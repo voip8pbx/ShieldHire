@@ -32,6 +32,14 @@
         {
             "source": "/alerts/:path*",
             "destination": "/api"
+        },
+        {
+            "source": "/(auth|user|bookings|api|bouncers|verifications|bouncer-status|alerts)",
+            "destination": "/api"
+        },
+        {
+            "source": "/((?!index\\.html|favicon\\.ico|_next|static|public|api/index.ts).*)",
+            "destination": "/api"
         }
     ]
 }

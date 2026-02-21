@@ -30,6 +30,10 @@ app.use(['/verifications', '/api/verifications'], verificationRoutes);
 app.use(['/bouncer-status', '/api/bouncer-status'], bouncerStatusRoutes);
 app.use(['/alerts', '/api/alerts'], alertRoutes);
 
+app.get('/api', (req, res) => {
+    res.json({ message: 'Home Gym Trainer API is running (via /api)' });
+});
+
 app.get('/', (req, res) => {
     res.json({ message: 'Home Gym Trainer API is running' });
 });
