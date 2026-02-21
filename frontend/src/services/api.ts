@@ -1,6 +1,6 @@
 // Replaces axios with fetch
 // Use your computer's local network IP address here (Physical Device)
-export const BASE_URL = 'http://10.59.243.154:5000'; // Updated for physical device connectivity
+export const BASE_URL = 'https://shield-hire-znyu.vercel.app'; // Production Vercel URL
 
 let authToken: string | null = null;
 
