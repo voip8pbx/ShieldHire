@@ -4,7 +4,7 @@ import admin from 'firebase-admin';
 // (token verification uses Google's public JWKS endpoint, no private key needed)
 if (!admin.apps.length) {
     admin.initializeApp({
-        projectId: process.env.FIREBASE_PROJECT_ID || 'sheildhire',
+        projectId: process.env.FIREBASE_PROJECT_ID,
     });
 }
 

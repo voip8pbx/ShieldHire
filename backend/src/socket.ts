@@ -25,7 +25,13 @@ export const initSocket = (httpServer: HttpServer) => {
 
 export const getIO = () => {
     if (!io) {
-        throw new Error('Socket.io not initialized!');
+        console.warn('⚠️ Socket.io not initialized! Signal will not be sent via Socket.io (Expected in Serverless)');
+        return {
+            emit: (...args: any[]) => {
+                console.log('Socket.emit (NO-OP in serverless):', args[0]);
+                return true;
+            }
+        } as any;
     }
     return io;
 };

@@ -12,13 +12,18 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+require("./init-env");
 const app_1 = __importDefault(require("./app"));
-// import { PrismaClient } from '@prisma/client';
+const http_1 = require("http");
 const db_1 = require("./config/db");
+const socket_1 = require("./socket");
+// import { PrismaClient } from '@prisma/client';
 const PORT = process.env.PORT || 3000;
 const startServer = () => __awaiter(void 0, void 0, void 0, function* () {
     yield (0, db_1.connectDB)();
-    app_1.default.listen(Number(PORT), '0.0.0.0', () => {
+    const httpServer = (0, http_1.createServer)(app_1.default);
+    (0, socket_1.initSocket)(httpServer);
+    httpServer.listen(Number(PORT), '0.0.0.0', () => {
         console.log(`Server is running on port ${PORT} and accessible on 0.0.0.0`);
     });
 });

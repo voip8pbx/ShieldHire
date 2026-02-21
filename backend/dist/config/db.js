@@ -1,4 +1,6 @@
 "use strict";
+// Deprecated: Prisma Client replaced by Supabase Client
+// This file is kept for compatibility with existing imports, but logic is disabled.
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -10,31 +12,15 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.connectDB = void 0;
-const client_1 = require("@prisma/client");
-// Optimize Prisma Client for better performance
-const prisma = new client_1.PrismaClient({
-    log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
-    // Connection pool optimization
-    datasources: {
-        db: {
-            url: process.env.DATABASE_URL || 'file:./dev.db',
-        },
-    },
-});
-// Enable connection pooling and set timeouts
 const connectDB = () => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        yield prisma.$connect();
-        console.log('MongoDB connected successfully');
-    }
-    catch (err) {
-        console.error('Failed to connect to database:', err);
-        process.exit(1);
-    }
+    console.log('✅ App configured to use Supabase via REST API (Prisma Disabled)');
 });
 exports.connectDB = connectDB;
-// Graceful shutdown
-process.on('beforeExit', () => __awaiter(void 0, void 0, void 0, function* () {
-    yield prisma.$disconnect();
-}));
+// Export a dummy object to prevent runtime crashes if some file still imports it
+// (But it should fail visibly if used, so we can fix it)
+const prisma = new Proxy({}, {
+    get: (_target, prop) => {
+        throw new Error(`Attempted to use Prisma.${String(prop)} but Prisma has been replaced by Supabase.`);
+    }
+});
 exports.default = prisma;

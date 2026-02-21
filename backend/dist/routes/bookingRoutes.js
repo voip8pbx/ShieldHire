@@ -10,4 +10,7 @@ const router = express_1.default.Router();
 router.use(authMiddleware_1.authenticate);
 router.post('/', bookingController_1.createBooking);
 router.get('/', bookingController_1.getUserBookings);
+router.get('/pending', bookingController_1.getPendingBookings);
+router.get('/bouncer/history', bookingController_1.getBouncerHistoryBookings);
+router.patch('/:id/status', bookingController_1.updateBookingStatus);
 exports.default = router;
