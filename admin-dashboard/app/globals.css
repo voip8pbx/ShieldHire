@@ -1,0 +1,305 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+@import "tailwindcss";
+
+:root {
+  /* Enterprise Dark Theme - Slate Based */
+  --background: #0f172a;
+  /* Slate 900 */
+  --surface: #1e293b;
+  /* Slate 800 */
+  --surface-elevated: #334155;
+  /* Slate 700 */
+  --surface-hover: #475569;
+  /* Slate 600 */
+
+  --border: #334155;
+  /* Slate 700 */
+  --border-light: #475569;
+  /* Slate 600 */
+
+  /* Brand Colors - Gold & Blue */
+  --primary: #fbbf24;
+  /* Amber 400 - Cleaner Gold */
+  --primary-dark: #d97706;
+  /* Amber 600 */
+  --primary-light: #fcd34d;
+  /* Amber 300 */
+  --primary-glow: rgba(251, 191, 36, 0.2);
+
+  --secondary: #3b82f6;
+  /* Blue 500 */
+  --secondary-dark: #2563eb;
+  /* Blue 600 */
+  --secondary-light: #60a5fa;
+  /* Blue 400 */
+
+  /* Status Colors */
+  --success: #10b981;
+  /* Emerald 500 */
+  --success-bg: rgba(16, 185, 129, 0.1);
+  --warning: #f59e0b;
+  /* Amber 500 */
+  --warning-bg: rgba(245, 158, 11, 0.1);
+  --error: #ef4444;
+  /* Red 500 */
+  --error-bg: rgba(239, 68, 68, 0.1);
+  --info: #3b82f6;
+  /* Blue 500 */
+  --info-bg: rgba(59, 130, 246, 0.1);
+
+  /* Typography */
+  --text-primary: #f8fafc;
+  /* Slate 50 */
+  --text-secondary: #94a3b8;
+  /* Slate 400 */
+  --text-tertiary: #64748b;
+  /* Slate 500 */
+  --text-inverse: #0f172a;
+  /* Slate 900 */
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: var(--background);
+  color: var(--text-primary);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--surface-elevated);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-tertiary);
+}
+
+/* Base Components */
+@layer components {
+  .card {
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    /* rounded-xl */
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    /* shadow-sm */
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .card:hover {
+    border-color: var(--border-light);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    /* shadow-md */
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    transition: all 0.2s;
+    border: 1px solid transparent;
+    cursor: pointer;
+  }
+
+  .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .btn-primary {
+    background-color: var(--primary);
+    color: var(--text-inverse);
+  }
+
+  .btn-primary:hover {
+    background-color: var(--primary-light);
+  }
+
+  .btn-secondary {
+    background-color: var(--surface-elevated);
+    color: var(--text-primary);
+    border-color: var(--border);
+  }
+
+  .btn-secondary:hover {
+    background-color: var(--surface-hover);
+  }
+
+  .btn-danger {
+    background-color: var(--error);
+    color: white;
+  }
+
+  .btn-danger:hover {
+    filter: brightness(1.1);
+  }
+
+  .btn-success {
+    background-color: var(--success);
+    color: white;
+  }
+
+  .btn-success:hover {
+    filter: brightness(1.1);
+  }
+
+  /* Form Elements */
+  .input-field {
+    width: 100%;
+    background-color: var(--background);
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    padding: 0.625rem 1rem;
+    color: var(--text-primary);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .input-field::placeholder {
+    color: var(--text-tertiary);
+  }
+
+  .input-field:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 1px var(--primary);
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.125rem 0.625rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+  }
+}
+
+/* Utilities */
+@layer utilities {
+  .text-brand {
+    color: var(--primary);
+  }
+
+  .bg-brand {
+    background-color: var(--primary);
+  }
+}
+
+/* Professional Data Table */
+.professional-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.professional-table thead th {
+  background-color: var(--surface-elevated);
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 1rem 1.5rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.professional-table tbody tr {
+  transition: background-color 0.15s ease;
+}
+
+.professional-table tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+/* Zebra Striping */
+.professional-table tbody tr:nth-child(even) {
+  background-color: rgba(255, 255, 255, 0.01);
+  /* Very subtle alternating bg */
+}
+
+.professional-table tbody td {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  vertical-align: middle;
+}
+
+.professional-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes scaleUp {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-scale-up {
+  animation: scaleUp 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}

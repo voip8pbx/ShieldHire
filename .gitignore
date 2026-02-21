@@ -1,0 +1,58 @@
+# Dependencies - DO NOT COMMIT
+node_modules/
+**/node_modules/
+
+# Environment variables - DO NOT COMMIT (sensitive data)
+.env
+.env.local
+.env.development
+.env.production
+**/.env
+**/.env.local
+
+# Build outputs
+dist/
+build/
+.next/
+**/dist/
+**/build/
+**/.next/
+
+# Android build files
+frontend/android/app/build/
+frontend/android/build/
+frontend/android/.gradle/
+frontend/android/local.properties
+
+# iOS build files
+frontend/ios/build/
+frontend/ios/Pods/
+frontend/ios/*.xcarchive
+
+# Backend compiled output
+backend/dist/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# React Native Metro bundler cache
+frontend/.metro-health-check*
+
+# Prisma
+backend/prisma/migrations/
+
+# Android keystore (sensitive)
+*.jks
+*.keystore

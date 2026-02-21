@@ -1,0 +1,63 @@
+{
+  "project_info": {
+    "project_number": "475575826072",
+    "project_id": "sheildhire",
+    "storage_bucket": "sheildhire.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:475575826072:android:c86c6b4d2bf3004da342ed",
+        "android_client_info": {
+          "package_name": "com.shieldhire"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "475575826072-0gs6nb4mtiue244hmiqa540lrbvruatl.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.shieldhire",
+            "certificate_hash": "c982443a663290f34cb788718145801c21dee55e"
+          }
+        },
+        {
+          "client_id": "475575826072-7n4ergi5rp618drn0cvu55s9r80ujavo.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.shieldhire",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        },
+        {
+          "client_id": "475575826072-n1ha5e3mp6hot5heo50uu9pmdmblqtfg.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.shieldhire",
+            "certificate_hash": "5e8f1609ebf7535d8c1542724f7198934d434610"
+          }
+        },
+        {
+          "client_id": "475575826072-boqj4svjnan55e3ba887qd0nsmj3ivtu.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBAkIvJKRX5Egk-nK4f9myUWD07fr5uoFY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "475575826072-boqj4svjnan55e3ba887qd0nsmj3ivtu.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

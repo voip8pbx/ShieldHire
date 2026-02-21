@@ -1,0 +1,26 @@
+{
+    "name": "shield-hire-monorepo",
+    "version": "1.0.0",
+    "description": "Root package to manage backend and frontend",
+    "scripts": {
+        "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install && cd ../admin-dashboard && npm install",
+        "start": "concurrently --names \"BACKEND,METRO,ADMIN\" --prefix-colors \"bgBlue.bold,bgMagenta.bold,bgYellow.bold\" \"npm run start:backend\" \"npm run start:frontend\" \"npm run start:admin\"",
+        "start:backend": "cd backend && npm run dev",
+        "start:frontend": "cd frontend && npm start",
+        "start:admin": "cd admin-dashboard && npm run dev",
+        "android": "concurrently --names \"BACKEND,METRO,ANDROID,ADMIN\" --prefix-colors \"bgBlue.bold,bgMagenta.bold,bgGreen.bold,bgYellow.bold\" \"npm run start:backend\" \"npm run start:frontend\" \"npm run android:all\" \"npm run start:admin\"",
+        "android:all": "node start-all-devices.js",
+        "android:build": "cd frontend && npm run android",
+        "clean": "cd frontend/android && ./gradlew clean && cd ../..",
+        "ios": "concurrently --names \"BACKEND,METRO,IOS,ADMIN\" --prefix-colors \"bgBlue.bold,bgMagenta.bold,bgCyan.bold,bgYellow.bold\" \"npm run start:backend\" \"npm run start:frontend\" \"npm run ios:build\" \"npm run start:admin\"",
+        "ios:build": "cd frontend && npm run ios",
+        "dev": "npm start",
+        "stop": "taskkill /F /IM node.exe /T 2>nul || echo No Node processes to kill"
+    },
+    "devDependencies": {
+        "concurrently": "^8.2.2"
+    },
+    "dependencies": {
+        "lottie-react-native": "^7.3.6"
+    }
+}

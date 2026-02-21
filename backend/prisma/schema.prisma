@@ -1,0 +1,120 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  password     String   @default("")
+  name         String
+  contactNo    String?
+  age          Int?
+  profilePhoto String?
+  role         String   @default("USER") // USER, BOUNCER, GUNMAN, ADMIN
+  googleId     String?  @unique
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  bouncerProfile  Bouncer?
+  bookings        Booking[]        @relation("UserBookings")
+  reviews         Review[]
+  emergencyAlerts EmergencyAlert[]
+
+  @@map("users")
+}
+
+model Bouncer {
+  id                 String    @id @default(uuid())
+  userId             String    @unique
+  user               User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name               String
+  contactNo          String
+  age                Int
+  gender             String
+  profilePhoto       String?
+  govtIdPhoto        String    @default("")
+  hasGunLicense      Boolean   @default(false)
+  gunLicensePhoto    String?
+  isGunman           Boolean   @default(false)
+  registrationType   String    @default("Individual")
+  agencyReferralCode String?
+  rating             Float     @default(0.0)
+  isAvailable        Boolean   @default(true)
+
+  // Profile details
+  bio        String?
+  skills     String[]
+  experience Int      @default(0)
+  gallery    String[]
+
+  // Verification fields
+  verificationStatus String    @default("PENDING")
+  verifiedBy         String?
+  verifiedAt         DateTime?
+  rejectionReason    String?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  bookings  Booking[] @relation("BouncerBookings")
+
+  @@index([verificationStatus])
+  @@index([isAvailable])
+  @@map("bouncers")
+}
+
+model Booking {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation("UserBookings", fields: [userId], references: [id])
+  bouncerId  String
+  bouncer    Bouncer  @relation("BouncerBookings", fields: [bouncerId], references: [id])
+  date       DateTime
+  time       String?
+  status     String   @default("PENDING")
+  location   String?
+  duration   Int      @default(4)
+  totalPrice Float?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  review Review?
+
+  @@index([userId])
+  @@index([bouncerId])
+  @@index([date])
+  @@map("bookings")
+}
+
+model Review {
+  id        String   @id @default(uuid())
+  rating    Int
+  comment   String?
+  bookingId String   @unique
+  booking   Booking  @relation(fields: [bookingId], references: [id])
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@map("reviews")
+}
+
+model EmergencyAlert {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  latitude  Float?
+  longitude Float?
+  location  String?
+  status    String   @default("OPEN")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([userId])
+  @@map("emergency_alerts")
+}
