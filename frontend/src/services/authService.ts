@@ -1,14 +1,7 @@
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import auth from '@react-native-firebase/auth';
-import {
-    getAuth,
-    signInWithCredential,
-    getIdToken,
-    signOut,
-    onAuthStateChanged,
-} from '@react-native-firebase/auth/lib/modular';
 
-// Initialize Google Sign-In with Web Client ID (type 3) from google-services.json
+// Initialize Google Sign-In
 export const initGoogleSignIn = () => {
     GoogleSignin.configure({
         webClientId: '475575826072-boqj4svjnan55e3ba887qd0nsmj3ivtu.apps.googleusercontent.com',
@@ -17,18 +10,15 @@ export const initGoogleSignIn = () => {
 };
 
 // Sign in with Google → Firebase Auth → return Firebase user + ID token
-// forceAccountPicker: true = show account picker every time (used for client)
-// forceAccountPicker: false = silently reuse signed-in account if available (used for bouncer)
 export const signInWithGoogle = async (forceAccountPicker = false) => {
     // Check Google Play Services availability
     await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
 
     if (forceAccountPicker) {
-        // Sign out to force the account picker UI
         try { await GoogleSignin.signOut(); } catch (_) { }
     }
 
-    // Trigger the Google sign-in UI (or silently reuse session)
+    // Trigger the Google sign-in UI
     const signInResult = await GoogleSignin.signIn();
 
     // Handle both old and new SDK response shapes
@@ -38,15 +28,14 @@ export const signInWithGoogle = async (forceAccountPicker = false) => {
         throw new Error('No ID token returned from Google Sign-In');
     }
 
-    // Use auth.GoogleAuthProvider (correctly exported from main package)
+    // Create a Google credential with the token
     const googleCredential = auth.GoogleAuthProvider.credential(idToken);
 
-    // Sign in using modular API
-    const firebaseAuth = getAuth();
-    const userCredential = await signInWithCredential(firebaseAuth, googleCredential);
+    // Sign-in the user with the credential
+    const userCredential = await auth().signInWithCredential(googleCredential);
 
     // Get Firebase ID token to send to backend
-    const firebaseToken = await getIdToken(userCredential.user);
+    const firebaseToken = await userCredential.user.getIdToken();
 
     return {
         firebaseUser: userCredential.user,
@@ -58,12 +47,14 @@ export const signInWithGoogle = async (forceAccountPicker = false) => {
 export const signOutUser = async () => {
     try {
         await GoogleSignin.signOut();
-        const firebaseAuth = getAuth();
-        await signOut(firebaseAuth);
+        await auth().signOut();
     } catch (error) {
         console.error('Sign Out Error:', error);
     }
 };
 
-// Re-export modular functions for AuthContext
-export { getAuth, onAuthStateChanged, getIdToken, signOut };
+// Compatibility exports for AuthContext
+export const getAuth = () => auth();
+export const onAuthStateChanged = (authInstance: any, callback: any) => authInstance.onAuthStateChanged(callback);
+export const getIdToken = (user: any) => user.getIdToken();
+export const signOut = (authInstance: any) => authInstance.signOut();
