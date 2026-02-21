@@ -16,6 +16,22 @@
         {
             "source": "/api/:path*",
             "destination": "/api"
+        },
+        {
+            "source": "/bouncers/:path*",
+            "destination": "/api"
+        },
+        {
+            "source": "/verifications/:path*",
+            "destination": "/api"
+        },
+        {
+            "source": "/bouncer-status/:path*",
+            "destination": "/api"
+        },
+        {
+            "source": "/alerts/:path*",
+            "destination": "/api"
         }
     ]
 }
