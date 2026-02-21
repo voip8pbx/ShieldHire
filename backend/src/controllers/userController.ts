@@ -166,3 +166,34 @@ export const getProfile = async (req: Request, res: Response) => {
     }
 };
 
+export const getUsers = async (req: Request, res: Response) => {
+    try {
+        const { data: users, error } = await supabaseAdmin
+            .from('users')
+            .select('*, bouncers(*)')
+            .order('createdAt', { ascending: false });
+
+        if (error) throw error;
+
+        const formattedUsers = users.map(user => {
+            const bouncerProfile = (user.bouncers && user.bouncers.length > 0)
+                ? camelCaseKeys(user.bouncers[0])
+                : null;
+
+            return {
+                id: user.id,
+                email: user.email,
+                name: user.name,
+                role: bouncerProfile ? (bouncerProfile.isGunman ? 'GUNMAN' : 'BOUNCER') : user.role,
+                contactNo: user.contactNo,
+                profilePhoto: user.profilePhoto,
+                bouncerProfile
+            };
+        });
+
+        res.json(formattedUsers);
+    } catch (error) {
+        console.error('Get Users Error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
