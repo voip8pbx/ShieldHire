@@ -1,6 +1,6 @@
-import '../src/init-env';
-import app from '../src/app';
-import { connectDB } from '../src/config/db';
+import '../backend/src/init-env';
+import app from '../backend/src/app';
+import { connectDB } from '../backend/src/config/db';
 
 // Vercel Serverless Function entry point
 const init = async () => {

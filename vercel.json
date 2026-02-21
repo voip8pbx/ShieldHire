@@ -1,27 +1,21 @@
 {
     "version": 2,
-    "functions": {
-        "backend/api/index.ts": {
-            "runtime": "@vercel/node",
-            "includeFiles": "backend/src/**"
-        }
-    },
     "rewrites": [
         {
             "source": "/auth/:path*",
-            "destination": "/backend/api/index.ts"
+            "destination": "/api"
         },
         {
             "source": "/user/:path*",
-            "destination": "/backend/api/index.ts"
+            "destination": "/api"
         },
         {
             "source": "/bookings/:path*",
-            "destination": "/backend/api/index.ts"
+            "destination": "/api"
         },
         {
             "source": "/api/:path*",
-            "destination": "/backend/api/index.ts"
+            "destination": "/api"
         }
     ]
 }
