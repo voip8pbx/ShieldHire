@@ -1,5 +1,11 @@
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
-import auth from '@react-native-firebase/auth';
+import {
+    GoogleAuthProvider,
+    getAuth,
+    signInWithCredential,
+    signOut as firebaseSignOut,
+    onAuthStateChanged as firebaseOnAuthStateChanged,
+} from '@react-native-firebase/auth';
 
 // Initialize Google Sign-In
 export const initGoogleSignIn = () => {
@@ -21,18 +27,22 @@ export const signInWithGoogle = async (forceAccountPicker = false) => {
     // Trigger the Google sign-in UI
     const signInResult = await GoogleSignin.signIn();
 
-    // Handle both old and new SDK response shapes
-    const idToken = signInResult.data?.idToken ?? (signInResult as any).idToken;
+    // Try the new style of google-sign in result, from v13+ of that module
+    let idToken = signInResult.data?.idToken;
+    if (!idToken) {
+        // if you are using older versions of google-signin, try old style result
+        idToken = (signInResult as any).idToken;
+    }
 
     if (!idToken) {
         throw new Error('No ID token returned from Google Sign-In');
     }
 
-    // Create a Google credential with the token
-    const googleCredential = auth.GoogleAuthProvider.credential(idToken);
+    // Create a Google credential with the token (modular API)
+    const googleCredential = GoogleAuthProvider.credential(idToken);
 
-    // Sign-in the user with the credential
-    const userCredential = await auth().signInWithCredential(googleCredential);
+    // Sign-in the user with the credential (modular API)
+    const userCredential = await signInWithCredential(getAuth(), googleCredential);
 
     // Get Firebase ID token to send to backend
     const firebaseToken = await userCredential.user.getIdToken();
@@ -47,14 +57,15 @@ export const signInWithGoogle = async (forceAccountPicker = false) => {
 export const signOutUser = async () => {
     try {
         await GoogleSignin.signOut();
-        await auth().signOut();
+        await firebaseSignOut(getAuth());
     } catch (error) {
         console.error('Sign Out Error:', error);
     }
 };
 
 // Compatibility exports for AuthContext
-export const getAuth = () => auth();
-export const onAuthStateChanged = (authInstance: any, callback: any) => authInstance.onAuthStateChanged(callback);
+export { getAuth };
+export const onAuthStateChanged = (authInstance: any, callback: any) =>
+    firebaseOnAuthStateChanged(authInstance, callback);
 export const getIdToken = (user: any) => user.getIdToken();
-export const signOut = (authInstance: any) => authInstance.signOut();
+export const signOut = (_authInstance: any) => firebaseSignOut(getAuth());

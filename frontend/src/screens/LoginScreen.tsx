@@ -20,7 +20,7 @@ export default function LoginScreen({ navigation }: Props) {
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [loginMode, setLoginMode] = useState<'client' | 'bouncer'>('client');
-    const { login } = useContext(AuthContext);
+    const { login, suppressAutoLogin, resumeAutoLogin, startBouncerRegistration } = useContext(AuthContext);
 
     const handleLogin = async () => {
         if (!email || !password) {
@@ -62,9 +62,17 @@ export default function LoginScreen({ navigation }: Props) {
 
     const handleBouncerRegistration = async () => {
         setLoading(true);
+
+        // IMPORTANT: Suppress auto-login BEFORE calling signInWithGoogle.
+        // Without this, onAuthStateChanged fires immediately after Firebase auth succeeds
+        // and races with this function — it calls /auth/me, gets role=USER (no bouncer profile),
+        // and sets the user in AuthContext, which causes App.tsx to render ClientMain
+        // instead of letting this function navigate to BouncerRegistration.
+        suppressAutoLogin();
+
         try {
-            // false = don't force account picker, reuse existing Google session
-            const { firebaseUser, firebaseToken } = await signInWithGoogle(false);
+            // true = force account picker so bouncer can choose their account
+            const { firebaseUser, firebaseToken } = await signInWithGoogle(true);
 
             setAuthToken(firebaseToken);
 
@@ -74,7 +82,10 @@ export default function LoginScreen({ navigation }: Props) {
 
             // If user has no bouncer profile, force them to registration
             if (!existingUser.bouncerProfile && existingUser.role === 'USER') {
-                navigation.navigate('BouncerRegistration', {
+                // Instead of calling navigate (which might fail if the navigator unmounts),
+                // we update the AuthContext to indicate a bouncer registration is pending.
+                // This will cause App.tsx to show the BouncerRegistration screen.
+                startBouncerRegistration(firebaseToken, existingUser, {
                     name: firebaseUser.displayName || existingUser.name || '',
                     email: firebaseUser.email || '',
                     photo: firebaseUser.photoURL || '',
@@ -83,8 +94,12 @@ export default function LoginScreen({ navigation }: Props) {
             }
 
             // Otherwise, just log them in; App.tsx handles Approved vs Pending vs Rejected
+            // login() automatically clears the suppress flag
             login(firebaseToken, existingUser);
         } catch (error: any) {
+            // Re-enable auto-login on any error so future auth state changes are handled
+            resumeAutoLogin();
+
             if (error.code === statusCodes.SIGN_IN_CANCELLED || error.code === '12501') {
                 return; // User cancelled
             }
@@ -216,9 +231,7 @@ export default function LoginScreen({ navigation }: Props) {
                             {loading ? <ActivityIndicator color="#000" /> : <Text style={styles.buttonText}>LOGIN</Text>}
                         </TouchableOpacity>
 
-                        <TouchableOpacity onPress={handleBypass} style={styles.skipBtn}>
-                            <Text style={styles.skipText}>Skip / Guest Access</Text>
-                        </TouchableOpacity>
+                        
 
                         <View style={{ marginTop: 20 }}>
                             <TouchableOpacity

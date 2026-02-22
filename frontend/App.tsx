@@ -128,7 +128,7 @@ const BouncerNavigator = () => (
 );
 
 const AppContent = () => {
-    const { token, isLoading, user } = useContext(AuthContext);
+    const { token, isLoading, user, pendingBouncerRegistration } = useContext(AuthContext);
 
     if (isLoading) {
         return null;
@@ -145,7 +145,13 @@ const AppContent = () => {
                     <Stack.Screen name="Auth" component={AuthNavigator} />
                 ) : (
                     <>
-                        {isBouncerFlow ? (
+                        {pendingBouncerRegistration ? (
+                            <Stack.Screen
+                                name="BouncerRegistration"
+                                component={BouncerRegistrationScreen}
+                                initialParams={pendingBouncerRegistration}
+                            />
+                        ) : isBouncerFlow ? (
                             isApproved ? (
                                 <Stack.Screen name="BouncerMain" component={BouncerNavigator} />
                             ) : (
@@ -160,7 +166,9 @@ const AppContent = () => {
                         )}
 
                         {/* Common screens that might be needed in either flow (like during registration) */}
-                        <Stack.Screen name="BouncerRegistration" component={BouncerRegistrationScreen} />
+                        {!pendingBouncerRegistration && (
+                            <Stack.Screen name="BouncerRegistration" component={BouncerRegistrationScreen} />
+                        )}
                         <Stack.Screen name="BouncerSurvey" component={BouncerSurveyScreen} options={{ headerShown: false }} />
                     </>
                 )}
