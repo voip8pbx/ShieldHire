@@ -92,14 +92,14 @@ export default function BouncersPage() {
             <div className="stats-grid mb-8">
                 <div className="card p-4 sm:p-6">
                     <div className="flex items-center justify-between">
-                        <div className="text-sm font-bold text-[var(--text-muted)] uppercase tracking-wider">Total Bouncers</div>
+                        <div className="text-sm font-bold text-text-muted uppercase tracking-wider">Total Bouncers</div>
                         <div className="text-2xl font-bold">{bouncers.length}</div>
                     </div>
                 </div>
                 <div className="card p-4 sm:p-6">
                     <div className="flex items-center justify-between">
-                        <div className="text-sm font-bold text-[var(--text-muted)] uppercase tracking-wider">Available</div>
-                        <div className="text-2xl font-bold text-[var(--success)]">
+                        <div className="text-sm font-bold text-text-muted uppercase tracking-wider">Available</div>
+                        <div className="text-2xl font-bold text-success">
                             {bouncers.filter(b => b.isAvailable).length}
                         </div>
                     </div>
@@ -107,7 +107,7 @@ export default function BouncersPage() {
                 <div className="card card-spacing">
                     <div className="detail-row">
                         <div className="detail-label">Licensed Gunmen</div>
-                        <div className="detail-value text-2xl font-bold text-[var(--primary)]">
+                        <div className="detail-value text-2xl font-bold text-primary-yellow">
                             {bouncers.filter(b => b.hasGunLicense).length}
                         </div>
                     </div>
@@ -121,8 +121,8 @@ export default function BouncersPage() {
                         key={tab}
                         onClick={() => setFilter(tab as typeof filter)}
                         className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-bold text-sm uppercase tracking-wide transition-all ${filter === tab
-                            ? 'bg-[var(--primary-yellow)] text-black'
-                            : 'bg-[var(--surface)] text-[var(--text-muted)] hover:bg-[var(--surface-hover)] border border-[var(--border-gray)]'
+                            ? 'bg-primary-yellow text-black'
+                            : 'bg-surface text-text-muted hover:bg-surface-hover border border-border-gray'
                             }`}
                     >
                         {tab}
@@ -161,7 +161,7 @@ export default function BouncersPage() {
                                 </tr>
                             ) : filteredBouncers.length === 0 ? (
                                 <tr>
-                                    <td colSpan={9} className="text-center py-12 text-[var(--text-tertiary)]">
+                                    <td colSpan={9} className="text-center py-12 text-text-tertiary">
                                         No bouncers found
                                     </td>
                                 </tr>
@@ -170,20 +170,20 @@ export default function BouncersPage() {
                                     <tr key={bouncer.id}>
                                         <td>
                                             <div>
-                                                <div className="font-bold text-[var(--text-primary)] mb-1">
+                                                <div className="font-bold text-text-primary mb-1">
                                                     {bouncer.name}
                                                 </div>
-                                                <div className="text-xs text-[var(--text-tertiary)]">
+                                                <div className="text-xs text-text-tertiary">
                                                     ID: {bouncer.id.slice(0, 8)}...
                                                 </div>
                                             </div>
                                         </td>
                                         <td>
                                             <div>
-                                                <div className="text-[var(--text-primary)] mb-1">
+                                                <div className="text-text-primary mb-1">
                                                     {bouncer.contactNo}
                                                 </div>
-                                                <div className="text-xs text-[var(--text-tertiary)]">
+                                                <div className="text-xs text-text-tertiary">
                                                     {bouncer.user.email}
                                                 </div>
                                             </div>
@@ -191,22 +191,22 @@ export default function BouncersPage() {
                                         <td>{bouncer.age} years</td>
                                         <td>{bouncer.gender}</td>
                                         <td>
-                                            <span className="font-bold text-[var(--primary)]">
+                                            <span className="font-bold text-primary">
                                                 {bouncer.rating.toFixed(1)} / 5.0
                                             </span>
                                         </td>
                                         <td>
-                                            <span className="px-3 py-1 rounded-md text-xs font-semibold bg-[var(--secondary-glow)] text-[var(--secondary)] border border-[var(--secondary)]">
+                                            <span className="px-3 py-1 rounded-md text-xs font-semibold bg-info-glow text-info border border-info">
                                                 {bouncer.registrationType}
                                             </span>
                                         </td>
                                         <td>
                                             {bouncer.hasGunLicense ? (
-                                                <span className="px-3 py-1 rounded-md text-xs font-semibold bg-[var(--success-glow)] text-[var(--success)] border border-[var(--success)]">
+                                                <span className="px-3 py-1 rounded-md text-xs font-semibold bg-success-glow text-success border border-success">
                                                     Licensed
                                                 </span>
                                             ) : (
-                                                <span className="text-[var(--text-tertiary)]">No License</span>
+                                                <span className="text-text-tertiary">No License</span>
                                             )}
                                         </td>
                                         <td>
@@ -220,15 +220,15 @@ export default function BouncersPage() {
                                             <div className="flex gap-2">
                                                 <button
                                                     onClick={() => setSelectedBouncer(bouncer)}
-                                                    className="px-4 py-2 rounded-lg bg-[var(--primary)] text-[var(--text-inverse)] hover:bg-[var(--primary-light)] transition-all text-sm font-semibold"
+                                                    className="px-4 py-2 rounded-lg bg-primary-yellow text-black hover:brightness-110 transition-all text-sm font-semibold"
                                                 >
                                                     View
                                                 </button>
                                                 <button
                                                     onClick={() => handleToggleAvailability(bouncer.id, bouncer.isAvailable)}
                                                     className={`px-4 py-2 rounded-lg transition-all text-sm font-semibold ${bouncer.isAvailable
-                                                        ? 'bg-[var(--error)] text-white hover:bg-red-600'
-                                                        : 'bg-[var(--success)] text-white hover:bg-green-600'
+                                                        ? 'bg-error text-white hover:bg-red-600'
+                                                        : 'bg-success text-white hover:bg-green-600'
                                                         }`}
                                                 >
                                                     {bouncer.isAvailable ? 'Disable' : 'Enable'}
@@ -255,12 +255,12 @@ export default function BouncersPage() {
                     >
                         <button
                             onClick={() => setSelectedBouncer(null)}
-                            className="float-right text-3xl text-[var(--text-tertiary)] hover:text-[var(--text-primary)] font-bold"
+                            className="float-right text-3xl text-text-tertiary hover:text-text-primary font-bold"
                         >
                             ×
                         </button>
 
-                        <h2 className="text-3xl font-bold text-[var(--text-primary)] mb-8">
+                        <h2 className="text-3xl font-bold text-text-primary mb-8">
                             Bouncer Details
                         </h2>
 
@@ -292,7 +292,7 @@ export default function BouncersPage() {
 
                             <div className="detail-row">
                                 <div className="detail-label">Rating</div>
-                                <div className="detail-value text-[var(--primary)] font-bold">
+                                <div className="detail-value text-primary font-bold">
                                     {selectedBouncer.rating.toFixed(1)} / 5.0
                                 </div>
                             </div>
@@ -339,7 +339,7 @@ export default function BouncersPage() {
                             </div>
                         </div>
 
-                        <div className="flex gap-4 mt-8 pt-8 border-t border-[var(--border-gray)]">
+                        <div className="flex gap-4 mt-8 pt-8 border-t border-border-gray">
                             <button
                                 onClick={() => handleToggleAvailability(selectedBouncer.id, selectedBouncer.isAvailable)}
                                 className={`flex-1 py-4 rounded-lg font-bold transition-all ${selectedBouncer.isAvailable
@@ -362,3 +362,5 @@ export default function BouncersPage() {
         </div>
     );
 }
+
+

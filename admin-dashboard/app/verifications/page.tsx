@@ -141,9 +141,9 @@ export default function VerificationsPage() {
 
     const getStatusColor = (status: string) => {
         switch (status) {
-            case 'APPROVED': return 'text-[var(--success)] bg-[var(--success-glow)] border-[var(--success)]';
-            case 'REJECTED': return 'text-[var(--error)] bg-[var(--error-glow)] border-[var(--error)]';
-            default: return 'text-[var(--pending)] bg-[var(--pending-glow)] border-[var(--pending)]';
+            case 'APPROVED': return 'text-success bg-success-glow border-success';
+            case 'REJECTED': return 'text-error bg-error-glow border-error';
+            default: return 'text-pending bg-pending-glow border-pending';
         }
     };
 
@@ -164,19 +164,19 @@ export default function VerificationsPage() {
             </div>
 
             {/* Filter Tabs */}
-            <div className="flex gap-2 mb-8 border-b border-[var(--border)] pb-1">
+            <div className="flex gap-2 mb-8 border-b border-border-brand pb-1">
                 {['pending', 'approved', 'rejected', 'all'].map((tab) => (
                     <button
                         key={tab}
                         onClick={() => setFilter(tab as any)}
                         className={`px-6 py-3 rounded-t-lg font-semibold text-sm uppercase tracking-wide transition-all border-b-2 ${filter === tab
-                            ? 'border-[var(--primary)] text-[var(--primary)] bg-[var(--surface-elevated)]'
-                            : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)]'
+                            ? 'border-primary-yellow text-primary-yellow bg-surface-elevated'
+                            : 'border-transparent text-text-secondary hover:text-text-primary hover:bg-surface-hover'
                             }`}
                     >
                         {tab}
                         {tab === 'pending' && !loading && (
-                            <span className="ml-2 px-2 py-0.5 rounded-full bg-[var(--error)] text-white text-[10px] font-bold">
+                            <span className="ml-2 px-2 py-0.5 rounded-full bg-error text-white text-[10px] font-bold">
                                 {bouncers.length}
                             </span>
                         )}
@@ -185,7 +185,7 @@ export default function VerificationsPage() {
             </div>
 
             {/* Bouncers Table */}
-            <div className="card overflow-hidden shadow-xl border-[var(--border-light)]">
+            <div className="card overflow-hidden shadow-xl border-border-light">
                 <div className="overflow-x-auto">
                     <table className="professional-table">
                         <thead>
@@ -212,8 +212,8 @@ export default function VerificationsPage() {
                             ) : bouncers.length === 0 ? (
                                 <tr>
                                     <td colSpan={8} className="text-center py-16">
-                                        <div className="text-[var(--text-tertiary)] text-lg mb-2">No records found</div>
-                                        <div className="text-sm text-[var(--text-tertiary)] opacity-70">
+                                        <div className="text-text-tertiary text-lg mb-2">No records found</div>
+                                        <div className="text-sm text-text-tertiary opacity-70">
                                             There are no {filter !== 'all' ? filter : ''} verifications at the moment.
                                         </div>
                                     </td>
@@ -227,42 +227,42 @@ export default function VerificationsPage() {
                                                     <img
                                                         src={bouncer.profilePhoto}
                                                         alt={bouncer.name}
-                                                        className="w-10 h-10 rounded-full object-cover ring-2 ring-[var(--border)] group-hover:ring-[var(--primary)] transition-all"
+                                                        className="w-10 h-10 rounded-full object-cover ring-2 ring-border group-hover:ring-primary transition-all"
                                                     />
                                                 ) : (
-                                                    <div className="w-10 h-10 rounded-full bg-[var(--surface-elevated)] flex items-center justify-center ring-2 ring-[var(--border)]">
-                                                        <span className="text-[var(--text-tertiary)] font-bold text-xs">
+                                                    <div className="w-10 h-10 rounded-full bg-surface-elevated flex items-center justify-center ring-2 ring-border">
+                                                        <span className="text-text-tertiary font-bold text-xs">
                                                             {bouncer.name.substring(0, 2).toUpperCase()}
                                                         </span>
                                                     </div>
                                                 )}
                                                 <div>
-                                                    <div className="font-semibold text-[var(--text-primary)]">
+                                                    <div className="font-semibold text-text-primary">
                                                         {bouncer.name}
                                                     </div>
-                                                    <div className="text-xs text-[var(--text-tertiary)]">
+                                                    <div className="text-xs text-text-tertiary">
                                                         {bouncer.user.email}
                                                     </div>
                                                 </div>
                                             </div>
                                         </td>
-                                        <td className="text-[var(--text-secondary)] font-mono text-sm">{bouncer.contactNo}</td>
-                                        <td className="text-[var(--text-secondary)]">
+                                        <td className="text-text-secondary font-mono text-sm">{bouncer.contactNo}</td>
+                                        <td className="text-text-secondary">
                                             {bouncer.age} <span className="opacity-40 mx-1">|</span> {bouncer.gender}
                                         </td>
                                         <td>
-                                            <span className="px-2 py-1 rounded text-xs font-medium bg-[var(--surface-elevated)] border border-[var(--border)] text-[var(--text-secondary)]">
+                                            <span className="px-2 py-1 rounded text-xs font-medium bg-surface-elevated border border-border-brand text-text-secondary">
                                                 {bouncer.registrationType}
                                             </span>
                                         </td>
                                         <td>
                                             {bouncer.hasGunLicense ? (
-                                                <div className="flex items-center text-[var(--success)] text-xs font-bold uppercase tracking-wider">
-                                                    <span className="w-2 h-2 bg-[var(--success)] rounded-full mr-2"></span>
+                                                <div className="flex items-center text-success text-xs font-bold uppercase tracking-wider">
+                                                    <span className="w-2 h-2 bg-success rounded-full mr-2"></span>
                                                     Licensed
                                                 </div>
                                             ) : (
-                                                <span className="text-[var(--text-tertiary)] text-xs opacity-50">Not Applicable</span>
+                                                <span className="text-text-tertiary text-xs opacity-50">Not Applicable</span>
                                             )}
                                         </td>
                                         <td>
@@ -270,7 +270,7 @@ export default function VerificationsPage() {
                                                 {bouncer.verificationStatus}
                                             </span>
                                         </td>
-                                        <td className="text-[var(--text-tertiary)] text-xs">
+                                        <td className="text-text-tertiary text-xs">
                                             {new Date(bouncer.createdAt).toLocaleDateString('en-IN', {
                                                 day: 'numeric',
                                                 month: 'short',
@@ -287,7 +287,7 @@ export default function VerificationsPage() {
                                                                 handleApprove(bouncer.id);
                                                             }}
                                                             title="Approve"
-                                                            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[var(--success-glow)] text-[var(--success)] border border-transparent hover:border-[var(--success)] transition-all"
+                                                            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-success-glow text-success border border-transparent hover:border-success transition-all"
                                                         >
                                                             ✓
                                                         </button>
@@ -297,7 +297,7 @@ export default function VerificationsPage() {
                                                                 setSelectedBouncer(bouncer); // Opens modal for rejection reason
                                                             }}
                                                             title="Reject"
-                                                            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[var(--error-glow)] text-[var(--error)] border border-transparent hover:border-[var(--error)] transition-all"
+                                                            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-error-glow text-error border border-transparent hover:border-error transition-all"
                                                         >
                                                             ✕
                                                         </button>
@@ -305,7 +305,7 @@ export default function VerificationsPage() {
                                                 )}
                                                 <button
                                                     onClick={() => setSelectedBouncer(bouncer)}
-                                                    className="btn-base btn-secondary hover:text-[var(--primary)] hover:border-[var(--primary)] text-xs py-1 px-3 ml-2"
+                                                    className="btn-base btn-secondary hover:text-primary hover:border-primary text-sm py-1.5 px-4 ml-2 font-bold"
                                                 >
                                                     Review
                                                 </button>
@@ -330,59 +330,68 @@ export default function VerificationsPage() {
 
                     {/* Drawer Panel */}
                     <div
-                        className="fixed inset-y-0 right-0 w-full max-w-5xl bg-[var(--surface)] border-l border-[var(--border)] shadow-2xl flex flex-col z-50 transform transition-transform duration-300 ease-in-out animate-slide-in-right"
+                        className="fixed inset-y-0 right-0 w-full md:w-[85vw] lg:w-[75vw] xl:w-[65vw] max-w-[1400px] bg-surface border-l border-border-brand shadow-2xl flex flex-col z-50 transform transition-transform duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] animate-slide-in-right"
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* Drawer Header */}
-                        <div className="flex items-center justify-between px-8 py-6 border-b border-[var(--border)] bg-[var(--surface-elevated)] sticky top-0 z-10">
-                            <div className="flex items-center gap-6">
-                                <div className="relative">
+                        <div className="flex items-center justify-between px-10 py-7 border-b border-border-brand bg-gradient-to-r from-surface-elevated to-surface sticky top-0 z-10 shadow-sm">
+                            <div className="flex items-center gap-8">
+                                <div className="relative group">
+                                    <div className="absolute inset-0 bg-primary blur-md opacity-20 group-hover:opacity-40 transition-opacity rounded-full"></div>
                                     {selectedBouncer.profilePhoto ? (
                                         <img
                                             src={selectedBouncer.profilePhoto}
                                             alt={selectedBouncer.name}
-                                            className="w-16 h-16 rounded-full object-cover border-2 border-[var(--primary)] shadow-lg"
+                                            className="relative w-20 h-20 rounded-full object-cover border-2 border-primary shadow-2xl z-10"
                                         />
                                     ) : (
-                                        <div className="w-16 h-16 rounded-full bg-[var(--surface)] flex items-center justify-center border border-[var(--border)] text-2xl font-bold text-[var(--text-secondary)]">
+                                        <div className="relative w-20 h-20 rounded-full bg-surface-elevated flex items-center justify-center border-2 border-border-brand text-3xl font-extrabold text-text-secondary z-10">
                                             {selectedBouncer.name.charAt(0)}
                                         </div>
                                     )}
-                                    <div className={`absolute -bottom-1 -right-1 w-6 h-6 rounded-full border-4 border-[var(--surface-elevated)] ${selectedBouncer.isAvailable ? 'bg-green-500' : 'bg-gray-500'}`}></div>
+                                    <div className={`absolute bottom-0 right-0 w-6 h-6 rounded-full border-4 border-surface-elevated z-20 shadow-md ${selectedBouncer.isAvailable ? 'bg-green-500' : 'bg-gray-500'}`}></div>
                                 </div>
-                                <div>
-                                    <h2 className="text-2xl font-bold text-[var(--text-primary)] leading-tight">{selectedBouncer.name}</h2>
-                                    <div className="flex items-center gap-2 mt-1">
-                                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase border ${selectedBouncer.verificationStatus === 'APPROVED' ? 'bg-green-500/10 text-green-500 border-green-500/20' :
-                                            selectedBouncer.verificationStatus === 'REJECTED' ? 'bg-red-500/10 text-red-500 border-red-500/20' :
-                                                'bg-yellow-500/10 text-yellow-500 border-yellow-500/20'
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-3">
+                                        <h2 className="text-3xl font-black text-text-primary tracking-tight leading-none uppercase">{selectedBouncer.name}</h2>
+                                        {selectedBouncer.isGunman && (
+                                            <span className="bg-primary text-black text-[10px] font-black px-2 py-0.5 rounded-sm flex items-center gap-1">
+                                                <span className="w-1.5 h-1.5 bg-black rounded-full animate-pulse"></span>
+                                                GUNMAN
+                                            </span>
+                                        )}
+                                    </div>
+                                    <div className="flex items-center gap-3 mt-3">
+                                        <span className={`px-3 py-1 rounded text-[11px] font-black tracking-widest uppercase border-2 ${selectedBouncer.verificationStatus === 'APPROVED' ? 'bg-green-500/10 text-green-400 border-green-500/30' :
+                                            selectedBouncer.verificationStatus === 'REJECTED' ? 'bg-red-500/10 text-red-400 border-red-500/30' :
+                                                'bg-yellow-500/10 text-yellow-400 border-yellow-500/30'
                                             }`}>
-                                            {selectedBouncer.verificationStatus}
+                                            {selectedBouncer.verificationStatus === 'PENDING' ? 'Under Review' : selectedBouncer.verificationStatus}
                                         </span>
-                                        <span className="text-[var(--text-tertiary)] text-sm">•</span>
-                                        <span className="text-[var(--text-secondary)] text-sm font-mono tracking-wide">{selectedBouncer.id.split('-')[0].toUpperCase()}</span>
+                                        <span className="h-1 w-1 bg-border rounded-full"></span>
+                                        <span className="text-text-tertiary text-xs font-mono tracking-widest bg-black/30 px-2 py-1 rounded border border-border-brand uppercase">
+                                            ID: {selectedBouncer.id.split('-')[0]}
+                                        </span>
                                     </div>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-4 flex-shrink-0">
                                 {selectedBouncer.verificationStatus === 'PENDING' && (
                                     <>
                                         <button
                                             onClick={() => setShowRejectModal(true)}
                                             disabled={actionLoading}
-                                            className="px-6 py-2 rounded-full text-white font-bold text-xs uppercase tracking-wide hover:brightness-110 transition-all shadow-md transform hover:-translate-y-0.5 active:translate-y-0"
-                                            style={{ backgroundColor: '#ef4444' }}
+                                            className="px-8 py-2.5 rounded-full text-white font-bold text-sm uppercase tracking-wide hover:brightness-110 transition-all shadow-md transform hover:-translate-y-0.5 active:translate-y-0 bg-error"
                                         >
                                             Deny
                                         </button>
                                         <button
                                             onClick={() => handleApprove(selectedBouncer.id)}
                                             disabled={actionLoading}
-                                            className="px-6 py-2 rounded-full text-white font-bold text-xs uppercase tracking-wide hover:brightness-110 transition-all shadow-md flex items-center gap-2 transform hover:-translate-y-0.5 active:translate-y-0"
-                                            style={{ backgroundColor: '#22c55e' }}
+                                            className="px-8 py-2.5 rounded-full text-white font-bold text-sm uppercase tracking-wide hover:brightness-110 transition-all shadow-md flex items-center gap-2 transform hover:-translate-y-0.5 active:translate-y-0 bg-success"
                                         >
                                             {actionLoading ? (
-                                                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
+                                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                                             ) : (
                                                 <span>Approve</span>
                                             )}
@@ -393,52 +402,72 @@ export default function VerificationsPage() {
                         </div>
 
                         {/* Drawer Content */}
-                        <div className="flex-1 overflow-y-auto p-8 pb-40 space-y-8 custom-scrollbar bg-gradient-to-b from-[var(--surface)] to-[var(--surface-elevated)]">
+                        <div className="flex-1 overflow-y-auto p-6 pb-32 space-y-6 custom-scrollbar bg-gradient-to-b from-surface via-surface to-surface-elevated">
                             {/* Stats Grid */}
-                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                                <div className="bg-[var(--surface-elevated)] p-4 rounded-xl border border-[var(--border-light)] hover:border-[var(--primary-glow)] transition-colors group">
-                                    <div className="text-xs font-bold tracking-widest text-[var(--text-tertiary)] uppercase mb-1 group-hover:text-[var(--primary)] transition-colors">Registration</div>
-                                    <div className="text-lg font-semibold text-[var(--text-primary)]">{selectedBouncer.registrationType}</div>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                <div className="bg-surface-elevated p-5 rounded-2xl border border-border-brand shadow-sm hover:border-primary-glow transition-all group relative overflow-hidden">
+                                    <div className="absolute top-0 right-0 p-2 opacity-5 group-hover:opacity-10 transition-opacity">
+                                        <svg className="w-8 h-8 text-text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                    </div>
+                                    <div className="text-[10px] font-black tracking-[0.2em] text-text-tertiary uppercase mb-2 group-hover:text-primary transition-colors">Registration</div>
+                                    <div className="text-xl font-extrabold text-text-primary uppercase tracking-tight">{selectedBouncer.registrationType}</div>
                                 </div>
-                                <div className="bg-[var(--surface-elevated)] p-4 rounded-xl border border-[var(--border-light)] hover:border-[var(--primary-glow)] transition-colors group">
-                                    <div className="text-xs font-bold tracking-widest text-[var(--text-tertiary)] uppercase mb-1 group-hover:text-[var(--primary)] transition-colors">Contact</div>
-                                    <div className="text-lg font-semibold text-[var(--text-primary)] font-mono">{selectedBouncer.contactNo}</div>
+                                <div className="bg-surface-elevated p-5 rounded-2xl border border-border-brand shadow-sm hover:border-primary-glow transition-all group relative overflow-hidden">
+                                    <div className="absolute top-0 right-0 p-2 opacity-5 group-hover:opacity-10 transition-opacity">
+                                        <svg className="w-8 h-8 text-text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h2.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
+                                    </div>
+                                    <div className="text-[10px] font-black tracking-[0.2em] text-text-tertiary uppercase mb-2 group-hover:text-primary transition-colors">Contact</div>
+                                    <div className="text-xl font-extrabold text-text-primary font-mono">{selectedBouncer.contactNo}</div>
                                 </div>
-                                <div className="bg-[var(--surface-elevated)] p-4 rounded-xl border border-[var(--border-light)] hover:border-[var(--primary-glow)] transition-colors group">
-                                    <div className="text-xs font-bold tracking-widest text-[var(--text-tertiary)] uppercase mb-1 group-hover:text-[var(--primary)] transition-colors">Demographics</div>
-                                    <div className="text-lg font-semibold text-[var(--text-primary)]">{selectedBouncer.age} Yrs / {selectedBouncer.gender}</div>
+                                <div className="bg-surface-elevated p-5 rounded-2xl border border-border-brand shadow-sm hover:border-primary-glow transition-all group relative overflow-hidden">
+                                    <div className="absolute top-0 right-0 p-2 opacity-5 group-hover:opacity-10 transition-opacity">
+                                        <svg className="w-8 h-8 text-text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                                    </div>
+                                    <div className="text-[10px] font-black tracking-[0.2em] text-text-tertiary uppercase mb-2 group-hover:text-primary transition-colors">Personal</div>
+                                    <div className="text-xl font-extrabold text-text-primary">{selectedBouncer.age}Y • {selectedBouncer.gender}</div>
                                 </div>
-                                <div className="bg-[var(--surface-elevated)] p-4 rounded-xl border border-[var(--border-light)] hover:border-[var(--primary-glow)] transition-colors group">
-                                    <div className="text-xs font-bold tracking-widest text-[var(--text-tertiary)] uppercase mb-1 group-hover:text-[var(--primary)] transition-colors">Gun License</div>
-                                    <div className={`text-lg font-semibold ${selectedBouncer.hasGunLicense ? 'text-[var(--success)]' : 'text-[var(--text-secondary)]'}`}>
-                                        {selectedBouncer.hasGunLicense ? '✓ Licensed' : 'No License'}
+                                <div className="bg-surface-elevated p-5 rounded-2xl border border-border-brand shadow-sm hover:border-primary-glow transition-all group relative overflow-hidden text-center">
+                                    <div className="text-[10px] font-black tracking-[0.2em] text-text-tertiary uppercase mb-2 group-hover:text-primary transition-colors">Status</div>
+                                    <div className={`text-xl font-black uppercase tracking-widest ${selectedBouncer.hasGunLicense ? 'text-success animate-pulse' : 'text-text-secondary'}`}>
+                                        {selectedBouncer.hasGunLicense ? 'Licensed' : 'Unlicensed'}
                                     </div>
                                 </div>
                             </div>
 
                             {/* Details & Documents */}
-                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                 {/* Left: Personal Details */}
                                 <div className="lg:col-span-1 space-y-6">
-                                    <div className="bg-[var(--surface-elevated)]/50 p-6 rounded-2xl border border-[var(--border-light)]">
-                                        <h3 className="text-sm font-bold text-[var(--text-primary)] uppercase tracking-wider mb-6 border-b border-[var(--border)] pb-2">
-                                            Identity Details
+                                    <div className="bg-surface-elevated p-5 rounded-2xl border border-border-brand shadow-xl relative overflow-hidden">
+                                        <div className="absolute top-0 left-0 w-1 h-full bg-primary opacity-50"></div>
+                                        <h3 className="text-xs font-black text-text-primary uppercase tracking-[0.3em] mb-6 flex items-center gap-3">
+                                            <span className="w-6 h-px bg-primary"></span>
+                                            Identity Data
                                         </h3>
                                         <div className="space-y-6">
                                             <div className="group">
-                                                <label className="block text-xs font-bold tracking-widest text-[var(--text-tertiary)] mb-1">Email Address</label>
-                                                <div className="text-base text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] transition-colors break-words">{selectedBouncer.user.email}</div>
+                                                <label className="block text-[10px] font-black tracking-widest text-text-tertiary uppercase mb-2">Registered Email</label>
+                                                <div className="text-lg font-bold text-text-primary transition-colors break-all leading-tight">
+                                                    {selectedBouncer.user.email}
+                                                </div>
                                             </div>
                                             {selectedBouncer.agencyReferralCode && (
                                                 <div className="group">
-                                                    <label className="block text-xs font-bold tracking-widest text-[var(--text-tertiary)] mb-1">Agency Code</label>
-                                                    <div className="text-base text-[var(--primary)] font-mono">{selectedBouncer.agencyReferralCode}</div>
+                                                    <label className="block text-[10px] font-black tracking-widest text-text-tertiary uppercase mb-2">Agency Referral</label>
+                                                    <div className="inline-flex items-center px-4 py-2 bg-black/40 border border-primary-glow rounded-lg text-lg font-black text-primary font-mono tracking-tighter">
+                                                        {selectedBouncer.agencyReferralCode}
+                                                    </div>
                                                 </div>
                                             )}
                                             {selectedBouncer.verificationStatus === 'REJECTED' && selectedBouncer.rejectionReason && (
-                                                <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-xl mt-4 animate-pulse">
-                                                    <label className="block text-xs font-bold uppercase tracking-wide mb-1 opacity-70">Rejection Reason</label>
-                                                    <div className="text-sm italic">"{selectedBouncer.rejectionReason}"</div>
+                                                <div className="bg-red-500/5 border border-red-500/20 p-5 rounded-2xl mt-4 ring-1 ring-red-500/10">
+                                                    <label className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-red-400 mb-2">
+                                                        <span className="w-2 h-2 rounded-full bg-red-500 animate-ping"></span>
+                                                        Rejection Details
+                                                    </label>
+                                                    <div className="text-sm font-medium text-red-200 leading-relaxed italic border-l-2 border-red-500/30 pl-4">
+                                                        "{selectedBouncer.rejectionReason}"
+                                                    </div>
                                                 </div>
                                             )}
                                         </div>
@@ -446,14 +475,14 @@ export default function VerificationsPage() {
 
                                     {/* Optional Gallery / Extra Photos */}
                                     {selectedBouncer.gallery && selectedBouncer.gallery.length > 0 && (
-                                        <div className="bg-[var(--surface-elevated)]/50 p-6 rounded-2xl border border-[var(--border-light)] mt-6">
-                                            <h3 className="text-sm font-bold text-[var(--text-primary)] uppercase tracking-wider mb-4 border-b border-[var(--border)] pb-2 flex justify-between items-center">
+                                        <div className="bg-surface-elevated/50 p-6 rounded-2xl border border-border-light mt-6">
+                                            <h3 className="text-sm font-bold text-text-primary uppercase tracking-wider mb-4 border-b border-border-brand pb-2 flex justify-between items-center">
                                                 <span>Gallery</span>
-                                                <span className="text-xs text-[var(--primary)]">{selectedBouncer.gallery.length} Photos</span>
+                                                <span className="text-xs text-primary">{selectedBouncer.gallery.length} Photos</span>
                                             </h3>
                                             <div className="grid grid-cols-2 gap-3">
                                                 {selectedBouncer.gallery.map((photoUrl, idx) => (
-                                                    <a key={idx} href={photoUrl} target="_blank" rel="noopener noreferrer" className="block w-full aspect-square rounded-xl overflow-hidden border border-[var(--border-light)] hover:border-[var(--primary)] transition-colors hover:shadow-lg group">
+                                                    <a key={idx} href={photoUrl} target="_blank" rel="noopener noreferrer" className="block w-full aspect-square rounded-xl overflow-hidden border border-border-light hover:border-primary transition-colors hover:shadow-lg group">
                                                         <img src={photoUrl} alt={`Gallery ${idx + 1}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
                                                     </a>
                                                 ))}
@@ -463,29 +492,37 @@ export default function VerificationsPage() {
                                 </div>
 
                                 {/* Right: Documents & Details Map */}
-                                <div className="lg:col-span-2 space-y-8">
-                                    {/* Professional Details mapped to top right to utilize width better */}
+                                <div className="lg:col-span-1 space-y-6">
+                                    {/* Professional Details */}
                                     {(selectedBouncer.bio || selectedBouncer.skills || selectedBouncer.experience) && (
-                                        <div className="bg-[var(--surface-elevated)]/50 p-6 rounded-2xl border border-[var(--border-light)]">
-                                            <h3 className="text-sm font-bold text-[var(--text-primary)] uppercase tracking-wider mb-6 border-b border-[var(--border)] pb-2 flex justify-between items-center">
-                                                <span>Professional Details</span>
+                                        <div className="bg-surface-elevated p-5 rounded-2xl border border-border-brand shadow-xl relative overflow-hidden">
+                                            <div className="absolute top-0 right-0 w-24 h-24 bg-primary opacity-[0.03] blur-2xl rounded-full translate-x-12 -translate-y-12"></div>
+                                            <h3 className="text-xs font-black text-text-primary uppercase tracking-[0.2em] mb-6 flex justify-between items-center">
+                                                <span className="flex items-center gap-3">
+                                                    <span className="w-5 h-px bg-primary"></span>
+                                                    Professional
+                                                </span>
                                                 {selectedBouncer.experience ? (
-                                                    <span className="text-xs text-[var(--primary)] font-bold">{selectedBouncer.experience} Years Exp.</span>
+                                                    <span className="px-2 py-1 bg-primary text-black rounded text-[9px] font-black uppercase tracking-tighter">
+                                                        {selectedBouncer.experience} YRS
+                                                    </span>
                                                 ) : null}
                                             </h3>
-                                            <div className="grid grid-cols-1 gap-6">
+                                            <div className="space-y-4">
                                                 {selectedBouncer.bio && (
                                                     <div className="group">
-                                                        <label className="block text-xs font-bold tracking-widest text-[var(--text-tertiary)] mb-2">Professional Bio</label>
-                                                        <div className="text-sm text-[var(--text-secondary)] leading-relaxed bg-black/20 p-4 rounded-xl border border-[var(--border)]">{selectedBouncer.bio}</div>
+                                                        <label className="block text-[9px] font-black tracking-widest text-text-tertiary uppercase mb-2">Bio</label>
+                                                        <div className="text-sm text-text-secondary leading-relaxed bg-black/30 p-4 rounded-xl border border-border-brand font-medium">
+                                                            {selectedBouncer.bio}
+                                                        </div>
                                                     </div>
                                                 )}
                                                 {selectedBouncer.skills && selectedBouncer.skills.length > 0 && (
                                                     <div>
-                                                        <label className="block text-xs font-bold tracking-widest text-[var(--text-tertiary)] mb-2">Tactical Skills & Qualifications</label>
+                                                        <label className="block text-[9px] font-black tracking-widest text-text-tertiary uppercase mb-3">Skills</label>
                                                         <div className="flex flex-wrap gap-2">
                                                             {selectedBouncer.skills.map((skill, idx) => (
-                                                                <span key={idx} className="px-3 py-1 bg-[var(--surface)] border border-[var(--border-light)] text-[var(--text-secondary)] text-sm rounded-lg hover:border-[var(--primary)] hover:text-[var(--primary)] transition-all">
+                                                                <span key={idx} className="px-3 py-1.5 bg-surface border border-border-brand text-text-primary text-[10px] font-bold rounded-lg hover:border-primary hover:bg-primary hover:text-black transition-all cursor-default uppercase tracking-tight">
                                                                     {skill}
                                                                 </span>
                                                             ))}
@@ -495,47 +532,56 @@ export default function VerificationsPage() {
                                             </div>
                                         </div>
                                     )}
-                                    <div className="bg-[var(--surface-elevated)]/50 p-6 rounded-2xl border border-[var(--border-light)]">
-                                        <h3 className="text-sm font-bold text-[var(--text-primary)] uppercase tracking-wider mb-6 border-b border-[var(--border)] pb-2 flex justify-between items-center">
-                                            <span>Verification Documents</span>
-                                            <span className="text-xs text-[var(--text-tertiary)] font-normal normal-case">Click to expand • Full Resolution</span>
+
+                                    <div className="bg-surface-elevated p-5 rounded-2xl border border-border-brand shadow-2xl">
+                                        <h3 className="text-xs font-black text-text-primary uppercase tracking-[0.2em] mb-5 flex justify-between items-end border-b border-border-brand pb-3">
+                                            <span className="flex items-center gap-2">
+                                                <span className="w-6 h-0.5 bg-primary"></span>
+                                                Documents
+                                            </span>
+                                            <span className="text-[9px] text-text-tertiary font-bold uppercase">
+                                                <span className="text-primary">Click</span> to enlarge
+                                            </span>
                                         </h3>
 
-                                        <div className="space-y-8">
+                                        <div className="space-y-4">
                                             {/* Govt ID */}
-                                            <div className="bg-black/80 rounded-2xl border border-[var(--border)] overflow-hidden shadow-2xl">
-                                                <div className="flex items-center justify-between px-4 py-3 bg-[var(--surface-elevated)] border-b border-[var(--border)]">
-                                                    <span className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">Government ID</span>
-                                                    <a href={selectedBouncer.govtIdPhoto} target="_blank" rel="noopener noreferrer" className="text-xs text-[var(--primary)] hover:underline flex items-center gap-1 group">
-                                                        Open Full Size <span className="group-hover:translate-x-1 transition-transform">↗</span>
+                                            <div className="bg-black/80 rounded-xl border border-border-brand overflow-hidden shadow-lg group hover:border-primary transition-all">
+                                                <div className="flex items-center justify-between px-4 py-2 bg-surface-elevated border-b border-border-brand">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+                                                        <span className="text-[10px] font-black text-text-primary uppercase tracking-wider">Govt ID</span>
+                                                    </div>
+                                                    <a href={selectedBouncer.govtIdPhoto} target="_blank" rel="noopener noreferrer" className="text-[9px] font-bold text-primary hover:text-white transition-colors">
+                                                        View ↗
                                                     </a>
                                                 </div>
-                                                <div className="p-4 flex items-center justify-center bg-[#050505]">
+                                                <div className="p-3 flex items-center justify-center bg-[#080808] max-h-[180px]">
                                                     <img
                                                         src={selectedBouncer.govtIdPhoto}
                                                         alt="Government ID"
-                                                        className="w-full h-auto max-h-[600px] object-contain rounded-lg hover:scale-[1.01] transition-transform duration-500"
+                                                        className="w-full h-auto max-h-[160px] object-contain rounded-lg hover:scale-[1.02] transition-transform duration-500"
                                                     />
                                                 </div>
-
-                                                {/* Action Buttons Below Image */}
-
                                             </div>
 
                                             {/* Gun License */}
                                             {selectedBouncer.hasGunLicense && selectedBouncer.gunLicensePhoto && (
-                                                <div className="bg-black/80 rounded-2xl border border-[var(--border)] overflow-hidden shadow-2xl">
-                                                    <div className="flex items-center justify-between px-4 py-3 bg-[var(--surface-elevated)] border-b border-[var(--border)]">
-                                                        <span className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">Gun License</span>
-                                                        <a href={selectedBouncer.gunLicensePhoto} target="_blank" rel="noopener noreferrer" className="text-xs text-[var(--primary)] hover:underline flex items-center gap-1 group">
-                                                            Open Full Size <span className="group-hover:translate-x-1 transition-transform">↗</span>
+                                                <div className="bg-black/80 rounded-xl border border-border-brand overflow-hidden shadow-lg group hover:border-red-500/50 transition-all">
+                                                    <div className="flex items-center justify-between px-4 py-2 bg-surface-elevated border-b border-border-brand">
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+                                                            <span className="text-[10px] font-black text-text-primary uppercase tracking-wider">Arms License</span>
+                                                        </div>
+                                                        <a href={selectedBouncer.gunLicensePhoto} target="_blank" rel="noopener noreferrer" className="text-[9px] font-bold text-red-400 hover:text-white transition-colors">
+                                                            View ↗
                                                         </a>
                                                     </div>
-                                                    <div className="p-4 flex items-center justify-center bg-[#050505]">
+                                                    <div className="p-3 flex items-center justify-center bg-[#080808] max-h-[180px]">
                                                         <img
                                                             src={selectedBouncer.gunLicensePhoto}
                                                             alt="Gun License"
-                                                            className="w-full h-auto max-h-[600px] object-contain rounded-lg hover:scale-[1.01] transition-transform duration-500"
+                                                            className="w-full h-auto max-h-[160px] object-contain rounded-lg hover:scale-[1.02] transition-transform duration-500"
                                                         />
                                                     </div>
                                                 </div>
@@ -546,14 +592,43 @@ export default function VerificationsPage() {
                             </div>
                         </div>
 
-                        {/* Large Floating Action Buttons */}
-
-
-                        {selectedBouncer.verificationStatus !== 'PENDING' && (
-                            <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-50">
+                        {/* Fixed Bottom Action Bar */}
+                        {selectedBouncer.verificationStatus === 'PENDING' && (
+                            <div className="absolute bottom-0 left-0 right-0 px-6 py-4 bg-surface-elevated border-t border-border-brand flex items-center justify-between z-20">
                                 <button
                                     onClick={() => setSelectedBouncer(null)}
-                                    className="px-8 py-3 rounded-full bg-[var(--surface-elevated)] border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--primary)] shadow-lg hover:shadow-[var(--primary-glow)] transition-all font-medium uppercase tracking-wider"
+                                    className="px-6 py-2.5 rounded-xl bg-surface border border-border-brand text-text-secondary hover:text-text-primary hover:border-primary transition-all font-semibold text-sm"
+                                >
+                                    Cancel
+                                </button>
+                                <div className="flex gap-3">
+                                    <button
+                                        onClick={() => setShowRejectModal(true)}
+                                        disabled={actionLoading}
+                                        className="px-8 py-2.5 rounded-xl text-white font-bold text-sm uppercase tracking-wide hover:brightness-110 transition-all shadow-md bg-error"
+                                    >
+                                        Deny
+                                    </button>
+                                    <button
+                                        onClick={() => handleApprove(selectedBouncer.id)}
+                                        disabled={actionLoading}
+                                        className="px-8 py-2.5 rounded-xl text-white font-bold text-sm uppercase tracking-wide hover:brightness-110 transition-all shadow-md flex items-center gap-2 bg-success"
+                                    >
+                                        {actionLoading ? (
+                                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                        ) : (
+                                            <span>Approve</span>
+                                        )}
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        {selectedBouncer.verificationStatus !== 'PENDING' && (
+                            <div className="absolute bottom-0 left-0 right-0 px-6 py-4 bg-surface-elevated border-t border-border-brand flex items-center justify-center z-20">
+                                <button
+                                    onClick={() => setSelectedBouncer(null)}
+                                    className="px-8 py-3 rounded-xl bg-surface border border-border-brand text-text-secondary hover:text-text-primary hover:border-primary shadow-lg hover:shadow-primary-glow transition-all font-semibold uppercase tracking-wider"
                                 >
                                     Close Review
                                 </button>
@@ -565,15 +640,15 @@ export default function VerificationsPage() {
                     {showRejectModal && (
                         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
                             <div className="absolute inset-0 bg-black/80 backdrop-blur-md animate-fade-in" onClick={() => setShowRejectModal(false)}></div>
-                            <div className="relative w-full max-w-lg bg-[var(--surface)] border border-[var(--border)] rounded-2xl shadow-2xl p-8 animate-scale-up">
-                                <h3 className="text-xl font-bold text-[var(--text-primary)] mb-2">Reject Application</h3>
-                                <p className="text-[var(--text-secondary)] text-sm mb-6">Please provide a reason for rejecting this application. This will be sent to the applicant.</p>
+                            <div className="relative w-full max-w-lg bg-surface border border-border-brand rounded-2xl shadow-2xl p-8 animate-scale-up">
+                                <h3 className="text-xl font-bold text-text-primary mb-2">Reject Application</h3>
+                                <p className="text-text-secondary text-sm mb-6">Please provide a reason for rejecting this application. This will be sent to the applicant.</p>
 
                                 <textarea
                                     value={rejectionReason}
                                     onChange={(e) => setRejectionReason(e.target.value)}
                                     placeholder="Enter rejection reason..."
-                                    className="w-full h-32 bg-[var(--surface-elevated)] border border-[var(--border-light)] rounded-xl p-4 text-[var(--text-primary)] focus:border-[var(--error)] focus:outline-none focus:ring-1 focus:ring-[var(--error)] transition-all resize-none mb-6"
+                                    className="w-full h-32 bg-surface-elevated border border-border-light rounded-xl p-4 text-text-primary focus:border-error focus:outline-none focus:ring-1 focus:ring-error transition-all resize-none mb-6"
                                     autoFocus
                                 />
 
@@ -583,7 +658,7 @@ export default function VerificationsPage() {
                                             setShowRejectModal(false);
                                             setRejectionReason('');
                                         }}
-                                        className="px-6 py-3 rounded-xl text-[var(--text-secondary)] hover:bg-[var(--surface-elevated)] transition-colors font-medium"
+                                        className="px-6 py-3 rounded-xl text-text-secondary hover:bg-surface-elevated transition-colors font-medium"
                                     >
                                         Cancel
                                     </button>
@@ -607,3 +682,5 @@ export default function VerificationsPage() {
         </div >
     );
 }
+
+

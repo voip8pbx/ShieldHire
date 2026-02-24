@@ -19,6 +19,7 @@ export async function PATCH(
 
         const body = await request.json();
 
+        console.log(`[API PROXY] Forwarding ${action} to: ${BACKEND_API_URL}/verifications/${id}/${action}`);
         const response = await fetch(`${BACKEND_API_URL}/verifications/${id}/${action}`, {
             method: 'PATCH',
             headers: {
@@ -26,6 +27,7 @@ export async function PATCH(
             },
             body: JSON.stringify(body),
         });
+        console.log(`[API PROXY] Backend responded with status: ${response.status}`);
 
         let result;
         try {

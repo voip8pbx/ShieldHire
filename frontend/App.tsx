@@ -134,8 +134,15 @@ const AppContent = () => {
         return null;
     }
 
-    const isBouncerFlow = user?.role === 'BOUNCER' || user?.role === 'GUNMAN' || !!user?.bouncerProfile;
+    // A user is a bouncer if they have the role OR they have a profile record.
+    const isBouncerFlow =
+        user?.role === 'BOUNCER' ||
+        user?.role === 'GUNMAN' ||
+        (user?.bouncerProfile !== null && user?.bouncerProfile !== undefined);
+
     const isApproved = user?.bouncerProfile?.verificationStatus === 'APPROVED';
+
+    console.log(`[AppNavigation] User: ${user?.email}, Role: ${user?.role}, isBouncer: ${isBouncerFlow}, isApproved: ${isApproved}`);
 
     return (
         <NavigationContainer theme={DarkTheme}>
@@ -152,14 +159,15 @@ const AppContent = () => {
                                 initialParams={pendingBouncerRegistration}
                             />
                         ) : isBouncerFlow ? (
-                            isApproved ? (
-                                <Stack.Screen name="BouncerMain" component={BouncerNavigator} />
-                            ) : (
+                            // If they are a bouncer but not yet approved (PENDING or REJECTED)
+                            !isApproved ? (
                                 <Stack.Screen
                                     name="VerificationPending"
                                     component={VerificationPendingScreen}
                                     initialParams={{ userId: user?.id }}
                                 />
+                            ) : (
+                                <Stack.Screen name="BouncerMain" component={BouncerNavigator} />
                             )
                         ) : (
                             <Stack.Screen name="ClientMain" component={MainNavigator} />

@@ -34,24 +34,31 @@ export default function VerificationPendingScreen({ navigation, route }: Props) 
     const [status, setStatus] = useState<'PENDING' | 'APPROVED' | 'REJECTED'>('PENDING');
     const [loading, setLoading] = useState(true);
     const [rejectionReason, setRejectionReason] = useState<string | null>(null);
-    const { userId } = route.params || {};
-    const { logout, updateUser } = useContext(AuthContext);
+    const { logout, updateUser, user: contextUser } = useContext(AuthContext);
+    const userId = route.params?.userId || contextUser?.id;
 
     // Animation
     const spinValue = useRef(new Animated.Value(0)).current;
     const scaleValue = useRef(new Animated.Value(1)).current;
 
     const checkVerificationStatus = async () => {
+        if (!userId) {
+            console.log('[VerificationPending] No userId available yet');
+            return;
+        }
         try {
+            console.log(`[VerificationPending] Checking status for userId: ${userId}`);
             const response = await api.get(`/api/bouncer-status/status/${userId}`);
             const { verificationStatus, rejectionReason: reason } = response.data;
 
+            console.log(`[VerificationPending] Status: ${verificationStatus}`);
             setStatus(verificationStatus);
             setRejectionReason(reason);
             setLoading(false);
 
             // If approved, update the AuthContext so App.tsx re-renders the navigation stack
             if (verificationStatus === 'APPROVED') {
+                console.log('[VerificationPending] Approved! Refreshing profile...');
                 setTimeout(async () => {
                     try {
                         const meRes = await api.get('/auth/me');
@@ -70,7 +77,7 @@ export default function VerificationPendingScreen({ navigation, route }: Props) 
     };
 
     useEffect(() => {
-        // Start rotation animation
+        // Start animations...
         Animated.loop(
             Animated.timing(spinValue, {
                 toValue: 1,
@@ -80,7 +87,6 @@ export default function VerificationPendingScreen({ navigation, route }: Props) 
             })
         ).start();
 
-        // Start pulse animation
         Animated.loop(
             Animated.sequence([
                 Animated.timing(scaleValue, {
@@ -100,11 +106,13 @@ export default function VerificationPendingScreen({ navigation, route }: Props) 
 
         let interval: any = null;
 
-        if (userId && status === 'PENDING') {
+        if (userId) {
             checkVerificationStatus();
 
-            // Poll every 10 seconds
-            interval = setInterval(checkVerificationStatus, 10000);
+            // Poll every 10 seconds if still pending
+            if (status === 'PENDING') {
+                interval = setInterval(checkVerificationStatus, 10000);
+            }
         }
 
         return () => {

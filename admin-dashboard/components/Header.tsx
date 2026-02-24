@@ -55,7 +55,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
                     </svg>
                 </button>
 
-                <h2 className="text-xl font-bold text-[var(--text-primary)] tracking-tight">
+                <h2 className="text-xl font-bold text-text-primary tracking-tight">
                     {getPageTitle(pathname)}
                 </h2>
             </div>
@@ -65,7 +65,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
                 {/* Global Search - Hidden on mobile */}
                 <div className="relative hidden md:block">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <svg className="h-4 w-4 text-[var(--text-dim)]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg className="h-4 w-4 text-text-dim" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                         </svg>
                     </div>
@@ -97,19 +97,19 @@ export default function Header({ onMenuClick }: HeaderProps) {
 
                 {/* Notifications */}
                 <button className="btn-icon btn-ghost relative" aria-label="Notifications">
-                    <span className="absolute top-2 right-2 h-2 w-2 bg-[var(--error)] rounded-full border-2 border-[var(--bg-secondary)]"></span>
+                    <span className="absolute top-2 right-2 h-2 w-2 bg-error rounded-full border-2 border-bg-secondary"></span>
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
                     </svg>
                 </button>
 
                 {/* Profile Widget */}
-                <div className="flex items-center gap-2 sm:gap-3 border-l border-[var(--border-gray)] pl-3 sm:pl-6">
+                <div className="flex items-center gap-2 sm:gap-3 border-l border-border-gray pl-3 sm:pl-6">
                     <div className="text-right hidden sm:block">
-                        <div className="text-sm font-semibold text-[var(--text-primary)]">Admin User</div>
-                        <div className="text-xs text-[var(--text-dim)]">Super Admin</div>
+                        <div className="text-sm font-semibold text-text-primary">Admin User</div>
+                        <div className="text-xs text-text-dim">Super Admin</div>
                     </div>
-                    <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-full bg-gradient-to-tr from-[var(--primary-yellow)] to-[var(--dark-yellow)] flex items-center justify-center text-black font-bold text-xs sm:text-sm ring-2 ring-[var(--bg-secondary)] cursor-pointer">
+                    <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-full bg-gradient-to-tr from-primary-yellow to-dark-yellow flex items-center justify-center text-black font-bold text-xs sm:text-sm ring-2 ring-bg-secondary cursor-pointer">
                         AD
                     </div>
                 </div>
@@ -117,3 +117,5 @@ export default function Header({ onMenuClick }: HeaderProps) {
         </header>
     );
 }
+
+
