@@ -3,6 +3,11 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
+interface SidebarProps {
+    isOpen: boolean;
+    onClose: () => void;
+}
+
 interface NavItem {
     name: string;
     href: string;
@@ -69,74 +74,104 @@ const navItems: NavItem[] = [
     },
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     const pathname = usePathname();
 
+    const handleLinkClick = () => {
+        // Close sidebar on mobile when a link is clicked
+        if (window.innerWidth < 1024) {
+            onClose();
+        }
+    };
+
     return (
-        <aside className="w-72 min-h-screen bg-[var(--surface-elevated)] border-r border-[var(--border)] flex flex-col shadow-xl z-20 sticky top-0 h-screen">
-            {/* Logo area */}
-            <div className="h-16 flex items-center px-6 border-b border-[var(--border)] bg-[var(--surface)]">
-                <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded bg-gradient-to-tr from-[var(--primary)] to-[var(--secondary)] flex items-center justify-center text-white font-bold">
-                        S
+        <>
+            {/* Mobile Overlay */}
+            <div
+                className={`mobile-menu-overlay ${isOpen ? 'active' : ''}`}
+                onClick={onClose}
+            />
+
+            {/* Sidebar */}
+            <aside className={`
+                sidebar 
+                ${isOpen ? '' : 'sidebar-collapsed'}
+                ${!isOpen ? 'lg:translate-x-0' : ''}
+            `}>
+                {/* Logo Area */}
+                <div className="h-16 flex items-center px-4 sm:px-6 border-b border-[var(--border-gray)] bg-[var(--bg-primary)]">
+                    <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-gradient-to-tr from-[var(--primary-yellow)] to-[var(--dark-yellow)] flex items-center justify-center text-black font-bold text-lg">
+                            S
+                        </div>
+                        <div className="flex flex-col">
+                            <h1 className="text-lg sm:text-xl font-bold text-[var(--text-primary)] tracking-tight">
+                                SECURITY
+                            </h1>
+                            <span className="text-[10px] sm:text-xs font-bold text-[var(--primary-yellow)] -mt-1 tracking-widest">
+                                ADMIN
+                            </span>
+                        </div>
                     </div>
-                    <h1 className="text-xl font-bold text-[var(--text-primary)] tracking-tight">
-                        SECURITY<span className="text-[var(--primary)]">ADMIN</span>
-                    </h1>
                 </div>
-            </div>
 
-            {/* Navigation */}
-            <nav className="flex-1 p-4 overflow-y-auto custom-scrollbar">
-                <div className="space-y-1">
-                    {navItems.map((item) => {
-                        const isActive = pathname === item.href;
-                        return (
-                            <Link
-                                key={item.name}
-                                href={item.href}
-                                className={`
-                                    flex items-center justify-between px-4 py-3 rounded-lg
-                                    transition-all duration-200 font-medium text-sm
-                                    group relative
-                                    ${isActive
-                                        ? 'bg-[var(--surface-hover)] text-[var(--primary)] border-l-4 border-[var(--primary)]'
-                                        : 'text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]'
-                                    }
-                                `}
-                            >
-                                <div className="flex items-center gap-3">
-                                    <span className={`${isActive ? 'text-[var(--primary)]' : 'text-[var(--text-tertiary)] group-hover:text-[var(--text-primary)]'}`}>
-                                        {item.icon}
-                                    </span>
-                                    <span>{item.name}</span>
-                                </div>
+                {/* Navigation */}
+                <nav className="flex-1 p-3 sm:p-4 overflow-y-auto">
+                    <div className="space-y-1">
+                        {navItems.map((item) => {
+                            const isActive = pathname === item.href;
+                            return (
+                                <Link
+                                    key={item.name}
+                                    href={item.href}
+                                    onClick={handleLinkClick}
+                                    className={`
+                                        flex items-center justify-between px-3 sm:px-4 py-3 rounded-lg
+                                        transition-all duration-200 font-medium text-sm
+                                        group relative
+                                        ${isActive
+                                            ? 'bg-[var(--surface-hover)] text-[var(--primary-yellow)] border-l-4 border-[var(--primary-yellow)]'
+                                            : 'text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]'
+                                        }
+                                    `}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <span className={`
+                                            ${isActive ? 'text-[var(--primary-yellow)]' : 'text-[var(--text-dim)] group-hover:text-[var(--text-primary)]'}
+                                        `}>
+                                            {item.icon}
+                                        </span>
+                                        <span className="hidden sm:inline">{item.name}</span>
+                                        <span className="sm:hidden">{item.name.substring(0, 4)}</span>
+                                    </div>
 
-                                {item.badge && (
-                                    <span
-                                        className={`
-                                            px-2 py-0.5 rounded-full text-[10px] font-bold
-                                            ${isActive
-                                                ? 'bg-[var(--primary)] text-black'
-                                                : 'bg-[var(--surface)] text-[var(--text-secondary)] border border-[var(--border)]'
-                                            }
-                                        `}
-                                    >
-                                        {item.badge}
-                                    </span>
-                                )}
-                            </Link>
-                        );
-                    })}
+                                    {item.badge && (
+                                        <span
+                                            className={`
+                                                px-2 py-0.5 rounded-full text-[10px] font-bold
+                                                ${isActive
+                                                    ? 'bg-[var(--primary-yellow)] text-black'
+                                                    : 'bg-[var(--surface)] text-[var(--text-muted)] border border-[var(--border-gray)]'
+                                                }
+                                            `}
+                                        >
+                                            {item.badge}
+                                        </span>
+                                    )}
+                                </Link>
+                            );
+                        })}
+                    </div>
+                </nav>
+
+                {/* Footer / Version Info */}
+                <div className="p-3 sm:p-4 border-t border-[var(--border-gray)]">
+                    <div className="text-xs text-[var(--text-dim)] text-center">
+                        <span className="hidden sm:inline">v1.0.0 &copy; 2026 ShieldHire</span>
+                        <span className="sm:hidden">v1.0.0</span>
+                    </div>
                 </div>
-            </nav>
-
-            {/* Footer / Version Info */}
-            <div className="p-4 border-t border-[var(--border)]">
-                <div className="text-xs text-[var(--text-tertiary)] text-center">
-                    v1.0.0 &copy; 2026 Security Admin
-                </div>
-            </div>
-        </aside>
+            </aside>
+        </>
     );
 }
