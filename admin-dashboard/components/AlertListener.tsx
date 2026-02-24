@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
 import { io } from 'socket.io-client';
+import supabase from '../lib/supabase';
 
 const ALERT_SOUND_URL = 'https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3';
 const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
@@ -26,8 +27,28 @@ export default function AlertListener() {
     const audioRef = useRef<HTMLAudioElement | null>(null);
     const socketRef = useRef<any>(null);
 
+    // Helper to convert snake_case DB columns to camelCase for frontend
+    const camelCaseKeys = (obj: any): any => {
+        if (!obj) return null;
+        if (Array.isArray(obj)) return obj.map(item => camelCaseKeys(item));
+        const newObj: any = {};
+        for (const key in obj) {
+            const camelKey = key.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
+            newObj[camelKey] = obj[key];
+        }
+        return newObj;
+    };
+
+    const processAlert = (alert: any) => {
+        const formatted = camelCaseKeys(alert);
+        if (alert.users) {
+            formatted.user = camelCaseKeys(alert.users);
+            delete formatted.users;
+        }
+        return formatted;
+    };
+
     // Calculate active alerts (OPEN and not dismissed locally if we keep local dismiss logic)
-    // For now, 'alerts' state will only hold active/unacknowledged alerts
     const activeAlerts = alerts;
 
     useEffect(() => {
@@ -35,11 +56,9 @@ export default function AlertListener() {
         audioRef.current.loop = true;
 
         // Initialize Socket
-        // Remove /api from local proxy URL to get base backend URL
         const backendUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api').replace('/api', '');
-
         const socket = io(backendUrl, {
-            transports: ['websocket', 'polling'], // force websocket first
+            transports: ['websocket', 'polling'],
         });
         socketRef.current = socket;
 
@@ -54,31 +73,74 @@ export default function AlertListener() {
         });
 
         socket.on('new-alert', (newAlert: any) => {
-            console.log('New Alert Received:', newAlert);
+            console.log('New Alert Received via Socket:', newAlert);
             setAlerts((prev) => {
-                // Prevent duplicates
                 if (prev.find(a => a.id === newAlert.id)) return prev;
                 return [newAlert, ...prev];
             });
         });
 
+        // Supabase Realtime Fallback (Works on Vercel/Serverless where Socket.io fails)
+        const channel = supabase
+            .channel('emergency_alerts_realtime')
+            .on(
+                'postgres_changes',
+                {
+                    event: 'INSERT',
+                    schema: 'public',
+                    table: 'emergency_alerts',
+                },
+                async (payload: any) => {
+                    console.log('New Alert detected via Supabase Realtime:', payload);
+
+                    // Fetch full details with join because payload only contains the table row
+                    const { data: fullAlert, error } = await supabase
+                        .from('emergency_alerts')
+                        .select('*, users(name, email, contactNo)')
+                        .eq('id', payload.new.id)
+                        .single();
+
+                    if (!error && fullAlert) {
+                        const formattedAlert = processAlert(fullAlert);
+                        setAlerts((prev) => {
+                            if (prev.find((a: any) => a.id === formattedAlert.id)) return prev;
+                            return [formattedAlert, ...prev];
+                        });
+                    }
+                }
+            )
+            .subscribe();
+
         // Initial Fetch of OPEN alerts
         const fetchInitialAlerts = async () => {
             try {
+                // Try fetching from our API first
                 const response = await fetch('/api/alerts', { cache: 'no-store' });
                 if (response.ok) {
                     const data = await response.json();
                     setAlerts(data);
+                } else {
+                    // Fallback directly to Supabase if API fails
+                    const { data, error } = await supabase
+                        .from('emergency_alerts')
+                        .select('*, users(name, email, contactNo)')
+                        .eq('status', 'OPEN')
+                        .order('createdAt', { ascending: false });
+
+                    if (!error && data) {
+                        setAlerts(data.map((a: any) => processAlert(a)));
+                    }
                 }
             } catch (error) {
                 console.error('Failed to fetch initial alerts:', error);
             }
         };
 
-        // fetchInitialAlerts();
+        fetchInitialAlerts();
 
         return () => {
             if (socketRef.current) socketRef.current.disconnect();
+            supabase.removeChannel(channel);
             if (audioRef.current) {
                 audioRef.current.pause();
                 audioRef.current = null;
