@@ -17,6 +17,7 @@ import { launchImageLibrary, ImagePickerResponse } from 'react-native-image-pick
 import { AuthContext } from '../../context/AuthContext';
 import api from '../../services/api';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { uploadImageToBlob } from '../../services/uploadService';
 
 type Props = {
     navigation: StackNavigationProp<any>;
@@ -182,6 +183,17 @@ export default function BouncerSurveyScreen({ navigation }: Props) {
     const saveProfile = async (silent = false) => {
         if (!silent) setLoading(true);
         try {
+            // Upload local images to Vercel Blob
+            const finalGallery = await Promise.all(
+                galleryImages.map(async (img, idx) => {
+                    if (img.startsWith('data:')) {
+                        console.log(`[Survey] Uploading gallery image ${idx + 1}...`);
+                        return await uploadImageToBlob(img, `gallery-${user?.id}-${idx}-${Date.now()}.jpg`, 'gallery');
+                    }
+                    return img; // Already a URL
+                })
+            );
+
             const response = await api.put('/user/profile', {
                 name: editName,
                 bouncerProfile: {
@@ -192,7 +204,7 @@ export default function BouncerSurveyScreen({ navigation }: Props) {
                     bio,
                     skills,
                     experience: parseInt(experience) || 0,
-                    gallery: galleryImages,
+                    gallery: finalGallery,
                 }
             });
 

@@ -1,26 +1,31 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { View, Text, FlatList, StyleSheet, ActivityIndicator, StatusBar, SafeAreaView, Platform } from 'react-native';
 import api from '../services/api';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { useFocusEffect } from '@react-navigation/native';
 
 export default function BookingsScreen() {
     const [bookings, setBookings] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        const fetchBookings = async () => {
-            try {
-                // If backend is same, endpoint is same
-                const response = await api.get('/bookings');
-                setBookings(response.data);
-            } catch (error) {
-                console.error(error);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchBookings();
-    }, []);
+    const fetchBookings = async () => {
+        try {
+            setLoading(true);
+            const response = await api.get('/bookings');
+            console.log(`[Bookings] Fetched ${response.data.length} records`);
+            setBookings(response.data);
+        } catch (error) {
+            console.error('[Bookings] Fetch Error:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useFocusEffect(
+        React.useCallback(() => {
+            fetchBookings();
+        }, [])
+    );
 
     const renderItem = ({ item }: any) => (
         <View style={styles.card}>

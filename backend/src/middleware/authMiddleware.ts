@@ -76,8 +76,9 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
             };
             return next();
 
-        } catch (_firebaseErr) {
+        } catch (firebaseErr: any) {
             // Not a Firebase token — fall through to Supabase
+            console.log('[AUTH] Firebase verify error:', firebaseErr.message);
         }
 
         // ── 2. Fallback: Try Supabase Auth token ────────────────────────────
@@ -120,7 +121,8 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
         req.user = decoded;
         next();
 
-    } catch (error) {
+    } catch (error: any) {
+        console.error('[AUTH] All verification methods failed:', error.message);
         res.status(400).json({ error: 'Invalid token.' });
     }
 };

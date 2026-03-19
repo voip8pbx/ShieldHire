@@ -1,4 +1,4 @@
-import express from 'express';
+import express from 'express'; 
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
@@ -21,8 +21,10 @@ import bouncerRoutes from './routes/bouncerRoutes';
 import verificationRoutes from './routes/verificationRoutes';
 import bouncerStatusRoutes from './routes/bouncerStatusRoutes';
 import alertRoutes from './routes/alertRoutes';
+import uploadRoutes from './routes/uploadRoutes';
 
 app.use(['/auth', '/api/auth'], authRoutes);
+app.use(['/upload', '/api/upload'], uploadRoutes);
 app.use(['/user', '/api/user', '/users', '/api/users'], userRoutes);
 app.use(['/bookings', '/api/bookings', '/booking', '/api/booking'], bookingRoutes);
 app.use(['/bouncers', '/api/bouncers', '/bouncer', '/api/bouncer'], bouncerRoutes);

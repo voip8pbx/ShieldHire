@@ -144,10 +144,16 @@ router.patch('/:id/approve', async (req: Request, res: Response) => {
             if (bouncer.isGunman) newRole = 'GUNMAN';
             else if (bouncer.registrationType === 'Agency') newRole = 'BOUNCER';
 
+            const targetUserId = bouncer.userId || bouncer.user_id;
+            if (!targetUserId) {
+                console.error('[VERIFICATION] No userId found for bouncer:', bouncer);
+                throw new Error('User ID not found for bouncer');
+            }
+
             await supabaseAdmin
                 .from('users')
                 .update({ role: newRole })
-                .eq('id', bouncer.userId);
+                .eq('id', targetUserId);
 
             // 2. Data is already in 'bouncers' table, no need to sync to 'trainer_profiles'
             // The verification_status was already updated in the previous step (calling this function)

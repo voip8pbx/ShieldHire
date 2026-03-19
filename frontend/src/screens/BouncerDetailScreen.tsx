@@ -98,12 +98,18 @@ export default function BouncerDetailScreen({ navigation, route }: Props) {
                     };
                 }
 
-                // Merge with UI-specific mock data
+                // Merge with UI-specific mock data but prioritize real DB content
                 const extended = MOCK_EXTENDED_DATA['default']!;
 
                 setBouncer({
-                    ...bouncerData,
                     ...extended,
+                    ...bouncerData,
+                    gallery: (bouncerData.gallery && bouncerData.gallery.length > 0)
+                        ? bouncerData.gallery
+                        : extended.gallery,
+                    specialties: (bouncerData.skills && bouncerData.skills.length > 0)
+                        ? bouncerData.skills
+                        : extended.specialties,
                     certifications: bouncerData.certifications || extended.certifications,
                     bio: bouncerData.bio || 'Highly trained security professional with years of experience in crowd control, VIP protection, and threat assessment.',
                 });

@@ -171,7 +171,8 @@ export const registerBouncer = async (req: Request, res: Response) => {
                 .from('users')
                 .update({
                     name: name || userName,
-                    role: role || userRole
+                    role: role || userRole,
+                    profilePhoto: profilePhoto || undefined
                 })
                 .eq('id', userId);
 

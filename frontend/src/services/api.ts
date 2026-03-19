@@ -1,6 +1,12 @@
-// Replaces axios with fetch
-// Use your computer's local network IP address here (Physical Device)
-export const BASE_URL = 'https://shield-hire-znyu.vercel.app'; // Production Vercel URL
+import { ENV } from '../config/env';
+
+const MACHINE_IP = ENV.MACHINE_IP;
+const DEVELOPMENT_URL = ENV.DEV_BASE_URL;
+const PRODUCTION_URL = ENV.PROD_BASE_URL;
+
+export const BASE_URL = __DEV__ ? DEVELOPMENT_URL : PRODUCTION_URL;
+
+console.log(`[API] Using Base URL: ${BASE_URL}`);
 
 let authToken: string | null = null;
 

@@ -18,6 +18,7 @@ import { RootStackParamList } from '../../types';
 import { launchImageLibrary } from 'react-native-image-picker';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import api from '../../services/api';
+import { uploadImageToBlob } from '../../services/uploadService';
 
 type BouncerRegistrationNavigationProp = StackNavigationProp<RootStackParamList, 'BouncerRegistration'>;
 type BouncerRegistrationRouteProp = RouteProp<RootStackParamList, 'BouncerRegistration'>;
@@ -107,18 +108,35 @@ export default function BouncerRegistrationScreen({ navigation, route }: Props) 
 
         setLoading(true);
         try {
+            // Step 1: Upload Images to Vercel Blob if they are local/base64
+            let finalProfilePhoto = profilePhoto;
+            let finalGovtIdPhoto = govtIdPhoto;
+            let finalGunLicensePhoto = gunLicensePhoto;
+
+            if (profilePhotoBase64) {
+                console.log('[Registration] Uploading profile photo...');
+                finalProfilePhoto = await uploadImageToBlob(profilePhotoBase64, `profile-${Date.now()}.jpg`, 'profiles');
+            }
+            if (govtIdPhotoBase64) {
+                console.log('[Registration] Uploading Govt ID...');
+                finalGovtIdPhoto = await uploadImageToBlob(govtIdPhotoBase64, `id-${Date.now()}.jpg`, 'ids');
+            }
+            if (gunLicensePhotoBase64) {
+                console.log('[Registration] Uploading Gun License...');
+                finalGunLicensePhoto = await uploadImageToBlob(gunLicensePhotoBase64, `license-${Date.now()}.jpg`, 'licenses');
+            }
+
             const role = hasGunLicense ? 'GUNMAN' : 'BOUNCER';
             const payload = {
                 email,
-
                 name,
                 contactNo,
                 age: parseInt(age),
                 gender,
-                profilePhoto: profilePhotoBase64 || profilePhoto,
-                govtIdPhoto: govtIdPhotoBase64,
+                profilePhoto: finalProfilePhoto,
+                govtIdPhoto: finalGovtIdPhoto,
                 hasGunLicense,
-                gunLicensePhoto: gunLicensePhotoBase64,
+                gunLicensePhoto: finalGunLicensePhoto,
                 isGunman: hasGunLicense,
                 registrationType,
                 agencyReferralCode: registrationType === 'Agency' ? agencyReferralCode : undefined,

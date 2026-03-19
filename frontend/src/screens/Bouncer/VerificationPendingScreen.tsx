@@ -59,16 +59,17 @@ export default function VerificationPendingScreen({ navigation, route }: Props) 
             // If approved, update the AuthContext so App.tsx re-renders the navigation stack
             if (verificationStatus === 'APPROVED') {
                 console.log('[VerificationPending] Approved! Refreshing profile...');
-                setTimeout(async () => {
-                    try {
-                        const meRes = await api.get('/auth/me');
-                        if (meRes.data && meRes.data.user && updateUser) {
-                            updateUser(meRes.data.user);
-                        }
-                    } catch (e) {
-                        console.error('Failed to update user profile:', e);
+                setLoading(true); // Show loading while refreshing profile
+                try {
+                    const meRes = await api.get('/auth/me');
+                    if (meRes.data && meRes.data.user && updateUser) {
+                        updateUser(meRes.data.user);
                     }
-                }, 1000);
+                } catch (e) {
+                    console.error('Failed to update user profile:', e);
+                } finally {
+                    setLoading(false);
+                }
             }
         } catch (error) {
             console.error('Error checking status:', error);
@@ -109,9 +110,9 @@ export default function VerificationPendingScreen({ navigation, route }: Props) 
         if (userId) {
             checkVerificationStatus();
 
-            // Poll every 10 seconds if still pending
+            // Poll every 5 seconds if still pending
             if (status === 'PENDING') {
-                interval = setInterval(checkVerificationStatus, 10000);
+                interval = setInterval(checkVerificationStatus, 5000);
             }
         }
 

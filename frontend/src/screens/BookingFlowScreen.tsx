@@ -8,6 +8,8 @@ import { Calendar } from 'react-native-calendars';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
+import { ENV } from '../config/env';
+
 type BookingFlowScreenNavigationProp = StackNavigationProp<HomeStackParamList, 'BookingFlow'>;
 type BookingFlowScreenRouteProp = RouteProp<HomeStackParamList, 'BookingFlow'>;
 
@@ -30,26 +32,39 @@ export default function BookingFlowScreen({ navigation, route }: Props) {
     const [predictions, setPredictions] = useState<any[]>([]);
     const [showPredictions, setShowPredictions] = useState(false);
 
-    // Google Maps API Key directly from .env per user prompt
-    const GOOGLE_MAPS_API_KEY = 'AIzaSyAaJ7VzIGk_y8dvrx2b4yya119jQVZJnNs';
+    // Google Maps API Key directly from central config per user prompt
+    const GOOGLE_MAPS_API_KEY = ENV.GOOGLE_MAPS_API_KEY;
+
+    // Session token to reduce API costs per search
+    const [sessionToken, setSessionToken] = useState(Math.random().toString(36).substring(7));
+
+    const [searchLoading, setSearchLoading] = useState(false);
 
     const fetchPlaces = async (text: string) => {
         if (text.length > 2) {
+            setSearchLoading(true);
             try {
                 const url = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(
                     text
-                )}&key=${GOOGLE_MAPS_API_KEY}&components=country:in`;
+                )}&key=${GOOGLE_MAPS_API_KEY}&components=country:in&sessiontoken=${sessionToken}`;
+                
+                console.log(`[PLACES] Request -> ${url}`);
                 const response = await fetch(url);
                 const data = await response.json();
+                
                 if (data.status === 'OK') {
                     setPredictions(data.predictions);
                     setShowPredictions(true);
                 } else {
+                    console.warn(`[PLACES] ${data.status}: ${data.error_message || 'Check API Key'}`);
                     setPredictions([]);
                     setShowPredictions(false);
                 }
-            } catch (error) {
-                console.error(error);
+            } catch (error: any) {
+                console.error('[PLACES] Error:', error.message);
+                setShowPredictions(false);
+            } finally {
+                setSearchLoading(false);
             }
         } else {
             setPredictions([]);
@@ -101,7 +116,11 @@ export default function BookingFlowScreen({ navigation, route }: Props) {
                 <Text style={styles.headerTitle}>Hiring Details</Text>
             </View>
 
-            <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+            <ScrollView 
+                contentContainerStyle={styles.scrollContent} 
+                showsVerticalScrollIndicator={false}
+                keyboardShouldPersistTaps="handled"
+            >
 
                 {/* Calendar Section */}
                 <View style={styles.section}>
@@ -193,23 +212,27 @@ export default function BookingFlowScreen({ navigation, route }: Props) {
                             fetchPlaces(text);
                         }}
                     />
-                    {showPredictions && predictions.length > 0 && (
+                    {showPredictions && (predictions.length > 0 || searchLoading) && (
                         <View style={styles.predictionsContainer}>
-                            {predictions.map((item: any, index: number) => (
-                                <TouchableOpacity
-                                    key={index}
-                                    style={styles.predictionItem}
-                                    onPress={() => {
-                                        setLocation(item.description);
-                                        setShowPredictions(false);
-                                    }}
-                                >
-                                    <MaterialCommunityIcons name="map-marker" size={16} color="#888" style={{ marginRight: 8 }} />
-                                    <Text style={styles.predictionText} numberOfLines={2}>
-                                        {item.description}
-                                    </Text>
-                                </TouchableOpacity>
-                            ))}
+                            {searchLoading ? (
+                                <ActivityIndicator style={{ padding: 20 }} color="#FFD700" size="small" />
+                            ) : (
+                                predictions.map((item: any, index: number) => (
+                                    <TouchableOpacity
+                                        key={index}
+                                        style={styles.predictionItem}
+                                        onPress={() => {
+                                            setLocation(item.description);
+                                            setShowPredictions(false);
+                                        }}
+                                    >
+                                        <MaterialCommunityIcons name="map-marker" size={16} color="#888" style={{ marginRight: 8 }} />
+                                        <Text style={styles.predictionText} numberOfLines={2}>
+                                            {item.description}
+                                        </Text>
+                                    </TouchableOpacity>
+                                ))
+                            )}
                         </View>
                     )}
                 </View>

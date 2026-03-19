@@ -6,17 +6,36 @@ buildscript {
         targetSdkVersion = 34
         ndkVersion = "26.1.10909125"
         kotlinVersion = "1.9.24"
+        REACT_NATIVE_NODE_MODULES_DIR = file("../../node_modules/react-native")
     }
     repositories {
         google()
         mavenCentral()
     }
     dependencies {
-        classpath("com.android.tools.build:gradle")
-        classpath("com.facebook.react:react-native-gradle-plugin")
-        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin")
+        classpath("com.android.tools.build:gradle:8.7.2")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.24")
         classpath("com.google.gms:google-services:4.4.2")
     }
 }
 
-apply plugin: "com.facebook.react.rootproject"
+plugins {
+    id("com.facebook.react.rootproject") version "0.76.6"
+}
+allprojects {
+    repositories {
+        mavenCentral()
+        google()
+        maven {
+            // All of React Native (JS, Obj-C sources, Android binaries) is installed from npm
+            url "$rootDir/../../node_modules/react-native/android"
+        }
+    }
+
+    configurations.all {
+        resolutionStrategy {
+            force "com.facebook.react:react-android:0.76.6"
+            force "com.facebook.react:hermes-android:0.76.6"
+        }
+    }
+}
