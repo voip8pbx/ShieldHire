@@ -225,27 +225,41 @@ body {
 }
 
 /* ============================================
-   RESPONSIVE BREAKPOINTS
-   ============================================ */
+    RESPONSIVE BREAKPOINTS
+    ============================================ */
 
-/* Mobile: ≤ 768px */
-@media (max-width: 768px) {
+/* Mobile phones: 320px - 480px */
+@media (max-width: 480px) {
   html {
     font-size: 14px;
   }
 }
 
-/* Tablet: 769px - 1024px */
-@media (min-width: 769px) and (max-width: 1024px) {
+/* Tablets: 481px - 768px */
+@media (min-width: 481px) and (max-width: 768px) {
   html {
     font-size: 15px;
   }
 }
 
-/* Desktop: > 1024px */
-@media (min-width: 1025px) {
+/* Laptops: 769px - 1024px */
+@media (min-width: 769px) and (max-width: 1024px) {
   html {
     font-size: 16px;
+  }
+}
+
+/* Desktops: 1025px - 1440px */
+@media (min-width: 1025px) and (max-width: 1440px) {
+  html {
+    font-size: 17px;
+  }
+}
+
+/* Large screens: 1441px+ */
+@media (min-width: 1441px) {
+  html {
+    font-size: 18px;
   }
 }
 
@@ -295,7 +309,7 @@ body {
   transition: margin-left 0.3s ease;
 }
 
-@media (min-width: 1025px) {
+@media (min-width: 769px) {
   .main-content {
     margin-left: 280px;
   }
@@ -777,6 +791,32 @@ body {
   gap: 1.5rem;
 }
 
+@media (max-width: 480px) {
+  .grid-auto-fit {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Spacing Utilities */
+.gap-1 {
+  gap: 0.25rem;
+}
+.gap-2 {
+  gap: 0.5rem;
+}
+.gap-3 {
+  gap: 0.75rem;
+}
+.gap-4 {
+  gap: 1rem;
+}
+.gap-6 {
+  gap: 1.5rem;
+}
+.gap-8 {
+  gap: 2rem;
+}
+
 @media (max-width: 768px) {
   .grid-auto-fit {
     grid-template-columns: 1fr;
@@ -809,8 +849,8 @@ body {
 }
 
 /* ============================================
-   MOBILE MENU OVERLAY
-   ============================================ */
+    MOBILE MENU OVERLAY
+    ============================================ */
 
 .mobile-menu-overlay {
   position: fixed;
@@ -828,8 +868,40 @@ body {
 }
 
 /* ============================================
-   THEME TOGGLE BUTTON
-   ============================================ */
+    RESPONSIVE UTILITY CLASSES
+    ============================================ */
+
+/* Hide on mobile (max-width: 480px) */
+@media (max-width: 480px) {
+  .hide-on-mobile {
+    display: none !important;
+  }
+}
+
+/* Show on mobile (max-width: 480px) */
+@media (max-width: 480px) {
+  .show-on-mobile {
+    display: block !important;
+  }
+}
+
+/* Hide on tablet and up (min-width: 481px) */
+@media (min-width: 481px) {
+  .hide-on-tablet-and-up {
+    display: none !important;
+  }
+}
+
+/* Show on tablet and up (min-width: 481px) */
+@media (min-width: 481px) {
+  .show-on-tablet-and-up {
+    display: block !important;
+  }
+}
+
+/* ============================================
+    THEME TOGGLE BUTTON
+    ============================================ */
 
 .theme-toggle {
   display: flex;
@@ -892,23 +964,40 @@ body {
 }
 
 /* ============================================
-   RESPONSIVE VISIBILITY
-   ============================================ */
+    RESPONSIVE VISIBILITY
+    ============================================ */
 
-@media (max-width: 768px) {
+/* Mobile phones: ≤ 480px */
+@media (max-width: 480px) {
   .hide-mobile {
     display: none !important;
   }
 }
 
-@media (min-width: 769px) and (max-width: 1024px) {
+/* Tablets: 481px - 768px */
+@media (min-width: 481px) and (max-width: 768px) {
   .hide-tablet {
     display: none !important;
   }
 }
 
-@media (min-width: 1025px) {
+/* Laptops: 769px - 1024px */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .hide-laptop {
+    display: none !important;
+  }
+}
+
+/* Desktops: 1025px - 1440px */
+@media (min-width: 1025px) and (max-width: 1440px) {
   .hide-desktop {
+    display: none !important;
+  }
+}
+
+/* Large screens: 1441px+ */
+@media (min-width: 1441px) {
+  .hide-large-screen {
     display: none !important;
   }
 }
@@ -954,13 +1043,19 @@ body {
   margin-bottom: 2rem;
 }
 
-@media (min-width: 640px) {
+@media (min-width: 481px) {
   .stats-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 769px) {
+  .stats-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1025px) {
   .stats-grid {
     grid-template-columns: repeat(4, 1fr);
   }
@@ -973,7 +1068,13 @@ body {
   gap: 1.5rem;
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 481px) {
+  .content-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1025px) {
   .content-grid {
     grid-template-columns: 2fr 1fr;
   }
