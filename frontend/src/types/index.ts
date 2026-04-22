@@ -58,6 +58,7 @@ export type MainTabParamList = {
 export type HomeStackParamList = {
     BouncerList: undefined;
     BouncerDetail: { bouncerId: string };
+    BouncerViewOnly: { bouncerId: string };
     BookingFlow: { bouncerId: string; price: number };
 };
 

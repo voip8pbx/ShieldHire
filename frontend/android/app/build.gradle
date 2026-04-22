@@ -30,6 +30,10 @@ project.ext.vectoricons = [
 apply from: "../../../node_modules/react-native-vector-icons/fonts.gradle"
 
 
+project.ext.react = [
+    enableHermes: false
+]
+
 /**
  * This is the configuration block to customize your React Native Android app.
  * By default you don't need to apply any configuration, just uncomment the lines you need.
@@ -37,13 +41,16 @@ apply from: "../../../node_modules/react-native-vector-icons/fonts.gradle"
 react {
     /* Folders */
     //   The root of your project, i.e. where "package.json" lives. Default is '../..'
-    root = file("../../../")
+    root = file("../../")
     //   The folder where the react-native NPM package is. Default is ../../node_modules/react-native
     reactNativeDir = file("../../../node_modules/react-native")
     //   The folder where the react-native Codegen package is. Default is ../../node_modules/@react-native/codegen
     codegenDir = file("../../../node_modules/@react-native/codegen")
     //   The cli.js file which is the React Native CLI entrypoint. Default is ../../node_modules/react-native/cli.js
     cliFile = file("../../../node_modules/react-native/cli.js")
+    entryFile = file("../../index.js")
+    hermesCommand = "D:\\.React\\HomeGymTrainer\\node_modules\\react-native\\sdks\\hermesc\\win64-bin\\hermesc.exe"
+
 
 
 
@@ -72,7 +79,7 @@ def jscFlavor = 'org.webkit:android-jsc:+'
 android {
     ndkVersion rootProject.ext.ndkVersion
     buildToolsVersion rootProject.ext.buildToolsVersion
-    compileSdk rootProject.ext.compileSdkVersion
+    compileSdkVersion rootProject.ext.compileSdkVersion
 
     namespace "com.shieldhire"
     defaultConfig {
@@ -101,6 +108,10 @@ android {
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }
+    }
+
+    packagingOptions {
+        pickFirst 'com/facebook/react/viewmanagers/RNGestureHandlerButtonManagerInterface.class'
     }
 }
 

@@ -18,6 +18,7 @@ import HomeScreen from './src/screens/HomeScreen';
 import BookingsScreen from './src/screens/BookingsScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
 import BouncerDetailScreen from './src/screens/BouncerDetailScreen';
+import BouncerViewOnlyScreen from './src/screens/BouncerViewOnlyScreen';
 import BookingFlowScreen from './src/screens/BookingFlowScreen';
 
 import { RootStackParamList, AuthStackParamList, MainTabParamList, HomeStackParamList, BouncerTabParamList } from './src/types';
@@ -51,6 +52,7 @@ const HomeNavigator = () => (
     <HomeStack.Navigator screenOptions={{ headerShown: false, cardStyle: { backgroundColor: '#0F0F0F' } }}>
         <HomeStack.Screen name="BouncerList" component={HomeScreen} />
         <HomeStack.Screen name="BouncerDetail" component={BouncerDetailScreen} />
+        <HomeStack.Screen name="BouncerViewOnly" component={BouncerViewOnlyScreen} />
         <HomeStack.Screen name="BookingFlow" component={BookingFlowScreen} />
     </HomeStack.Navigator>
 );

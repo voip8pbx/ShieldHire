@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { supabaseAdmin } from '../config/supabase';
+import { getIO } from '../socket';
 
 // Helper to convert snake_case DB columns to camelCase for frontend
 const camelCaseKeys = (obj: any): any => {
@@ -33,6 +34,13 @@ export const createBooking = async (req: Request, res: Response) => {
             .single();
 
         if (error) throw error;
+        
+        // Emit socket event to notify bouncer
+        getIO().emit('new-booking', {
+            bouncerId: bouncerId,
+            booking: camelCaseKeys(booking),
+            clientName: (req as any).user.name || 'A client'
+        });
 
         res.status(201).json(camelCaseKeys(booking));
     } catch (error) {

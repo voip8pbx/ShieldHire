@@ -5,11 +5,11 @@
 
 export const ENV = {
     // Current Machine IP (Auto-updated or defined in .env)
-    MACHINE_IP: '10.34.82.154',
+    MACHINE_IP: '10.248.116.154',
     
     // API Configurations
     API_PORT: '5000',
-    DEV_BASE_URL: 'http://10.34.82.154:5000',
+    DEV_BASE_URL: 'http://10.248.116.154:5000',
     PROD_BASE_URL: 'https://shield-hire-znyu.vercel.app',
 
     // Google Services

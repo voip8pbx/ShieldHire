@@ -13,7 +13,9 @@ export async function GET() {
         });
 
         if (!response.ok) {
-            throw new Error('Failed to fetch alerts');
+            const errorText = await response.text();
+            console.error(`Backend returned ${response.status}:`, errorText);
+            throw new Error(`Failed to fetch alerts. Status: ${response.status}`);
         }
 
         const alerts = await response.json();

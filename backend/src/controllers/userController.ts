@@ -192,8 +192,8 @@ export const getUsers = async (req: Request, res: Response) => {
         });
 
         res.json(formattedUsers);
-    } catch (error) {
+    } catch (error: any) {
         console.error('Get Users Error:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(500).json({ error: 'Internal server error', details: error.message });
     }
 };

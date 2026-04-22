@@ -1,11 +1,13 @@
 import React, { useContext, useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, StatusBar, TouchableOpacity, Alert, ActivityIndicator, FlatList, PermissionsAndroid, Platform, Linking } from 'react-native';
+import notifee, { EventType } from '@notifee/react-native';
 import { AuthContext } from '../../context/AuthContext';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { io } from 'socket.io-client';
 import api, { BASE_URL } from '../../services/api';
 import Geolocation from 'react-native-geolocation-service';
+import { notificationService } from '../../services/notificationService';
 
 interface BouncerBooking {
     id: string;
@@ -50,14 +52,47 @@ export default function BouncerHomeScreen() {
             );
         });
 
+        socket.on('new-booking', async (data: any) => {
+            // Only notify if this booking is for the current bouncer
+            if (data.bouncerId === user?.bouncerProfile?.id) {
+                const bookingDate = new Date(data.booking.date).toLocaleDateString();
+                await notificationService.displayBookingNotification(
+                    data.clientName,
+                    bookingDate,
+                    data.booking.id
+                );
+                
+                // Also refresh the bookings list
+                fetchPendingBookings();
+            }
+        });
+
+        // ── Foreground Notification Action Handler ──────────────────────────
+        const unsubscribeNotifee = notifee.onForegroundEvent(({ type, detail }) => {
+            if (type === EventType.ACTION_PRESS && detail.notification?.id) {
+                const bookingId = detail.notification.data?.bookingId as string;
+                if (!bookingId) return;
+
+                if (detail.pressAction?.id === 'confirm') {
+                    handleBookingResponse(bookingId, 'CONFIRMED');
+                    notifee.cancelNotification(detail.notification.id);
+                } else if (detail.pressAction?.id === 'decline') {
+                    handleBookingResponse(bookingId, 'REJECTED');
+                    notifee.cancelNotification(detail.notification.id);
+                }
+            }
+        });
+
         return () => {
             socket.disconnect();
+            unsubscribeNotifee();
         };
-    }, []);
+    }, [user?.bouncerProfile?.id]);
 
     useEffect(() => {
         fetchPendingBookings();
         getCurrentLocation();
+        notificationService.requestPermission();
     }, []);
 
     const getCurrentLocation = () => {

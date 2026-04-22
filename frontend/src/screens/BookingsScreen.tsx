@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
-import { View, Text, FlatList, StyleSheet, ActivityIndicator, StatusBar, SafeAreaView, Platform } from 'react-native';
+import { View, Text, FlatList, StyleSheet, ActivityIndicator, StatusBar, SafeAreaView, Platform, TouchableOpacity } from 'react-native';
 import api from '../services/api';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import type { NavigationProp } from '@react-navigation/native';
 
 export default function BookingsScreen() {
     const [bookings, setBookings] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const navigation = useNavigation<NavigationProp<any>>();
 
     const fetchBookings = async () => {
         try {
@@ -27,32 +29,54 @@ export default function BookingsScreen() {
         }, [])
     );
 
-    const renderItem = ({ item }: any) => (
-        <View style={styles.card}>
-            <View style={styles.cardHeader}>
-                <Text style={styles.bouncerName}>{item.bouncer?.name || 'Security Detail'}</Text>
-                <View style={styles.statusBadge}>
-                    <Text style={styles.status}>{item.status}</Text>
+    const renderItem = ({ item }: any) => {
+        const bouncerId = item.bouncer?.id || item.bouncerId;
+
+        const handlePress = () => {
+            if (bouncerId) {
+                navigation.navigate('HomeStack', {
+                    screen: 'BouncerViewOnly',
+                    params: { bouncerId },
+                } as any);
+            }
+        };
+
+        return (
+            <TouchableOpacity
+                style={styles.card}
+                onPress={handlePress}
+                activeOpacity={bouncerId ? 0.75 : 1}
+            >
+                <View style={styles.cardHeader}>
+                    <Text style={styles.bouncerName}>{item.bouncer?.name || 'Security Detail'}</Text>
+                    <View style={styles.headerRight}>
+                        <View style={[styles.statusBadge, item.status === 'CONFIRMED' && styles.statusConfirmed, item.status === 'PENDING' && styles.statusPending, item.status === 'CANCELLED' && styles.statusCancelled]}>
+                            <Text style={[styles.status, item.status === 'PENDING' && styles.statusTextPending, item.status === 'CANCELLED' && styles.statusTextCancelled]}>{item.status}</Text>
+                        </View>
+                        {bouncerId && (
+                            <Ionicons name="chevron-forward" size={18} color="#FFD700" style={{ marginLeft: 8 }} />
+                        )}
+                    </View>
                 </View>
-            </View>
-            <View style={styles.row}>
-                <Ionicons name="calendar-outline" size={16} color="#888" />
-                <Text style={styles.date}>{new Date(item.date).toLocaleDateString()}</Text>
-            </View>
-            <View style={styles.row}>
-                <Ionicons name="time-outline" size={16} color="#888" />
-                <Text style={styles.date}>{item.time} ({item.duration} hrs)</Text>
-            </View>
-            <View style={styles.row}>
-                <Ionicons name="location-outline" size={16} color="#888" />
-                <Text style={styles.date}>{item.location || 'N/A'}</Text>
-            </View>
-            <View style={styles.priceRow}>
-                <Text style={styles.costLabel}>Total Cost</Text>
-                <Text style={styles.price}>₹{item.totalPrice}</Text>
-            </View>
-        </View >
-    );
+                <View style={styles.row}>
+                    <Ionicons name="calendar-outline" size={16} color="#888" />
+                    <Text style={styles.date}>{new Date(item.date).toLocaleDateString()}</Text>
+                </View>
+                <View style={styles.row}>
+                    <Ionicons name="time-outline" size={16} color="#888" />
+                    <Text style={styles.date}>{item.time} ({item.duration} hrs)</Text>
+                </View>
+                <View style={styles.row}>
+                    <Ionicons name="location-outline" size={16} color="#888" />
+                    <Text style={styles.date}>{item.location || 'N/A'}</Text>
+                </View>
+                <View style={styles.priceRow}>
+                    <Text style={styles.costLabel}>Total Cost</Text>
+                    <Text style={styles.price}>₹{item.totalPrice}</Text>
+                </View>
+            </TouchableOpacity>
+        );
+    };
 
     return (
         <SafeAreaView style={styles.container}>
@@ -111,10 +135,16 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginBottom: 12,
     },
+    headerRight: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
     bouncerName: {
         fontSize: 18,
         fontWeight: 'bold',
         color: '#fff',
+        flex: 1,
+        marginRight: 8,
     },
     statusBadge: {
         backgroundColor: 'rgba(34, 197, 94, 0.2)',
@@ -122,11 +152,26 @@ const styles = StyleSheet.create({
         paddingVertical: 2,
         borderRadius: 4,
     },
+    statusConfirmed: {
+        backgroundColor: 'rgba(34, 197, 94, 0.2)',
+    },
+    statusPending: {
+        backgroundColor: 'rgba(251, 191, 36, 0.2)',
+    },
+    statusCancelled: {
+        backgroundColor: 'rgba(239, 68, 68, 0.2)',
+    },
     status: {
         color: '#4ade80',
         fontSize: 12,
         fontWeight: '700',
         textTransform: 'uppercase',
+    },
+    statusTextPending: {
+        color: '#fbbf24',
+    },
+    statusTextCancelled: {
+        color: '#ef4444',
     },
     row: {
         flexDirection: 'row',

@@ -7,7 +7,7 @@ import api, { setAuthToken } from '../services/api';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { signInWithGoogle, getAuth, getIdToken } from '../services/authService';
 import { statusCodes } from '@react-native-google-signin/google-signin';
-import { signInWithEmailAndPassword } from '@react-native-firebase/auth/lib/modular';
+import { signInWithEmailAndPassword } from '@react-native-firebase/auth';
 
 type LoginScreenNavigationProp = StackNavigationProp<AuthStackParamList, 'Login'>;
 
