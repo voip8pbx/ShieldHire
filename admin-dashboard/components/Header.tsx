@@ -104,12 +104,12 @@ export default function Header({ onMenuClick }: HeaderProps) {
                 </button>
 
                 {/* Profile Widget */}
-                <div className="flex items-center gap-2 sm:gap-3 border-l border-border-gray pl-3 sm:pl-6">
+                <div className="flex items-center gap-2 sm:gap-3 border-l border-border-gray pl-3 sm:pl-6" style={{ paddingLeft: '24px' }}>
                     <div className="text-right hidden sm:block">
                         <div className="text-sm font-semibold text-text-primary">Admin User</div>
                         <div className="text-xs text-text-dim">Super Admin</div>
                     </div>
-                    <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-full bg-gradient-to-tr from-primary-yellow to-dark-yellow flex items-center justify-center text-black font-bold text-xs sm:text-sm ring-2 ring-bg-secondary cursor-pointer">
+                    <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-full bg-primary-yellow flex items-center justify-center text-black font-bold text-xs sm:text-sm ring-2 ring-bg-secondary cursor-pointer">
                         AD
                     </div>
                 </div>

@@ -53,16 +53,16 @@ export default function UsersPage() {
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 section-spacing">
-                <div className="card card-spacing">
-                    <div className="detail-row">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 section-spacing" style={{ marginTop: '24px', marginBottom: '24px' }}>
+                <div className="card card-spacing" style={{ padding: '16px' }}>
+                    <div className="detail-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <div className="detail-label">Total Users</div>
                         <div className="detail-value text-2xl font-bold">{users.length}</div>
                     </div>
                 </div>
 
-                <div className="card card-spacing">
-                    <div className="detail-row">
+                <div className="card card-spacing" style={{ padding: '16px' }}>
+                    <div className="detail-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <div className="detail-label">Bouncer Accounts</div>
                         <div className="detail-value text-2xl font-bold text-[var(--primary)]">
                             {users.filter(u => u.role === 'BOUNCER').length}
@@ -70,8 +70,8 @@ export default function UsersPage() {
                     </div>
                 </div>
 
-                <div className="card card-spacing">
-                    <div className="detail-row">
+                <div className="card card-spacing" style={{ padding: '16px' }}>
+                    <div className="detail-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <div className="detail-label">Client Accounts</div>
                         <div className="detail-value text-2xl font-bold text-[var(--secondary)]">
                             {users.filter(u => u.role === 'USER').length}
@@ -82,7 +82,22 @@ export default function UsersPage() {
 
             {/* Users Table */}
             <div className="card overflow-hidden">
-                <table className="professional-table">
+                <table className="professional-table" style={{ fontSize: '16px' }}>
+                    <style jsx>{`
+                        .professional-table th,
+                        .professional-table td {
+                            font-size: 16px !important;
+                          padding-top: 6px !important;
+                          padding-bottom: 6px !important;
+                    
+                        }
+                        .professional-table th {
+                            font-weight: 600;
+                            text-transform: uppercase;
+                            font-size: 0.75rem;
+                            background-color: rgba(255, 255, 255, 0.03);
+                        }
+                    `}</style>
                     <thead>
                         <tr>
                             <th>User Details</th>
@@ -131,12 +146,12 @@ export default function UsersPage() {
                                         </div>
                                     </td>
                                     <td>
-                                        <span className={`px-3 py-1 rounded-md text-xs font-semibold ${user.role === 'BOUNCER'
-                                                ? 'bg-[var(--primary-glow)] text-[var(--primary)] border border-[var(--primary)]'
-                                                : user.role === 'USER'
-                                                    ? 'bg-[var(--secondary-glow)] text-[var(--secondary)] border border-[var(--secondary)]'
-                                                    : 'bg-[var(--surface-elevated)] text-[var(--text-tertiary)]'
-                                            }`}>
+                                        <span className={`rounded-md font-semibold inline-block ${user.role === 'BOUNCER'
+                                            ? 'bg-[var(--primary-glow)] text-[var(--primary)] border border-[var(--primary)]'
+                                            : user.role === 'USER'
+                                                ? 'bg-[var(--secondary-glow)] text-[var(--secondary)] border border-[var(--secondary)]'
+                                                : 'bg-[var(--surface-elevated)] text-[var(--text-tertiary)]'
+                                            }`} style={{ fontSize: '10px', paddingTop: '2px', paddingBottom: '2px', paddingLeft: '6px', paddingRight: '6px', borderRadius: '9999px' }}>
                                             {user.role}
                                         </span>
                                     </td>
@@ -181,41 +196,41 @@ export default function UsersPage() {
                             ×
                         </button>
 
-                        <h2 className="text-3xl font-bold text-[var(--text-primary)] mb-8">
+                        <h2 className="text-3xl font-bold text-[var(--text-primary)] mb-8 text-center bg-zinc-800 py-2 ">
                             User Details
                         </h2>
 
-                        <div className="space-y-6">
-                            <div className="detail-row">
+                        <div className="space-y-6 mx-8 ">
+                            <div className="detail-row border-b border-white/10 pb-1.5 mb-2" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', margin: '20px' }}>
                                 <div className="detail-label">Full Name</div>
                                 <div className="detail-value">{selectedUser.name}</div>
                             </div>
 
-                            <div className="detail-row">
+                            <div className="detail-row border-b border-white/10 pb-1.5 mb-2" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '20px' }}>
                                 <div className="detail-label">Email Address</div>
                                 <div className="detail-value">{selectedUser.email}</div>
                             </div>
 
                             {selectedUser.contactNo && (
-                                <div className="detail-row">
+                                <div className="detail-row border-b border-white/10 pb-1.5 mb-2" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '20px' }}>
                                     <div className="detail-label">Contact Number</div>
                                     <div className="detail-value">{selectedUser.contactNo}</div>
                                 </div>
                             )}
 
-                            <div className="detail-row">
+                            <div className="detail-row border-b border-white/10 pb-1.5 mb-2" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '20px' }}>
                                 <div className="detail-label">Account Type</div>
                                 <div className="detail-value">
-                                    <span className={`px-3 py-1 rounded-md text-sm font-semibold ${selectedUser.role === 'BOUNCER'
-                                            ? 'bg-[var(--primary-glow)] text-[var(--primary)] border border-[var(--primary)]'
-                                            : 'bg-[var(--secondary-glow)] text-[var(--secondary)] border border-[var(--secondary)]'
-                                        }`}>
+                                    <span className={`rounded-md font-semibold inline-block ${selectedUser.role === 'BOUNCER'
+                                        ? 'bg-[var(--primary-glow)] text-[var(--primary)] border border-[var(--primary)]'
+                                        : 'bg-[var(--secondary-glow)] text-[var(--secondary)] border border-[var(--secondary)]'
+                                        }`} style={{ fontSize: '10px', paddingTop: '2px', paddingBottom: '2px', paddingLeft: '6px', paddingRight: '6px', borderRadius: '9999px' }}>
                                         {selectedUser.role}
                                     </span>
                                 </div>
                             </div>
 
-                            <div className="detail-row">
+                            <div className="detail-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginLeft: '20px', marginRight: '20px' }}>
                                 <div className="detail-label">Registered On</div>
                                 <div className="detail-value">
                                     {new Date(selectedUser.createdAt).toLocaleDateString('en-IN', {

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 
+
 interface DashboardStats {
   totalBouncers: number;
   activeBouncers: number;
@@ -39,18 +40,18 @@ export default function DashboardPage() {
   }, []);
 
   const StatCard = ({ title, value, change, icon, color }: { title: string, value: string | number, change?: string, icon: React.ReactNode, color: string }) => (
-    <div className="card p-4 sm:p-6 lg:p-8 border-l-4 border-primary-yellow hover:border-l-secondary-yellow transition-all group">
+    <div className="card border-l-4 border-primary-yellow hover:border-l-secondary-yellow transition-all group" style={{ padding: '14px 14px 10px 14px' }}>
       <div className="flex justify-between items-start gap-4">
         <div className="flex-1 min-w-0">
-          <h3 className="text-xs sm:text-sm font-bold text-text-muted uppercase tracking-wider mb-2 truncate">
+          <h3 className="font-bold text-text-muted uppercase tracking-wider mb-2 truncate" style={{ fontSize: '12.75px' }}>
             {title}
           </h3>
           <div className="flex items-baseline gap-3 flex-wrap">
-            <div className="text-3xl sm:text-4xl lg:text-5xl font-black text-text-primary group-hover:text-primary-yellow transition-colors tracking-tight">
+            <div className="font-black text-text-primary group-hover:text-primary-yellow transition-colors tracking-tight" style={{ fontSize: '32px' }}>
               {loading ? <div className="skeleton w-24 h-8 sm:h-10" /> : value}
             </div>
             {change && (
-              <div className="text-sm font-semibold text-success flex items-center gap-1.5 bg-success-bg px-3 py-1 rounded-full whitespace-nowrap">
+              <div className="font-semibold text-success flex items-center gap-1.5 bg-success-bg px-3 py-1 rounded-full whitespace-nowrap" style={{ fontSize: '11px' }}>
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
                 </svg>
@@ -136,11 +137,11 @@ export default function DashboardPage() {
       <div className="content-grid">
         {/* Recent Activity / Chart Placeholder */}
         <div className="card p-4 sm:p-6 lg:p-8 bg-gradient-to-br from-surface-elevated to-surface border border-border-light">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 sm:mb-8">
-            <h3 className="text-xl sm:text-2xl font-bold text-text-primary">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 sm:mb-8 px-4">
+            <h3 className="text-xl sm:text-2xl font-bold text-text-primary pt-2" style={{ paddingTop: '0.5rem' }}>
               Performance Analytics
             </h3>
-            <select className="input-field w-full sm:w-auto bg-surface text-sm">
+            <select className="input-field w-full sm:w-auto bg-surface text-sm py-2 pl-2 pr-6 mx-0">
               <option>Last 7 Days</option>
               <option>Last 30 Days</option>
               <option>Last 90 Days</option>
@@ -163,17 +164,18 @@ export default function DashboardPage() {
         </div>
 
         {/* Quick Actions & Status */}
-        <div className="space-y-4 sm:space-y-6">
-          <div className="card p-4 sm:p-6 border border-border-light">
-            <h3 className="text-xl font-bold text-text-primary mb-4 sm:mb-6">
+        <div className="space-y-3 sm:space-y-3">
+          <div className="card border border-border-light flex flex-col" style={{ padding: '0.75rem 1rem 0.75rem 0', gap: '0.5rem' }}>
+            <h3 className="text-xl font-bold text-text-primary text-center" style={{ marginBottom: '0' }}>
               Quick Actions
             </h3>
-            <div className="space-y-3 sm:space-y-4">
+            <div className="flex flex-col gap-4" style={{ paddingLeft: '1rem', paddingTop: '0', paddingBottom: '0' }}>
               <button
                 onClick={() => window.location.href = '/verifications'}
-                className="w-full flex items-center justify-between p-3 sm:p-4 rounded-xl border-2 border-border-gray hover:border-primary-yellow hover:bg-surface-elevated transition-all group cursor-pointer hover:shadow-md"
+                className="w-full flex items-center justify-between rounded-xl border-2 border-border-gray hover:border-primary-yellow hover:bg-surface-elevated transition-all group cursor-pointer hover:shadow-md"
+                style={{ padding: '0.5rem 0.375rem 0.5rem 0.125rem' }}
               >
-                <div className="flex items-center gap-3 sm:gap-4">
+                <div className="flex items-center gap-3 sm:gap-4" style={{ marginLeft: '0.5rem' }}>
                   <span className="p-2.5 sm:p-3 rounded-lg bg-warning-bg text-warning text-xl shadow-inner">
                     <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -184,14 +186,15 @@ export default function DashboardPage() {
                     <div className="text-sm font-medium text-text-dim">{stats.pendingVerifications} requests</div>
                   </div>
                 </div>
-                <span className="text-xl text-text-dim group-hover:text-primary-yellow transition-colors">→</span>
+                <span className="text-xl text-text-dim group-hover:text-primary-yellow transition-colors" style={{ marginRight: '0.5rem' }}>→</span>
               </button>
 
               <button
                 onClick={() => window.location.href = '/tracking'}
-                className="w-full flex items-center justify-between p-3 sm:p-4 rounded-xl border-2 border-border-gray hover:border-info hover:bg-surface-elevated transition-all group cursor-pointer hover:shadow-md"
+                className="w-full flex items-center justify-between rounded-xl border-2 border-border-gray hover:border-info hover:bg-surface-elevated transition-all group cursor-pointer hover:shadow-md"
+                style={{ padding: '0.5rem 0.375rem 0.5rem 0.125rem' }}
               >
-                <div className="flex items-center gap-3 sm:gap-4">
+                <div className="flex items-center gap-3 sm:gap-4" style={{ marginLeft: '0.5rem' }}>
                   <span className="p-2.5 sm:p-3 rounded-lg bg-info-bg text-info text-xl shadow-inner">
                     <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -203,14 +206,15 @@ export default function DashboardPage() {
                     <div className="text-sm font-medium text-text-dim">{stats.activeBouncers} active</div>
                   </div>
                 </div>
-                <span className="text-xl text-text-dim group-hover:text-info transition-colors">→</span>
+                <span className="text-xl text-text-dim group-hover:text-info transition-colors" style={{ marginRight: '0.5rem' }}>→</span>
               </button>
 
               <button
                 onClick={() => window.location.href = '/bouncers'}
-                className="w-full flex items-center justify-between p-3 sm:p-4 rounded-xl border-2 border-border-gray hover:border-success hover:bg-surface-elevated transition-all group cursor-pointer hover:shadow-md"
+                className="w-full flex items-center justify-between rounded-xl border-2 border-border-gray hover:border-success hover:bg-surface-elevated transition-all group cursor-pointer hover:shadow-md"
+                style={{ padding: '0.5rem 0.375rem 0.5rem 0.125rem' }}
               >
-                <div className="flex items-center gap-3 sm:gap-4">
+                <div className="flex items-center gap-3 sm:gap-4" style={{ marginLeft: '0.5rem' }}>
                   <span className="p-2.5 sm:p-3 rounded-lg bg-success-bg text-success text-xl shadow-inner">
                     <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -221,12 +225,12 @@ export default function DashboardPage() {
                     <div className="text-sm font-medium text-text-dim">{stats.totalBouncers} registered</div>
                   </div>
                 </div>
-                <span className="text-xl text-text-dim group-hover:text-success transition-colors">→</span>
+                <span className="text-xl text-text-dim group-hover:text-success transition-colors" style={{ marginRight: '0.5rem' }}>→</span>
               </button>
             </div>
           </div>
 
-          <div className="card p-4 sm:p-6 bg-gradient-to-r from-accent-glow to-bg-primary border-2 border-primary-yellow shadow-[0_0_30px_rgba(250,204,21,0.15)]">
+          <div className="card p-4 sm:p-6 bg-gradient-to-r from-accent-glow to-bg-primary border-2 border-primary-yellow shadow-[0_0_30px_rgba(250,204,21,0.15)]" style={{ marginTop: '12px' }}>
             <div className="flex items-center gap-3 sm:gap-4 mb-3 sm:mb-4">
               <div className="p-2 sm:p-3 rounded-lg bg-success-bg">
                 <svg className="w-5 h-5 sm:w-6 sm:h-6 text-success animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">

@@ -84,16 +84,16 @@ export default function EngagementsPage() {
 
     // Filter and sort bookings
     const filteredBookings = bookings.filter((booking) => {
-        const matchesSearch = 
+        const matchesSearch =
             booking.user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             booking.user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
             booking.bouncer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             booking.eventType.toLowerCase().includes(searchQuery.toLowerCase()) ||
             booking.eventLocation.toLowerCase().includes(searchQuery.toLowerCase()) ||
             booking.id.toLowerCase().includes(searchQuery.toLowerCase());
-        
+
         const matchesStatus = statusFilter === 'ALL' || booking.status === statusFilter;
-        
+
         return matchesSearch && matchesStatus;
     });
 
@@ -125,8 +125,8 @@ export default function EngagementsPage() {
     };
 
     const handleConfirmBooking = async (bookingId: string) => {
-        setBookings(prev => prev.map(b => 
-            b.id === bookingId 
+        setBookings(prev => prev.map(b =>
+            b.id === bookingId
                 ? { ...b, status: 'CONFIRMED', updatedAt: new Date().toISOString() }
                 : b
         ));
@@ -135,8 +135,8 @@ export default function EngagementsPage() {
     };
 
     const handleCancelBooking = async (bookingId: string) => {
-        setBookings(prev => prev.map(b => 
-            b.id === bookingId 
+        setBookings(prev => prev.map(b =>
+            b.id === bookingId
                 ? { ...b, status: 'CANCELLED', paymentStatus: 'REFUNDED', updatedAt: new Date().toISOString() }
                 : b
         ));
@@ -622,18 +622,17 @@ export default function EngagementsPage() {
                                                 <div className="absolute -left-6 w-3 h-3 rounded-full bg-[var(--success)] border-2 border-[var(--surface)]"></div>
                                                 <div className="text-sm">
                                                     <span className="font-semibold text-[var(--text-primary)]">
-                                                        {selectedBooking.status === 'CONFIRMED' ? 'Booking Confirmed' : 
-                                                         selectedBooking.status === 'COMPLETED' ? 'Booking Completed' : 'Booking Cancelled'}
+                                                        {selectedBooking.status === 'CONFIRMED' ? 'Booking Confirmed' :
+                                                            selectedBooking.status === 'COMPLETED' ? 'Booking Completed' : 'Booking Cancelled'}
                                                     </span>
                                                     <span className="text-[var(--text-muted)] ml-2">{formatDateTime(selectedBooking.updatedAt)}</span>
                                                 </div>
                                             </div>
                                         )}
                                         <div className="relative">
-                                            <div className={`absolute -left-6 w-3 h-3 rounded-full border-2 border-[var(--surface)] ${
-                                                selectedBooking.status === 'COMPLETED' ? 'bg-[var(--success)]' : 
+                                            <div className={`absolute -left-6 w-3 h-3 rounded-full border-2 border-[var(--surface)] ${selectedBooking.status === 'COMPLETED' ? 'bg-[var(--success)]' :
                                                 selectedBooking.status === 'CANCELLED' ? 'bg-[var(--error)]' : 'bg-[var(--warning)]'
-                                            }`}></div>
+                                                }`}></div>
                                             <div className="text-sm">
                                                 <span className="font-semibold text-[var(--text-primary)]">Event Date</span>
                                                 <span className="text-[var(--text-muted)] ml-2">{formatDateTime(selectedBooking.eventDate)}</span>
@@ -719,9 +718,8 @@ export default function EngagementsPage() {
                         onClick={(e) => e.stopPropagation()}
                     >
                         <div className="text-center mb-6">
-                            <div className={`w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center ${
-                                bookingToAction.action === 'confirm' ? 'bg-[var(--success-bg)]' : 'bg-[var(--error-bg)]'
-                            }`}>
+                            <div className={`w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center ${bookingToAction.action === 'confirm' ? 'bg-[var(--success-bg)]' : 'bg-[var(--error-bg)]'
+                                }`}>
                                 <svg className={`w-8 h-8 ${bookingToAction.action === 'confirm' ? 'text-[var(--success)]' : 'text-[var(--error)]'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     {bookingToAction.action === 'confirm' ? (
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -734,7 +732,7 @@ export default function EngagementsPage() {
                                 {bookingToAction.action === 'confirm' ? 'Confirm Booking?' : 'Cancel Booking?'}
                             </h3>
                             <p className="text-[var(--text-secondary)]">
-                                {bookingToAction.action === 'confirm' 
+                                {bookingToAction.action === 'confirm'
                                     ? 'This will confirm the booking and notify both the client and bouncer.'
                                     : 'This will cancel the booking and initiate a refund if payment was made.'}
                             </p>

@@ -36,8 +36,8 @@ export default function StatCard({
                         <div className="flex items-center gap-2">
                             <span
                                 className={`text-sm font-semibold ${isPositiveTrend
-                                        ? 'text-success'
-                                        : 'text-error'
+                                    ? 'text-success'
+                                    : 'text-error'
                                     }`}
                             >
                                 {isPositiveTrend ? '↑' : '↓'} {Math.abs(trend)}%
