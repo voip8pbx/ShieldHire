@@ -3,10 +3,9 @@ import {
     getAuth,
     signOut as firebaseSignOut,
     onAuthStateChanged as firebaseOnAuthStateChanged,
+    signInWithCredential,
+    GoogleAuthProvider,
 } from '@react-native-firebase/auth';
-
-// Firebase Web API key (from google-services.json → api_key.current_key)
-const FIREBASE_WEB_API_KEY = 'AIzaSyBAkIvJKRX5Egk-nK4f9myUWD07fr5uoFY';
 
 // Initialize Google Sign-In
 export const initGoogleSignIn = () => {
@@ -17,50 +16,12 @@ export const initGoogleSignIn = () => {
 };
 
 /**
- * Exchanges a Google ID token for a Firebase ID token using the
- * Firebase Identity Toolkit REST API.
- *
- * This avoids calling GoogleAuthProvider.credential() from the
- * React Native Firebase SDK, which is broken in v22/23 Bridgeless mode.
+ * Signs in with Google using the native Firebase SDK's signInWithCredential.
+ * This is more reliable than the REST API approach because:
+ * - The token exchange happens at the native layer (no JS network call)
+ * - Not affected by Android network security config or HTTPS restrictions
+ * - Works correctly in React Native New Architecture / Bridgeless mode with v23+
  */
-const exchangeGoogleTokenForFirebaseToken = async (googleIdToken: string): Promise<{
-    firebaseToken: string;
-    email: string;
-    displayName: string;
-    photoUrl: string;
-    uid: string;
-}> => {
-    const endpoint = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithIdp?key=${FIREBASE_WEB_API_KEY}`;
-
-    const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            postBody: `id_token=${googleIdToken}&providerId=google.com`,
-            requestUri: 'http://localhost',
-            returnIdpCredential: true,
-            returnSecureToken: true,
-        }),
-    });
-
-    const data = await response.json();
-
-    if (!response.ok || !data.idToken) {
-        const msg = data?.error?.message || 'Firebase token exchange failed';
-        console.error('[AuthService] Firebase REST error:', data?.error);
-        throw new Error(msg);
-    }
-
-    return {
-        firebaseToken: data.idToken,
-        email: data.email || '',
-        displayName: data.displayName || data.email?.split('@')[0] || '',
-        photoUrl: data.photoUrl || '',
-        uid: data.localId || '',
-    };
-};
-
-// Sign in with Google → Firebase REST exchange → return Firebase ID token
 export const signInWithGoogle = async (forceAccountPicker = false) => {
     // 1. Ensure Google Play Services are available
     await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
@@ -72,9 +33,24 @@ export const signInWithGoogle = async (forceAccountPicker = false) => {
 
     // 3. Trigger the native Google Sign-In UI
     const signInResult = await GoogleSignin.signIn();
+    console.log('[AuthService] Google Sign-In result:', JSON.stringify(signInResult));
 
-    // 4. Extract the Google ID token (v13+ style first, legacy fallback)
-    let googleIdToken = signInResult.data?.idToken;
+    // 4. Handle v13+ response shape: { type: 'success' | 'cancelled' | 'noSavedCredentialFound', data }
+    if (signInResult.type === 'cancelled') {
+        const cancelError: any = new Error('Sign-in cancelled');
+        cancelError.code = '12501';
+        throw cancelError;
+    }
+
+    if (signInResult.type !== 'success') {
+        // At this point, type could be 'noSavedCredentialFound' or any future type
+        const type = (signInResult as any).type || 'unknown';
+        throw new Error(`Google Sign-In failed with type: ${type}`);
+    }
+
+    // 5. Extract the Google ID token
+    let googleIdToken: string | null | undefined = signInResult.data?.idToken;
+    // Legacy fallback for SDK versions that don't wrap in data
     if (!googleIdToken) {
         googleIdToken = (signInResult as any).idToken;
     }
@@ -82,18 +58,26 @@ export const signInWithGoogle = async (forceAccountPicker = false) => {
         throw new Error('No ID token returned from Google Sign-In');
     }
 
-    // 5. Exchange the Google token for a Firebase ID token via REST (no SDK needed)
-    const { firebaseToken, email, displayName, photoUrl, uid } =
-        await exchangeGoogleTokenForFirebaseToken(googleIdToken);
+    // 6. Use the native Firebase SDK to exchange the Google ID token for a Firebase credential.
+    //    signInWithCredential() works at the native layer — no JS fetch() needed.
+    const credential = GoogleAuthProvider.credential(googleIdToken);
+    const userCredential = await signInWithCredential(getAuth(), credential);
+    const firebaseUser = userCredential.user;
+    const firebaseToken = await firebaseUser.getIdToken();
 
     // Return a shape compatible with the rest of the app
     return {
-        firebaseUser: { uid, email, displayName, photoURL: photoUrl },
+        firebaseUser: {
+            uid: firebaseUser.uid,
+            email: firebaseUser.email || '',
+            displayName: firebaseUser.displayName || '',
+            photoURL: firebaseUser.photoURL || '',
+        },
         firebaseToken,
     };
 };
 
-// Sign out from Google (Firebase client state is not used, so no Firebase signOut needed)
+// Sign out from Google and Firebase
 export const signOutUser = async () => {
     try {
         await GoogleSignin.signOut();

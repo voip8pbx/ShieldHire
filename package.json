@@ -24,10 +24,11 @@
         "stop": "taskkill /F /IM node.exe /T 2>nul || echo No Node processes to kill"
     },
     "devDependencies": {
-        "concurrently": "^8.2.2"
+        "concurrently": "^8.2.2",
+        "patch-package": "^8.0.1"
     },
     "dependencies": {
-        "react-native": "0.76.6",
-        "@react-native/gradle-plugin": "0.76.6"
+        "@react-native/gradle-plugin": "0.76.6",
+        "react-native": "0.76.6"
     }
 }

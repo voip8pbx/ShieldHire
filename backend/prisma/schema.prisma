@@ -17,6 +17,8 @@ model User {
   profilePhoto String?
   role         String   @default("USER") // USER, BOUNCER, GUNMAN, ADMIN
   googleId     String?  @unique
+  fcmToken     String?  @map("fcm_token")
+  fcmUpdatedAt DateTime? @map("fcm_updated_at")
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -24,8 +26,25 @@ model User {
   bookings        Booking[]        @relation("UserBookings")
   reviews         Review[]
   emergencyAlerts EmergencyAlert[]
+  notifications   Notification[]
 
   @@map("users")
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  title     String
+  body      String
+  type      String?  // e.g. BOOKING_REQUEST, HIRE_CONFIRMED, EMERGENCY
+  data      Json?    // Optional structured data
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
+  @@map("notifications")
 }
 
 model Bouncer {
@@ -77,6 +96,8 @@ model Booking {
   time       String?
   status     String   @default("PENDING")
   location   String?
+  latitude   Float?
+  longitude  Float?
   duration   Int      @default(4)
   totalPrice Float?
   createdAt  DateTime @default(now())

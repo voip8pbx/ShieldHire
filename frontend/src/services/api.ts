@@ -14,11 +14,23 @@ export const setAuthToken = (token: string | null) => {
     authToken = token;
 };
 
-const getHeaders = (customHeaders: any = {}) => {
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const getHeaders = async (customHeaders: any = {}) => {
     const headers: any = {
         'Content-Type': 'application/json',
         ...customHeaders,
     };
+    
+    if (!authToken) {
+        try {
+            const stored = await AsyncStorage.getItem('shield_auth_token');
+            if (stored) authToken = stored;
+        } catch (e) {
+            // Ignore async storage error
+        }
+    }
+    
     if (authToken) {
         headers['Authorization'] = `Bearer ${authToken}`;
     }
@@ -63,14 +75,14 @@ const api = {
             : '';
         const response = await fetchWithTimeout(`${BASE_URL}${url}${query}`, {
             method: 'GET',
-            headers: getHeaders(config.headers),
+            headers: await getHeaders(config.headers),
         });
         return handleResponse(response) as Promise<{ data: T }>;
     },
     post: async <T = any>(url: string, body: any, config: any = {}) => {
         const response = await fetchWithTimeout(`${BASE_URL}${url}`, {
             method: 'POST',
-            headers: getHeaders(config.headers),
+            headers: await getHeaders(config.headers),
             body: JSON.stringify(body),
         });
         return handleResponse(response) as Promise<{ data: T }>;
@@ -78,7 +90,7 @@ const api = {
     put: async <T = any>(url: string, body: any, config: any = {}) => {
         const response = await fetchWithTimeout(`${BASE_URL}${url}`, {
             method: 'PUT',
-            headers: getHeaders(config.headers),
+            headers: await getHeaders(config.headers),
             body: JSON.stringify(body),
         });
         return handleResponse(response) as Promise<{ data: T }>;
@@ -86,7 +98,7 @@ const api = {
     patch: async <T = any>(url: string, body: any, config: any = {}) => {
         const response = await fetchWithTimeout(`${BASE_URL}${url}`, {
             method: 'PATCH',
-            headers: getHeaders(config.headers),
+            headers: await getHeaders(config.headers),
             body: JSON.stringify(body),
         });
         return handleResponse(response) as Promise<{ data: T }>;

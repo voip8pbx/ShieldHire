@@ -5,15 +5,15 @@
 
 export const ENV = {
     // Current Machine IP (Auto-updated or defined in .env)
-    MACHINE_IP: '10.248.116.154',
+    MACHINE_IP: '10.69.233.154',
     
     // API Configurations
     API_PORT: '5000',
-    DEV_BASE_URL: 'http://10.248.116.154:5000',
+    DEV_BASE_URL: 'http://10.69.233.154:5000',
     PROD_BASE_URL: 'https://shield-hire-znyu.vercel.app',
 
     // Google Services
-    GOOGLE_MAPS_API_KEY: 'AIzaSyAaJ7VzIGk_y8dvrx2b4yya119jQVZJnNs',
+    GOOGLE_MAPS_API_KEY: 'AIzaSyCV1MNMAyPMvM0jXnPmVG01ikwxa1ETERg',
     
     // Supabase (Mirrored from root .env)
     SUPABASE_URL: 'https://yoshgwtufyjjfqittrhb.supabase.co',

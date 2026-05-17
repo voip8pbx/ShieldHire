@@ -124,4 +124,14 @@ dependencies {
     } else {
         implementation jscFlavor
     }
+
+    // ── Firebase ─────────────────────────────────────────────────────────────
+    // BOM 32.x is the last series compatible with Kotlin 1.9.x / RN 0.76.x.
+    // BOM 33+ pulls play-services-measurement 23.x (Kotlin 2.1 metadata) which
+    // breaks compilation when the project's kotlinVersion is 1.9.24.
+    implementation platform("com.google.firebase:firebase-bom:32.8.1")
+    implementation "com.google.firebase:firebase-messaging"
+    implementation "com.google.firebase:firebase-analytics"
+    // ── Google Maps ─────────────────────────────────────────────────────────
+    implementation "com.google.android.gms:play-services-maps:$rootProject.ext.googlePlayServicesVersion"
 }

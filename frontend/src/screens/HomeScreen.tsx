@@ -48,46 +48,62 @@ export default function HomeScreen({ navigation }: Props) {
         getCurrentLocation();
     }, []);
 
-    const getCurrentLocation = () => {
-        if (Platform.OS === 'android') {
-            PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION).then(granted => {
-                if (granted) {
-                    setLocationName('Locating...');
-                    Geolocation.getCurrentPosition(
-                        async (position) => {
-                            const { latitude, longitude } = position.coords;
+    const getCurrentLocation = async () => {
+        let hasPermission = false;
+        if (Platform.OS === 'ios') {
+            const auth = await Geolocation.requestAuthorization('whenInUse');
+            hasPermission = auth === 'granted';
+        } else if (Platform.OS === 'android') {
+            try {
+                const granted = await PermissionsAndroid.request(
+                    PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+                    {
+                        title: "Location Permission Required",
+                        message: "ShieldHire needs access to your location to show relevant security personnel near you.",
+                        buttonNeutral: "Ask Me Later",
+                        buttonNegative: "Cancel",
+                        buttonPositive: "OK"
+                    }
+                );
+                hasPermission = granted === PermissionsAndroid.RESULTS.GRANTED;
+            } catch (err) {
+                console.warn(err);
+            }
+        }
 
-                            try {
-                                // Basic reverse geocoding using OpenStreetMap Nominatim (Free, no key required for low usage)
-                                const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`, {
-                                    headers: {
-                                        'User-Agent': 'ShieldHireApp/1.0'
-                                    }
-                                });
-                                const data = await response.json();
-                                if (data && data.address) {
-                                    const city = data.address.city || data.address.town || data.address.village || data.address.county || 'Unknown Location';
-                                    const country = data.address.country || '';
-                                    setLocationName(`${city}, ${country}`);
-                                } else {
-                                    setLocationName(`Lat: ${latitude.toFixed(2)}, Long: ${longitude.toFixed(2)}`);
-                                }
-                            } catch (err) {
-                                console.log('Reverse geocoding error:', err);
-                                setLocationName(`Lat: ${latitude.toFixed(2)}, Long: ${longitude.toFixed(2)}`);
+        if (hasPermission) {
+            setLocationName('Locating...');
+            Geolocation.getCurrentPosition(
+                async (position) => {
+                    const { latitude, longitude } = position.coords;
+
+                    try {
+                        const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`, {
+                            headers: {
+                                'User-Agent': 'ShieldHireApp/1.0'
                             }
-                        },
-                        (error) => {
-                            console.log(error.code, error.message);
-                            setLocationName('Location Unavailable');
-                        },
-                        { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
-                    );
-                } else {
-                    // Optionally request permission here or rely on default
-                    // setLocationName('Permission Denied');
-                }
-            });
+                        });
+                        const data = await response.json();
+                        if (data && data.address) {
+                            const city = data.address.city || data.address.town || data.address.village || data.address.county || 'Unknown Location';
+                            const country = data.address.country || '';
+                            setLocationName(`${city}, ${country}`);
+                        } else {
+                            setLocationName(`Lat: ${latitude.toFixed(2)}, Long: ${longitude.toFixed(2)}`);
+                        }
+                    } catch (err) {
+                        console.log('Reverse geocoding error:', err);
+                        setLocationName(`Lat: ${latitude.toFixed(2)}, Long: ${longitude.toFixed(2)}`);
+                    }
+                },
+                (error) => {
+                    console.log(error.code, error.message);
+                    setLocationName('Location Unavailable');
+                },
+                { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+            );
+        } else {
+            setLocationName('Location Denied');
         }
     };
 

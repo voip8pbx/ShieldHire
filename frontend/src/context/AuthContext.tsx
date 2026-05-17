@@ -3,6 +3,11 @@ import { User } from '../types';
 import { setAuthToken } from '../services/api';
 import { initGoogleSignIn, getAuth, onAuthStateChanged, getIdToken, signOut } from '../services/authService';
 import api from '../services/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { initFCM, cleanupFCMListeners } from '../services/fcmService';
+
+const TOKEN_KEY = 'shield_auth_token';
+const USER_KEY = 'shield_cached_user';
 
 type PendingBouncerReg = {
     name: string;
@@ -59,6 +64,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     useEffect(() => {
         initGoogleSignIn();
 
+        const checkStoredToken = async () => {
+            try {
+                const storedToken = await AsyncStorage.getItem(TOKEN_KEY);
+                if (storedToken) {
+                    console.log('[AuthContext] Found stored token, restoring session...');
+                    await fetchAndSetUser(storedToken);
+                } else {
+                    setIsLoading(false);
+                }
+            } catch (e) {
+                console.error('[AuthContext] Error checking stored token:', e);
+                setIsLoading(false);
+            }
+        };
+
+        checkStoredToken();
+
         const firebaseAuth = getAuth();
         const unsubscribe = onAuthStateChanged(firebaseAuth, async (firebaseUser: any) => {
             // If the bouncer sign-in flow is in progress, skip auto-login.
@@ -78,10 +100,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                     setIsLoading(false);
                 }
             } else {
-                setToken(null);
-                setUser(null);
-                setAuthToken(null);
-                setIsLoading(false);
+                // If the SDK says no user, but we haven't checked AsyncStorage yet, 
+                // do nothing and let checkStoredToken finish.
             }
         });
 
@@ -92,31 +112,68 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         try {
             setAuthToken(accessToken);
             const response = await api.get('/auth/me');
+            const fetchedUser: User = response.data.user;
             setToken(accessToken);
-            setUser(response.data.user);
-        } catch (error) {
-            console.error('Failed to fetch user profile:', error);
-            setAuthToken(null);
-            setToken(null);
-            setUser(null);
+            setUser(fetchedUser);
+            // Persist both token and user so we can restore offline
+            await AsyncStorage.multiSet([
+                [TOKEN_KEY, accessToken],
+                [USER_KEY, JSON.stringify(fetchedUser)],
+            ]);
+
+            // Initialise FCM now that we have a confirmed user
+            if (fetchedUser?.id) {
+                initFCM(fetchedUser.id).catch(err =>
+                    console.error('[AuthContext] FCM init failed:', err),
+                );
+            }
+        } catch (error: any) {
+            const httpStatus = error?.response?.status;
+            if (httpStatus === 401 || httpStatus === 403) {
+                // Token is genuinely invalid — clear the session entirely
+                console.warn('[AuthContext] Token rejected by server, clearing session.');
+                setAuthToken(null);
+                setToken(null);
+                setUser(null);
+                await AsyncStorage.multiRemove([TOKEN_KEY, USER_KEY]);
+            } else {
+                // Network error or server unreachable — restore the cached user
+                // so the app stays navigable until connectivity is restored.
+                console.warn('[AuthContext] Could not reach server, restoring cached session:', error?.message);
+                setAuthToken(accessToken);
+                setToken(accessToken);
+                try {
+                    const cachedUserJson = await AsyncStorage.getItem(USER_KEY);
+                    if (cachedUserJson) {
+                        setUser(JSON.parse(cachedUserJson));
+                    }
+                } catch (_) { }
+            }
         } finally {
             setIsLoading(false);
         }
     };
 
-    const login = (newToken: string, newUser: User) => {
+    const login = async (newToken: string, newUser: User) => {
         // Clear all bouncer registration state and suppress flags
         suppressAutoLoginRef.current = false;
         setPendingBouncerRegistration(null);
         setToken(newToken);
         setUser(newUser);
         setAuthToken(newToken);
+        await AsyncStorage.multiSet([
+            [TOKEN_KEY, newToken],
+            [USER_KEY, JSON.stringify(newUser)],
+        ]);
     };
 
     const logout = async () => {
         suppressAutoLoginRef.current = false;
         setPendingBouncerRegistration(null);
+        // Stop FCM listeners before clearing credentials
+        cleanupFCMListeners();
         try {
+            await AsyncStorage.multiRemove([TOKEN_KEY, USER_KEY]);
             const firebaseAuth = getAuth();
             await signOut(firebaseAuth);
         } catch (_) { }
@@ -143,6 +200,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(newUser);
         setAuthToken(newToken);
         setPendingBouncerRegistration(regData);
+        AsyncStorage.setItem(TOKEN_KEY, newToken).catch(() => { });
         // Keep suppress flag on — it will be cleared when login() is called after registration
     };
 

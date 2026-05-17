@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, ScrollView, Platform, TextInput } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, ScrollView, Platform, TextInput, KeyboardAvoidingView } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
 import { HomeStackParamList } from '../types';
@@ -7,6 +7,7 @@ import api from '../services/api';
 import { Calendar } from 'react-native-calendars';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+
 
 import { ENV } from '../config/env';
 
@@ -31,6 +32,8 @@ export default function BookingFlowScreen({ navigation, route }: Props) {
     const [location, setLocation] = useState('');
     const [predictions, setPredictions] = useState<any[]>([]);
     const [showPredictions, setShowPredictions] = useState(false);
+    const selectedCoordinate = route.params.selectedCoordinate;
+    const hasSelectedCoords = !!selectedCoordinate;
 
     // Google Maps API Key directly from central config per user prompt
     const GOOGLE_MAPS_API_KEY = ENV.GOOGLE_MAPS_API_KEY;
@@ -88,17 +91,17 @@ export default function BookingFlowScreen({ navigation, route }: Props) {
                 date: selectedDate,
                 time: selectedTime,
                 location: location,
+                latitude: hasSelectedCoords ? selectedCoordinate?.latitude : null,
+                longitude: hasSelectedCoords ? selectedCoordinate?.longitude : null,
                 duration: hours,
                 totalPrice: Math.round(calculatedPrice)
             });
             Alert.alert('Success', 'Security Personnel Confirmed!', [
                 { text: 'Done', onPress: () => navigation.popToTop() }
             ]);
-        } catch (error) {
-            console.log(error);
-            Alert.alert('Success', 'Security Request Sent! (Mock)', [
-                { text: 'Done', onPress: () => navigation.popToTop() }
-            ]);
+        } catch (error: any) {
+            console.log('Booking Error:', error.response?.data || error.message);
+            Alert.alert('Error', error.response?.data?.error || 'Failed to create booking.');
         } finally {
             setLoading(false);
         }
@@ -116,11 +119,15 @@ export default function BookingFlowScreen({ navigation, route }: Props) {
                 <Text style={styles.headerTitle}>Hiring Details</Text>
             </View>
 
-            <ScrollView 
-                contentContainerStyle={styles.scrollContent} 
-                showsVerticalScrollIndicator={false}
-                keyboardShouldPersistTaps="handled"
+            <KeyboardAvoidingView 
+                style={{ flex: 1, marginBottom: 80 }} 
+                behavior={Platform.OS === 'ios' ? 'padding' : undefined}
             >
+                <ScrollView 
+                    contentContainerStyle={styles.scrollContent} 
+                    showsVerticalScrollIndicator={false}
+                    keyboardShouldPersistTaps="handled"
+                >
 
                 {/* Calendar Section */}
                 <View style={styles.section}>
@@ -212,6 +219,7 @@ export default function BookingFlowScreen({ navigation, route }: Props) {
                             fetchPlaces(text);
                         }}
                     />
+
                     {showPredictions && (predictions.length > 0 || searchLoading) && (
                         <View style={styles.predictionsContainer}>
                             {searchLoading ? (
@@ -235,9 +243,30 @@ export default function BookingFlowScreen({ navigation, route }: Props) {
                             )}
                         </View>
                     )}
+
+                    <TouchableOpacity 
+                        style={[styles.mapToggleBtn, hasSelectedCoords && styles.mapToggleBtnActive]} 
+                        onPress={() => navigation.navigate('MapScreen', {
+                            initialLatitude: selectedCoordinate?.latitude || 19.0760,
+                            initialLongitude: selectedCoordinate?.longitude || 72.8777,
+                            bouncerId,
+                            price
+                        })}
+                    >
+                        <MaterialCommunityIcons 
+                            name={hasSelectedCoords ? "map-check" : "map-marker-plus"} 
+                            size={20} 
+                            color={hasSelectedCoords ? "#000" : "#FFD700"} 
+                        />
+                        <Text style={[styles.mapToggleText, hasSelectedCoords && styles.mapToggleTextActive]}>
+                            {hasSelectedCoords ? "Location Pinned on Map" : "Set Precise Location on Map"}
+                        </Text>
+                    </TouchableOpacity>
                 </View>
 
-            </ScrollView>
+
+                </ScrollView>
+            </KeyboardAvoidingView>
 
             {/* Bottom Bar */}
             <View style={styles.footer}>
@@ -440,4 +469,29 @@ const styles = StyleSheet.create({
         fontSize: 14,
         flex: 1,
     },
+    mapToggleBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: 'rgba(255, 215, 0, 0.1)',
+        padding: 12,
+        borderRadius: 12,
+        marginTop: 15,
+        borderWidth: 1,
+        borderColor: 'rgba(255, 215, 0, 0.3)',
+        justifyContent: 'center',
+    },
+    mapToggleBtnActive: {
+        backgroundColor: '#FFD700',
+        borderColor: '#FFD700',
+    },
+    mapToggleText: {
+        color: '#FFD700',
+        fontSize: 14,
+        fontWeight: 'bold',
+        marginLeft: 10,
+    },
+    mapToggleTextActive: {
+        color: '#000',
+    },
+
 });

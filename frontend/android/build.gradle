@@ -6,6 +6,7 @@ buildscript {
         targetSdkVersion = 34
         ndkVersion = "26.1.10909125"
         kotlinVersion = "1.9.24"
+        googlePlayServicesVersion = "18.2.0"
         REACT_NATIVE_NODE_MODULES_DIR = file("../../node_modules/react-native")
     }
     repositories {
@@ -36,6 +37,19 @@ allprojects {
         resolutionStrategy {
             force "com.facebook.react:react-android:0.76.6"
             force "com.facebook.react:hermes-android:0.76.6"
+
+            // ── Kotlin metadata compatibility fix ────────────────────────────
+            // @react-native-firebase v23 uses Firebase BOM 34.x internally,
+            // which pulls play-services-measurement 23.x compiled with Kotlin 2.1.
+            // RN 0.76 requires Kotlin 1.9.24. Force the last 1.x-compatible versions.
+            force "com.google.android.gms:play-services-measurement:21.6.2"
+            force "com.google.android.gms:play-services-measurement-api:21.6.2"
+            force "com.google.android.gms:play-services-measurement-impl:21.6.2"
+            force "com.google.android.gms:play-services-measurement-base:21.6.2"
+            force "com.google.android.gms:play-services-measurement-sdk:21.6.2"
+            force "com.google.android.gms:play-services-measurement-sdk-api:21.6.2"
+            force "com.google.android.gms:play-services-location:21.0.1"
         }
     }
 }
+

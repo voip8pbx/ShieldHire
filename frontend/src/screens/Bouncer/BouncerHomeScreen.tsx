@@ -1,6 +1,9 @@
 import React, { useContext, useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, StatusBar, TouchableOpacity, Alert, ActivityIndicator, FlatList, PermissionsAndroid, Platform, Linking } from 'react-native';
 import notifee, { EventType } from '@notifee/react-native';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RootStackParamList } from '../../types';
 import { AuthContext } from '../../context/AuthContext';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -26,6 +29,7 @@ interface BouncerBooking {
 }
 
 export default function BouncerHomeScreen() {
+    const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
     const { user } = useContext(AuthContext);
     const [bookings, setBookings] = useState<BouncerBooking[]>([]);
     const [loading, setLoading] = useState(true);
@@ -154,6 +158,10 @@ export default function BouncerHomeScreen() {
             await api.patch(`/bookings/${id}/status`, { status });
             Alert.alert('Success', `Booking ${status.toLowerCase()} successfully`);
             fetchPendingBookings(); // Refresh list
+            
+            if (status === 'CONFIRMED') {
+                navigation.navigate('BouncerBookingDetail', { bookingId: id });
+            }
         } catch (error) {
             console.error(`Failed to ${status} booking:`, error);
             Alert.alert('Error', `Failed to ${status.toLowerCase()} booking`);
@@ -253,7 +261,11 @@ export default function BouncerHomeScreen() {
     };
 
     const renderBookingItem = ({ item }: { item: BouncerBooking }) => (
-        <View style={styles.bookingCard}>
+        <TouchableOpacity 
+            style={styles.bookingCard}
+            activeOpacity={0.8}
+            onPress={() => navigation.navigate('BouncerBookingDetail', { bookingId: item.id })}
+        >
             <View style={styles.bookingHeader}>
                 <View style={styles.userInfo}>
                     <View style={styles.avatarPlaceholder}>
@@ -316,7 +328,7 @@ export default function BouncerHomeScreen() {
                     <Text style={styles.btnText}>Accept</Text>
                 </TouchableOpacity>
             </View>
-        </View>
+        </TouchableOpacity>
     );
 
     return (

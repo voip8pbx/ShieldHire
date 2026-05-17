@@ -10,14 +10,15 @@
         <!-- Standard private network ranges (works regardless of which WiFi you're on) -->
         <domain includeSubdomains="true">10.0.0.0</domain>
         <domain includeSubdomains="true">10.0.0.1</domain>
+        <domain includeSubdomains="true">10.69.233.154</domain>
         <domain includeSubdomains="true">10.248.116.154</domain>
         <domain includeSubdomains="true">10.34.82.154</domain>
         <domain includeSubdomains="true">192.168.1.0</domain>
         <domain includeSubdomains="true">192.168.0.0</domain>
     </domain-config>
 
-    <!-- Base config: allow cleartext to any 10.x.x.x address (covers any office/home LAN) -->
-    <base-config cleartextTrafficPermitted="false">
+    <!-- Base config: allow cleartext for dev flexibility -->
+    <base-config cleartextTrafficPermitted="true">
         <trust-anchors>
             <certificates src="system" />
         </trust-anchors>

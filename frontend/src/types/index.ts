@@ -47,6 +47,7 @@ export type RootStackParamList = {
     BouncerSurvey: undefined;
     BouncerRegistration: { name?: string; email?: string; photo?: string };
     VerificationPending: { userId: string };
+    BouncerBookingDetail: { bookingId: string };
 };
 
 export type MainTabParamList = {
@@ -58,8 +59,9 @@ export type MainTabParamList = {
 export type HomeStackParamList = {
     BouncerList: undefined;
     BouncerDetail: { bouncerId: string };
-    BouncerViewOnly: { bouncerId: string };
-    BookingFlow: { bouncerId: string; price: number };
+
+    BookingFlow: { bouncerId: string; price: number; selectedCoordinate?: { latitude: number; longitude: number } };
+    MapScreen: { initialLatitude: number; initialLongitude: number; bouncerId: string; price: number };
 };
 
 export type BouncerTabParamList = {

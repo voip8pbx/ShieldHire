@@ -56,3 +56,9 @@ backend/prisma/migrations/
 # Android keystore (sensitive)
 *.jks
 *.keystore
+
+# Firebase Service Account keys — NEVER COMMIT THESE
+serviceAccountKey.json
+*serviceAccountKey*.json
+shieldhire-9a30d-*.json
+backend/fcm/serviceAccountKey.json

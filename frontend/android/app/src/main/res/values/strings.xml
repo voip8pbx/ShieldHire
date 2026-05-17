@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">ShieldHire</string>
+    <string name="map_api_key">AIzaSyCV1MNMAyPMvM0jXnPmVG01ikwxa1ETERg</string>
 </resources>

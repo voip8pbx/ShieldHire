@@ -1,10 +1,11 @@
-import React, { useContext } from 'react';
-import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
+import React, { useContext, useEffect, useRef } from 'react';
+import { NavigationContainer, DefaultTheme, NavigationContainerRef } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { AuthProvider, AuthContext } from './src/context/AuthContext';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { StatusBar } from 'react-native';
+import { setNavigationRef, checkInitialNotification } from './src/services/fcmService';
 
 import LoginScreen from './src/screens/LoginScreen';
 import SignupScreen from './src/screens/SignupScreen';
@@ -14,12 +15,14 @@ import BouncerHomeScreen from './src/screens/Bouncer/BouncerHomeScreen';
 import BouncerHistoryScreen from './src/screens/Bouncer/BouncerHistoryScreen';
 import BouncerProfileScreen from './src/screens/Bouncer/BouncerProfileScreen';
 import BouncerSurveyScreen from './src/screens/Bouncer/BouncerSurveyScreen';
+import BouncerBookingDetailScreen from './src/screens/Bouncer/BouncerBookingDetailScreen';
 import HomeScreen from './src/screens/HomeScreen';
 import BookingsScreen from './src/screens/BookingsScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
 import BouncerDetailScreen from './src/screens/BouncerDetailScreen';
-import BouncerViewOnlyScreen from './src/screens/BouncerViewOnlyScreen';
+
 import BookingFlowScreen from './src/screens/BookingFlowScreen';
+import MapScreen from './src/screens/MapScreen';
 
 import { RootStackParamList, AuthStackParamList, MainTabParamList, HomeStackParamList, BouncerTabParamList } from './src/types';
 
@@ -47,13 +50,13 @@ const AuthNavigator = () => (
         <AuthStack.Screen name="Signup" component={SignupScreen} />
     </AuthStack.Navigator>
 );
-
 const HomeNavigator = () => (
     <HomeStack.Navigator screenOptions={{ headerShown: false, cardStyle: { backgroundColor: '#0F0F0F' } }}>
         <HomeStack.Screen name="BouncerList" component={HomeScreen} />
         <HomeStack.Screen name="BouncerDetail" component={BouncerDetailScreen} />
-        <HomeStack.Screen name="BouncerViewOnly" component={BouncerViewOnlyScreen} />
+
         <HomeStack.Screen name="BookingFlow" component={BookingFlowScreen} />
+        <HomeStack.Screen name="MapScreen" component={MapScreen} />
     </HomeStack.Navigator>
 );
 
@@ -131,6 +134,19 @@ const BouncerNavigator = () => (
 
 const AppContent = () => {
     const { token, isLoading, user, pendingBouncerRegistration } = useContext(AuthContext);
+    const navigationRef = useRef<NavigationContainerRef<any>>(null);
+
+    // Pass navigation ref to FCM service so it can deep-link from notifications
+    useEffect(() => {
+        if (navigationRef.current) {
+            setNavigationRef(navigationRef.current);
+        }
+    }, [navigationRef.current]);
+
+    // Check if the app was launched by tapping a notification in killed state
+    useEffect(() => {
+        checkInitialNotification();
+    }, []);
 
     if (isLoading) {
         return null;
@@ -147,7 +163,7 @@ const AppContent = () => {
     console.log(`[AppNavigation] User: ${user?.email}, Role: ${user?.role}, isBouncer: ${isBouncerFlow}, isApproved: ${isApproved}`);
 
     return (
-        <NavigationContainer theme={DarkTheme}>
+        <NavigationContainer ref={navigationRef} theme={DarkTheme}>
             <StatusBar barStyle="light-content" backgroundColor="#0F0F0F" />
             <Stack.Navigator screenOptions={{ headerShown: false }}>
                 {!token ? (
@@ -176,10 +192,11 @@ const AppContent = () => {
                         )}
 
                         {/* Common screens that might be needed in either flow (like during registration) */}
-                        {!pendingBouncerRegistration && (
+                        {!pendingBouncerRegistration && !isBouncerFlow && (
                             <Stack.Screen name="BouncerRegistration" component={BouncerRegistrationScreen} />
                         )}
                         <Stack.Screen name="BouncerSurvey" component={BouncerSurveyScreen} options={{ headerShown: false }} />
+                        <Stack.Screen name="BouncerBookingDetail" component={BouncerBookingDetailScreen} />
                     </>
                 )}
             </Stack.Navigator>
