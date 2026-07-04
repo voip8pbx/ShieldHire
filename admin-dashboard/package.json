@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "node -e \"const fs=require('fs'); if(fs.existsSync('../.env')) fs.copyFileSync('../.env', '.env')\" && next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
