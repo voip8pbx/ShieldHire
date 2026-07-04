@@ -1,0 +1,76 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  email        String   @unique
+  password     String
+  name         String
+  contactNo    String?
+  profilePhoto String?
+  role         String   @default("USER") // USER, ADMIN, BOUNCER, GUNMAN
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  bouncerProfile Bouncer?
+  bookings       Booking[]       @relation("UserBookings")
+  reviews        Review[]
+}
+
+model Bouncer {
+  id                String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String   @unique @db.ObjectId
+  user              User     @relation(fields: [userId], references: [id])
+  name              String
+  contactNo         String
+  age               Int
+  gender            String
+  profilePhoto      String?
+  govtIdPhoto       String
+  hasGunLicense     Boolean
+  gunLicensePhoto   String?
+  isGunman          Boolean
+  registrationType  String   @default("Individual") // Individual, Agency
+  agencyReferralCode String?
+  rating            Float    @default(0.0)
+  isAvailable       Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  bookings Booking[] @relation("BouncerBookings")
+}
+
+model Booking {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  user      User     @relation("UserBookings", fields: [userId], references: [id])
+  bouncerId String   @db.ObjectId
+  bouncer   Bouncer  @relation("BouncerBookings", fields: [bouncerId], references: [id])
+  date      DateTime
+  status    String   @default("PENDING") // PENDING, CONFIRMED, CANCELLED, COMPLETED
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  review Review?
+
+  @@index([userId])
+  @@index([bouncerId])
+  @@index([date])
+}
+
+model Review {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  rating    Int
+  comment   String?
+  bookingId String   @unique @db.ObjectId
+  booking   Booking  @relation(fields: [bookingId], references: [id])
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+}

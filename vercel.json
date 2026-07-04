@@ -1,0 +1,45 @@
+{
+    "version": 2,
+    "rewrites": [
+        {
+            "source": "/auth/:path*",
+            "destination": "/api"
+        },
+        {
+            "source": "/user/:path*",
+            "destination": "/api"
+        },
+        {
+            "source": "/bookings/:path*",
+            "destination": "/api"
+        },
+        {
+            "source": "/api/:path*",
+            "destination": "/api"
+        },
+        {
+            "source": "/bouncers/:path*",
+            "destination": "/api"
+        },
+        {
+            "source": "/verifications/:path*",
+            "destination": "/api"
+        },
+        {
+            "source": "/bouncer-status/:path*",
+            "destination": "/api"
+        },
+        {
+            "source": "/alerts/:path*",
+            "destination": "/api"
+        },
+        {
+            "source": "/(auth|user|bookings|api|bouncers|verifications|bouncer-status|alerts)",
+            "destination": "/api"
+        },
+        {
+            "source": "/((?!index\\.html|favicon\\.ico|_next|static|public|api/index.ts).*)",
+            "destination": "/api"
+        }
+    ]
+}
