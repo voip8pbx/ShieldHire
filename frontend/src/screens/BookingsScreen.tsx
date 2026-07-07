@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { View, Text, FlatList, StyleSheet, ActivityIndicator, StatusBar, SafeAreaView, Platform, TouchableOpacity } from 'react-native';
 import api from '../services/api';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NavigationProp } from '@react-navigation/native';
+import { AuthContext } from '../context/AuthContext';
 
 const BookingCardClient = React.memo(({ item, navigation }: { item: any, navigation: any }) => {
     const bouncerId = item.bouncer?.id || item.bouncerId;
@@ -55,6 +56,8 @@ export default function BookingsScreen() {
     const [bookings, setBookings] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const navigation = useNavigation<NavigationProp<any>>();
+    const { token, requireAuth } = useContext(AuthContext);
+    const isGuest = token === 'guest_token';
 
     const fetchBookings = async () => {
         try {
@@ -76,13 +79,41 @@ export default function BookingsScreen() {
 
     useFocusEffect(
         React.useCallback(() => {
-            fetchBookings();
-        }, [])
+            if (!isGuest) {
+                fetchBookings();
+            }
+        }, [isGuest])
     );
 
     const renderItem = React.useCallback(({ item }: any) => {
         return <BookingCardClient item={item} navigation={navigation} />;
     }, [navigation]);
+
+    if (isGuest) {
+        return (
+            <SafeAreaView style={styles.container}>
+                <StatusBar barStyle="light-content" backgroundColor="#0F0F0F" />
+                <View style={styles.guestContainer}>
+                    <View style={styles.guestIconWrap}>
+                        <Ionicons name="shield-checkmark" size={72} color="#FFD700" />
+                    </View>
+                    <Text style={styles.guestTitle}>Your Hires Await</Text>
+                    <Text style={styles.guestSubtitle}>Login to Hire Our Bouncers</Text>
+                    <Text style={styles.guestDesc}>
+                        Sign in to book professional security personnel, track your hires, and manage all your bookings in one place.
+                    </Text>
+                    <TouchableOpacity
+                        style={styles.loginBtn}
+                        activeOpacity={0.85}
+                        onPress={() => requireAuth(navigation, 'Bookings')}
+                    >
+                        <Ionicons name="log-in-outline" size={20} color="#000" style={{ marginRight: 8 }} />
+                        <Text style={styles.loginBtnText}>Login / Sign Up</Text>
+                    </TouchableOpacity>
+                </View>
+            </SafeAreaView>
+        );
+    }
 
     return (
         <SafeAreaView style={styles.container}>
@@ -216,5 +247,61 @@ const styles = StyleSheet.create({
         marginTop: 16,
         color: '#666',
         fontSize: 16,
+    },
+    guestContainer: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingHorizontal: 32,
+    },
+    guestIconWrap: {
+        width: 120,
+        height: 120,
+        borderRadius: 60,
+        backgroundColor: 'rgba(255, 215, 0, 0.1)',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: 28,
+        borderWidth: 1,
+        borderColor: 'rgba(255, 215, 0, 0.25)',
+    },
+    guestTitle: {
+        fontSize: 26,
+        fontWeight: 'bold',
+        color: '#fff',
+        marginBottom: 8,
+        textAlign: 'center',
+    },
+    guestSubtitle: {
+        fontSize: 18,
+        fontWeight: '600',
+        color: '#FFD700',
+        marginBottom: 16,
+        textAlign: 'center',
+    },
+    guestDesc: {
+        fontSize: 14,
+        color: '#888',
+        textAlign: 'center',
+        lineHeight: 22,
+        marginBottom: 36,
+    },
+    loginBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#FFD700',
+        paddingVertical: 14,
+        paddingHorizontal: 36,
+        borderRadius: 12,
+        shadowColor: '#FFD700',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.35,
+        shadowRadius: 10,
+        elevation: 8,
+    },
+    loginBtnText: {
+        color: '#000',
+        fontSize: 16,
+        fontWeight: 'bold',
     },
 });
