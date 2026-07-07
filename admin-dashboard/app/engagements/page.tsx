@@ -318,7 +318,7 @@ export default function EngagementsPage() {
                         <thead>
                             <tr>
                                 <th>Booking ID</th>
-                                <th>User Details</th>
+                                <th>Client Details</th>
                                 <th>Bouncer Details</th>
                                 <th>Event Info</th>
                                 <th>Event Date</th>
@@ -379,6 +379,11 @@ export default function EngagementsPage() {
                                             <div className="text-xs text-[var(--text-tertiary)]">
                                                 ID: {booking.bouncer.id}
                                             </div>
+                                            {booking.bouncer.contactNo && (
+                                                <div className="text-xs text-[var(--text-muted)]">
+                                                    {booking.bouncer.contactNo}
+                                                </div>
+                                            )}
                                             {booking.bouncer.experience && (
                                                 <div className="text-xs text-[var(--text-muted)]">
                                                     {booking.bouncer.experience} years exp
@@ -562,6 +567,12 @@ export default function EngagementsPage() {
                                             <div className="text-xs text-[var(--text-muted)]">Bouncer ID</div>
                                             <div className="text-sm font-mono text-[var(--text-primary)]">{selectedBooking.bouncer.id}</div>
                                         </div>
+                                        {selectedBooking.bouncer.contactNo && (
+                                            <div>
+                                                <div className="text-xs text-[var(--text-muted)]">Phone</div>
+                                                <div className="text-sm text-[var(--text-primary)]">{selectedBooking.bouncer.contactNo}</div>
+                                            </div>
+                                        )}
                                         {selectedBooking.bouncer.experience && (
                                             <div>
                                                 <div className="text-xs text-[var(--text-muted)]">Experience</div>

@@ -5,8 +5,8 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
-import { RootStackParamList } from '../../types';
-import api from '../../services/api';
+import { RootStackParamList } from '../types';
+import api from '../services/api';
 
 type BouncerBookingDetailScreenNavigationProp = StackNavigationProp<RootStackParamList, 'BouncerBookingDetail'>;
 type BouncerBookingDetailScreenRouteProp = RouteProp<RootStackParamList, 'BouncerBookingDetail'>;

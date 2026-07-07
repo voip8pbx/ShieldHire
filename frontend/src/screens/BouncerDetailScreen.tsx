@@ -10,7 +10,10 @@ import {
     SafeAreaView,
     Platform,
     StatusBar,
-    Alert
+    Alert,
+    Modal,
+    FlatList,
+    Dimensions
 } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
@@ -56,6 +59,8 @@ export default function BouncerDetailScreen({ navigation, route }: Props) {
     const { bouncerId } = route.params;
     const [bouncer, setBouncer] = useState<BouncerDetails | null>(null);
     const [loading, setLoading] = useState(true);
+    const [selectedPackage, setSelectedPackage] = useState<'SINGLE_SHIFT' | 'VIP_BODYGUARD'>('SINGLE_SHIFT');
+    const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
 
     useLayoutEffect(() => {
         navigation.setOptions({
@@ -134,7 +139,9 @@ export default function BouncerDetailScreen({ navigation, route }: Props) {
 
     if (!bouncer) return null;
 
-    const currentPrice = bouncer.isGunman ? 3500 : 2000;
+    const SINGLE_SHIFT_PRICE = 2000;
+    const VIP_BODYGUARD_PRICE = 4000;
+    const selectedBasePrice = selectedPackage === 'VIP_BODYGUARD' ? VIP_BODYGUARD_PRICE : SINGLE_SHIFT_PRICE;
 
     return (
         <SafeAreaView style={styles.safeArea}>
@@ -217,11 +224,16 @@ export default function BouncerDetailScreen({ navigation, route }: Props) {
                             <Text style={styles.sectionTitle}>Photos</Text>
                             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.galleryScroll}>
                                 {bouncer.gallery.map((photoUrl, index) => (
-                                    <Image
-                                        key={index}
-                                        source={{ uri: photoUrl }}
-                                        style={styles.galleryImage}
-                                    />
+                                    <TouchableOpacity 
+                                        key={index} 
+                                        onPress={() => setSelectedImageIndex(index)}
+                                        activeOpacity={0.9}
+                                    >
+                                        <Image
+                                            source={{ uri: photoUrl }}
+                                            style={styles.galleryImage}
+                                        />
+                                    </TouchableOpacity>
                                 ))}
                             </ScrollView>
                         </View>
@@ -231,30 +243,55 @@ export default function BouncerDetailScreen({ navigation, route }: Props) {
                     <View style={styles.section}>
                         <Text style={styles.sectionTitle}>Hiring Packages</Text>
 
-                        {/* Event Guard */}
-                        <View style={styles.planCard}>
+                        {/* Single Event Shift */}
+                        <TouchableOpacity
+                            style={[
+                                styles.planCard,
+                                selectedPackage === 'SINGLE_SHIFT' && styles.planCardSelected,
+                            ]}
+                            onPress={() => setSelectedPackage('SINGLE_SHIFT')}
+                            activeOpacity={0.85}
+                        >
                             <View style={styles.planHeader}>
                                 <Text style={styles.planName}>Single Event Shift</Text>
-                                <Text style={styles.planPrice}>₹{currentPrice}</Text>
+                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                    {selectedPackage === 'SINGLE_SHIFT' && (
+                                        <Ionicons name="checkmark-circle" size={20} color="#FFD700" style={{ marginRight: 8 }} />
+                                    )}
+                                    <Text style={styles.planPrice}>₹{SINGLE_SHIFT_PRICE}</Text>
+                                </View>
                             </View>
-                            <Text style={styles.planSub}>Up to 6 hours active duty.</Text>
                             <View style={styles.divider} />
                             <View style={styles.planFeature}><Text style={styles.planFeatureText}>• Crowd Control</Text></View>
                             <View style={styles.planFeature}><Text style={styles.planFeatureText}>• Entry Screening</Text></View>
-                        </View>
+                            <View style={styles.planFeature}><Text style={styles.planFeatureText}>• General Event Security</Text></View>
+                        </TouchableOpacity>
 
                         {/* VIP Protection */}
-                        <View style={[styles.planCard, styles.goldPlan]}>
+                        <TouchableOpacity
+                            style={[
+                                styles.planCard,
+                                styles.goldPlan,
+                                selectedPackage === 'VIP_BODYGUARD' && styles.goldPlanSelected,
+                            ]}
+                            onPress={() => setSelectedPackage('VIP_BODYGUARD')}
+                            activeOpacity={0.85}
+                        >
                             <View style={styles.planHeader}>
                                 <Text style={[styles.planName, { color: '#000' }]}>VIP Bodyguard</Text>
-                                <Text style={[styles.planPrice, { color: '#000' }]}>₹{currentPrice * 2}</Text>
+                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                    {selectedPackage === 'VIP_BODYGUARD' && (
+                                        <Ionicons name="checkmark-circle" size={20} color="#000" style={{ marginRight: 8 }} />
+                                    )}
+                                    <Text style={[styles.planPrice, { color: '#000' }]}>₹{VIP_BODYGUARD_PRICE}</Text>
+                                </View>
                             </View>
-                            <Text style={[styles.planSub, { color: '#333' }]}>Full day personal protection.</Text>
                             <View style={[styles.divider, { backgroundColor: 'rgba(0,0,0,0.1)' }]} />
                             <View style={styles.planFeature}><Text style={[styles.planFeatureText, { color: '#000' }]}>• Close Protection</Text></View>
                             <View style={styles.planFeature}><Text style={[styles.planFeatureText, { color: '#000' }]}>• Threat Assessment</Text></View>
                             <View style={styles.planFeature}><Text style={[styles.planFeatureText, { color: '#000' }]}>• Armed Response (if licensed)</Text></View>
-                        </View>
+                            <View style={styles.planFeature}><Text style={[styles.planFeatureText, { color: '#000' }]}>• 24/7 VIP Coverage</Text></View>
+                        </TouchableOpacity>
                     </View>
 
                     {/* Client Reviews */}
@@ -285,17 +322,51 @@ export default function BouncerDetailScreen({ navigation, route }: Props) {
             {/* Bottom Button */}
             <View style={styles.footer}>
                 <View>
-                    <Text style={styles.priceLabel}>Starting from</Text>
-                    <Text style={styles.priceValue}>₹{currentPrice}<Text style={{ fontSize: 14, color: '#888', fontWeight: '400' }}>/shift</Text></Text>
+                    <Text style={styles.priceLabel}>
+                        {selectedPackage === 'VIP_BODYGUARD' ? 'VIP Package' : 'Standard Package'}
+                    </Text>
+                    <Text style={styles.priceValue}>₹{selectedBasePrice}<Text style={{ fontSize: 14, color: '#888', fontWeight: '400' }}>/shift</Text></Text>
                 </View>
                 <TouchableOpacity
                     style={styles.bookButton}
-                    onPress={() => navigation.navigate('BookingFlow', { bouncerId: bouncer.id, price: currentPrice })}
+                    onPress={() => navigation.navigate('BookingFlow', { bouncerId: bouncer.id, price: selectedBasePrice, package: selectedPackage })}
                 >
                     <Text style={styles.bookBtnText}>HIRE SECURITY</Text>
                     <Ionicons name="shield-checkmark" size={20} color="#000" style={{ marginLeft: 8 }} />
                 </TouchableOpacity>
             </View>
+
+            {/* Image Viewer Modal */}
+            <Modal
+                visible={selectedImageIndex !== null}
+                transparent={true}
+                animationType="fade"
+                onRequestClose={() => setSelectedImageIndex(null)}
+            >
+                <View style={styles.modalContainer}>
+                    <TouchableOpacity style={styles.closeButton} onPress={() => setSelectedImageIndex(null)}>
+                        <Ionicons name="close" size={32} color="#fff" />
+                    </TouchableOpacity>
+                    {bouncer?.gallery && (
+                        <FlatList
+                            data={bouncer.gallery}
+                            horizontal
+                            pagingEnabled
+                            showsHorizontalScrollIndicator={false}
+                            initialScrollIndex={selectedImageIndex || 0}
+                            getItemLayout={(data, index) => (
+                                { length: Dimensions.get('window').width, offset: Dimensions.get('window').width * index, index }
+                            )}
+                            keyExtractor={(_, index) => index.toString()}
+                            renderItem={({ item }) => (
+                                <View style={{ width: Dimensions.get('window').width, flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                                    <Image source={{ uri: item }} style={styles.fullscreenImage} resizeMode="contain" />
+                                </View>
+                            )}
+                        />
+                    )}
+                </View>
+            </Modal>
         </SafeAreaView>
     );
 }
@@ -340,7 +411,6 @@ const styles = StyleSheet.create({
     headerOverlay: {
         ...StyleSheet.absoluteFillObject,
         backgroundColor: 'rgba(15,15,15,0.7)',
-        // gradient effect could be added here
     },
     profileInfoCentered: {
         alignItems: 'center',
@@ -439,6 +509,11 @@ const styles = StyleSheet.create({
         fontSize: 13,
         fontWeight: '500',
     },
+    featureText: {
+        color: '#ccc',
+        fontSize: 12,
+        fontWeight: '500',
+    },
     // Body Text
     bodyText: {
         fontSize: 15,
@@ -489,12 +564,20 @@ const styles = StyleSheet.create({
         borderRadius: 16,
         padding: 20,
         marginBottom: 16,
-        borderWidth: 1,
+        borderWidth: 2,
         borderColor: '#333',
+    },
+    planCardSelected: {
+        borderColor: '#FFD700',
+        backgroundColor: '#252020',
     },
     goldPlan: {
         backgroundColor: '#FFD700',
         borderColor: '#FFD700',
+    },
+    goldPlanSelected: {
+        borderColor: '#000',
+        borderWidth: 3,
     },
     planHeader: {
         flexDirection: 'row',
@@ -602,4 +685,22 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: '800',
     },
+    modalContainer: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.95)',
+        justifyContent: 'center',
+    },
+    closeButton: {
+        position: 'absolute',
+        top: Platform.OS === 'ios' ? 60 : 30,
+        right: 20,
+        zIndex: 10,
+        backgroundColor: 'rgba(255, 255, 255, 0.2)',
+        borderRadius: 20,
+        padding: 5,
+    },
+    fullscreenImage: {
+        width: Dimensions.get('window').width,
+        height: '80%',
+    }
 });

@@ -195,11 +195,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setAuthToken(null);
     };
 
-    const updateUser = (updatedUser: User) => {
+    const updateUser = (updatedUser: Partial<User>) => {
         // When bouncer registration completes and updateUser is called,
         // clear the pending registration flag so App.tsx re-evaluates navigation
         setPendingBouncerRegistration(null);
-        setUser(prev => ({ ...prev, ...updatedUser }));
+        setUser(prev => {
+            const newUser = { ...prev, ...updatedUser } as User;
+            AsyncStorage.setItem(USER_KEY, JSON.stringify(newUser)).catch(() => {});
+            return newUser;
+        });
     };
 
     const startBouncerRegistration = (

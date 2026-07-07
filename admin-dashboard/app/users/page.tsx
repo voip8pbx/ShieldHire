@@ -152,7 +152,7 @@ export default function UsersPage() {
                                                 ? 'bg-[var(--secondary-glow)] text-[var(--secondary)] border border-[var(--secondary)]'
                                                 : 'bg-[var(--surface-elevated)] text-[var(--text-tertiary)]'
                                             }`} style={{ fontSize: '10px', paddingTop: '2px', paddingBottom: '2px', paddingLeft: '6px', paddingRight: '6px', borderRadius: '9999px' }}>
-                                            {user.role}
+                                            {user.role === 'USER' ? 'CLIENT' : user.role}
                                         </span>
                                     </td>
                                     <td>
@@ -225,7 +225,7 @@ export default function UsersPage() {
                                         ? 'bg-[var(--primary-glow)] text-[var(--primary)] border border-[var(--primary)]'
                                         : 'bg-[var(--secondary-glow)] text-[var(--secondary)] border border-[var(--secondary)]'
                                         }`} style={{ fontSize: '10px', paddingTop: '2px', paddingBottom: '2px', paddingLeft: '6px', paddingRight: '6px', borderRadius: '9999px' }}>
-                                        {selectedUser.role}
+                                        {selectedUser.role === 'USER' ? 'CLIENT' : selectedUser.role}
                                     </span>
                                 </div>
                             </div>

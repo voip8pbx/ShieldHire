@@ -15,6 +15,10 @@ interface BookingHistory {
     duration?: number;
     totalPrice?: number;
     status: string;
+    package?: string;
+    notes?: string;
+    clientName?: string;
+    clientContactNo?: string;
     user: {
         name: string;
         contactNo?: string;
@@ -180,9 +184,29 @@ const HistoryCardBouncer = React.memo(({ item, isUpcoming = false, navigation }:
                         <MaterialCommunityIcons name="clock-outline" size={14} color="#888" />
                         <Text style={styles.durationText}>{item.duration || 0} Hours Shift</Text>
                     </View>
-                    <View style={styles.payoutAmountContainer}>
-                        <Text style={styles.payoutLabel}>PAYOUT</Text>
-                        <Text style={styles.payoutAmount}>₹{item.totalPrice || 0}</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                        {item.package && (
+                            <View style={[
+                                styles.packageBadge,
+                                item.package === 'VIP_BODYGUARD' && styles.packageBadgeVip,
+                            ]}>
+                                <Ionicons
+                                    name={item.package === 'VIP_BODYGUARD' ? 'shield' : 'shield-outline'}
+                                    size={10}
+                                    color={item.package === 'VIP_BODYGUARD' ? '#000' : '#888'}
+                                />
+                                <Text style={[
+                                    styles.packageBadgeText,
+                                    item.package === 'VIP_BODYGUARD' && { color: '#000' },
+                                ]}>
+                                    {item.package === 'VIP_BODYGUARD' ? 'VIP' : 'STANDARD'}
+                                </Text>
+                            </View>
+                        )}
+                        <View style={styles.payoutAmountContainer}>
+                            <Text style={styles.payoutLabel}>PAYOUT</Text>
+                            <Text style={styles.payoutAmount}>₹{item.totalPrice || 0}</Text>
+                        </View>
                     </View>
                 </View>
             </View>
@@ -585,5 +609,26 @@ const styles = StyleSheet.create({
         color: '#444',
         marginTop: 10,
         fontSize: 14,
+    },
+    packageBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#2A2A2A',
+        paddingHorizontal: 7,
+        paddingVertical: 3,
+        borderRadius: 6,
+        borderWidth: 1,
+        borderColor: '#444',
+    },
+    packageBadgeVip: {
+        backgroundColor: '#FFD700',
+        borderColor: '#FFD700',
+    },
+    packageBadgeText: {
+        color: '#888',
+        fontSize: 9,
+        fontWeight: '900',
+        marginLeft: 3,
+        letterSpacing: 0.5,
     },
 });

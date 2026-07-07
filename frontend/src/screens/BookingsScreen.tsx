@@ -9,11 +9,8 @@ const BookingCardClient = React.memo(({ item, navigation }: { item: any, navigat
     const bouncerId = item.bouncer?.id || item.bouncerId;
 
     const handlePress = () => {
-        if (bouncerId) {
-            navigation.navigate('HomeStack', {
-                screen: 'BouncerViewOnly',
-                params: { bouncerId },
-            } as any);
+        if (item.id) {
+            navigation.navigate('BookingDetails', { bookingId: item.id } as any);
         }
     };
 
@@ -21,7 +18,7 @@ const BookingCardClient = React.memo(({ item, navigation }: { item: any, navigat
         <TouchableOpacity
             style={styles.card}
             onPress={handlePress}
-            activeOpacity={bouncerId ? 0.75 : 1}
+            activeOpacity={item.id ? 0.75 : 1}
         >
             <View style={styles.cardHeader}>
                 <Text style={styles.bouncerName}>{item.bouncer?.name || 'Security Detail'}</Text>
@@ -64,7 +61,12 @@ export default function BookingsScreen() {
             setLoading(true);
             const response = await api.get('/bookings');
             console.log(`[Bookings] Fetched ${response.data.length} records`);
-            setBookings(response.data);
+            const sortedBookings = response.data.sort((a: any, b: any) => {
+                const dateA = new Date(a.createdAt || a.date).getTime();
+                const dateB = new Date(b.createdAt || b.date).getTime();
+                return dateB - dateA;
+            });
+            setBookings(sortedBookings);
         } catch (error) {
             console.error('[Bookings] Fetch Error:', error);
         } finally {

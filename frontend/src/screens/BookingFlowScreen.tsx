@@ -24,12 +24,13 @@ const TIME_SLOTS = [
 ];
 
 export default function BookingFlowScreen({ navigation, route }: Props) {
-    const { bouncerId, price } = route.params;
+    const { bouncerId, price, package: bookingPackage } = route.params;
     const [selectedDate, setSelectedDate] = useState('');
     const [selectedTime, setSelectedTime] = useState('');
     const [hours, setHours] = useState(4); // Default 4 hours for security
     const [loading, setLoading] = useState(false);
     const [location, setLocation] = useState('');
+    const [notes, setNotes] = useState('');
     const [predictions, setPredictions] = useState<any[]>([]);
     const [showPredictions, setShowPredictions] = useState(false);
     const selectedCoordinate = route.params.selectedCoordinate;
@@ -93,27 +94,22 @@ export default function BookingFlowScreen({ navigation, route }: Props) {
         const calculatedPrice = price * (hours / 4) * (hours > 6 ? 1.2 : 1); // Dynamic calculation
 
         setLoading(true);
-        try {
-            // Re-using existing endpoint
-            await api.post('/bookings', {
+        // Simulate a brief loading state before navigating
+        setTimeout(() => {
+            setLoading(false);
+            navigation.navigate('PaymentScreen', {
                 bouncerId,
                 date: selectedDate,
                 time: selectedTime,
-                location: location,
+                location,
                 latitude: hasSelectedCoords ? selectedCoordinate?.latitude : null,
                 longitude: hasSelectedCoords ? selectedCoordinate?.longitude : null,
                 duration: hours,
-                totalPrice: Math.round(calculatedPrice)
+                totalPrice: Math.round(calculatedPrice),
+                package: bookingPackage,
+                notes: notes.trim() || null,
             });
-            Alert.alert('Success', 'Security Personnel Confirmed!', [
-                { text: 'Done', onPress: () => navigation.popToTop() }
-            ]);
-        } catch (error: any) {
-            console.log('Booking Error:', error.response?.data || error.message);
-            Alert.alert('Error', error.response?.data?.error || 'Failed to create booking.');
-        } finally {
-            setLoading(false);
-        }
+        }, 500);
     };
 
     const incrementHours = () => setHours(h => Math.min(h + 1, 24));
@@ -126,6 +122,17 @@ export default function BookingFlowScreen({ navigation, route }: Props) {
                     <Ionicons name="chevron-back" size={24} color="#fff" />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Hiring Details</Text>
+                {/* Package badge in header */}
+                <View style={[styles.packageBadge, bookingPackage === 'VIP_BODYGUARD' && styles.packageBadgeVip]}>
+                    <Ionicons
+                        name={bookingPackage === 'VIP_BODYGUARD' ? 'shield' : 'shield-outline'}
+                        size={12}
+                        color={bookingPackage === 'VIP_BODYGUARD' ? '#000' : '#FFD700'}
+                    />
+                    <Text style={[styles.packageBadgeText, bookingPackage === 'VIP_BODYGUARD' && { color: '#000' }]}>
+                        {bookingPackage === 'VIP_BODYGUARD' ? 'VIP' : 'STANDARD'}
+                    </Text>
+                </View>
             </View>
 
             <KeyboardAvoidingView 
@@ -264,7 +271,8 @@ export default function BookingFlowScreen({ navigation, route }: Props) {
                             initialLatitude: selectedCoordinate?.latitude || 19.0760,
                             initialLongitude: selectedCoordinate?.longitude || 72.8777,
                             bouncerId,
-                            price
+                            price,
+                            package: bookingPackage,
                         })}
                     >
                         <MaterialCommunityIcons 
@@ -278,6 +286,21 @@ export default function BookingFlowScreen({ navigation, route }: Props) {
                     </TouchableOpacity>
                 </View>
 
+                {/* Special Instructions */}
+                <View style={styles.section}>
+                    <View style={styles.sectionHeader}>
+                        <MaterialCommunityIcons name="note-text-outline" size={20} color="#FFD700" style={{ marginRight: 8 }} />
+                        <Text style={styles.sectionTitle}>Special Instructions (optional)</Text>
+                    </View>
+                    <TextInput
+                        style={[styles.input, { minHeight: 80, textAlignVertical: 'top' }]}
+                        placeholder="e.g. VIP guest list, dress code, specific post requirements..."
+                        placeholderTextColor="#666"
+                        value={notes}
+                        onChangeText={setNotes}
+                        multiline
+                    />
+                </View>
 
                 </ScrollView>
             </KeyboardAvoidingView>
@@ -297,7 +320,7 @@ export default function BookingFlowScreen({ navigation, route }: Props) {
                     {loading ? (
                         <ActivityIndicator color="#000" />
                     ) : (
-                        <Text style={styles.confirmButtonText}>CONFIRM HIRE</Text>
+                        <Text style={styles.confirmButtonText}>PROCEED TO PAYMENT</Text>
                     )}
                 </TouchableOpacity>
             </View>
@@ -313,6 +336,7 @@ const styles = StyleSheet.create({
     header: {
         flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'space-between',
         paddingTop: Platform.OS === 'android' ? 40 : 20,
         paddingBottom: 20,
         paddingHorizontal: 20,
@@ -325,14 +349,37 @@ const styles = StyleSheet.create({
         padding: 5,
     },
     headerTitle: {
+        flex: 1,
         fontSize: 18,
         fontWeight: 'bold',
         color: '#fff',
+    },
+    packageBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: 'rgba(255, 215, 0, 0.15)',
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: 'rgba(255, 215, 0, 0.4)',
+    },
+    packageBadgeVip: {
+        backgroundColor: '#FFD700',
+        borderColor: '#FFD700',
+    },
+    packageBadgeText: {
+        color: '#FFD700',
+        fontSize: 10,
+        fontWeight: '900',
+        marginLeft: 4,
+        letterSpacing: 0.5,
     },
     scrollContent: {
         padding: 20,
         paddingBottom: 100,
     },
+
     section: {
         marginBottom: 30,
     },

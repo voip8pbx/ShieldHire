@@ -1,5 +1,6 @@
-import React, { useContext, useEffect, useRef } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import { NavigationContainer, DefaultTheme, NavigationContainerRef } from '@react-navigation/native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { AuthProvider, AuthContext } from './src/context/AuthContext';
@@ -10,6 +11,7 @@ import BootSplash from 'react-native-bootsplash';
 
 import LoginScreen from './src/screens/LoginScreen';
 import SignupScreen from './src/screens/SignupScreen';
+import AnimatedSplashScreen from './src/screens/AnimatedSplashScreen';
 import BouncerRegistrationScreen from './src/screens/Bouncer/BouncerRegistrationScreen';
 import VerificationPendingScreen from './src/screens/Bouncer/VerificationPendingScreen';
 import BouncerHomeScreen from './src/screens/Bouncer/BouncerHomeScreen';
@@ -17,11 +19,12 @@ import NotificationScreen from './src/screens/NotificationScreen';
 import BouncerHistoryScreen from './src/screens/Bouncer/BouncerHistoryScreen';
 import BouncerProfileScreen from './src/screens/Bouncer/BouncerProfileScreen';
 import BouncerSurveyScreen from './src/screens/Bouncer/BouncerSurveyScreen';
-import BouncerBookingDetailScreen from './src/screens/Bouncer/BouncerBookingDetailScreen';
+import BouncerBookingDetailScreen from './src/screens/BouncerBookingDetailScreen';
 import HomeScreen from './src/screens/HomeScreen';
 import BookingsScreen from './src/screens/BookingsScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
 import BouncerDetailScreen from './src/screens/BouncerDetailScreen';
+import BookingDetailsScreen from './src/screens/BookingDetailsScreen';
 
 import BookingFlowScreen from './src/screens/BookingFlowScreen';
 import MapScreen from './src/screens/MapScreen';
@@ -54,14 +57,18 @@ const AuthNavigator = () => (
     </AuthStack.Navigator>
 );
 import ExploreProfessionalsScreen from './src/screens/ExploreProfessionalsScreen';
+import ContactUsScreen from './src/screens/ContactUsScreen';
+import PaymentScreen from './src/screens/PaymentScreen';
 
 const HomeNavigator = () => (
     <HomeStack.Navigator screenOptions={{ headerShown: false, cardStyle: { backgroundColor: '#0F0F0F' } }}>
         <HomeStack.Screen name="BouncerList" component={HomeScreen} />
         <HomeStack.Screen name="ExploreProfessionals" component={ExploreProfessionalsScreen} />
         <HomeStack.Screen name="BouncerDetail" component={BouncerDetailScreen} />
+        <HomeStack.Screen name="ContactUs" component={ContactUsScreen} />
 
         <HomeStack.Screen name="BookingFlow" component={BookingFlowScreen} />
+        <HomeStack.Screen name="PaymentScreen" component={PaymentScreen} />
         <HomeStack.Screen name="MapScreen" component={MapScreen} />
     </HomeStack.Navigator>
 );
@@ -141,6 +148,7 @@ const BouncerNavigator = () => (
 const AppContent = () => {
     const { token, isLoading, user, pendingBouncerRegistration } = useContext(AuthContext);
     const navigationRef = useRef<NavigationContainerRef<any>>(null);
+    const [isSplashAnimationComplete, setSplashAnimationComplete] = useState(false);
 
     // Pass navigation ref to FCM service so it can deep-link from notifications
     useEffect(() => {
@@ -154,8 +162,13 @@ const AppContent = () => {
         checkInitialNotification();
     }, []);
 
-    if (isLoading) {
-        return null;
+    if (isLoading || !isSplashAnimationComplete) {
+        return (
+            <AnimatedSplashScreen 
+                isAppLoaded={!isLoading}
+                onAnimationComplete={() => setSplashAnimationComplete(true)}
+            />
+        );
     }
 
     // A user is a bouncer if they have the role OR they have a profile record.
@@ -209,6 +222,7 @@ const AppContent = () => {
                         )}
                         <Stack.Screen name="BouncerSurvey" component={BouncerSurveyScreen} options={{ headerShown: false }} />
                         <Stack.Screen name="BouncerBookingDetail" component={BouncerBookingDetailScreen} />
+                        <Stack.Screen name="BookingDetails" component={BookingDetailsScreen} />
                         <Stack.Screen name="Notifications" component={NotificationScreen} options={{ headerShown: false }} />
                     </>
                 )}
@@ -220,8 +234,10 @@ const AppContent = () => {
 
 export default function App() {
     return (
-        <AuthProvider>
-            <AppContent />
-        </AuthProvider>
+        <SafeAreaProvider>
+            <AuthProvider>
+                <AppContent />
+            </AuthProvider>
+        </SafeAreaProvider>
     );
 }

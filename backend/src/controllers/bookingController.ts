@@ -38,7 +38,15 @@ export const createBooking = async (req: Request, res: Response) => {
     try {
         const userId = (req as any).user.id;
         const clientName: string = (req as any).user.name || 'A client';
-        const { bouncerId, date, time, location, latitude, longitude, duration, totalPrice } = req.body;
+        const { bouncerId, date, time, location, latitude, longitude, duration, totalPrice, package: pkg, notes } = req.body;
+
+        // Fetch client's contact number to denormalize into the booking
+        const { data: clientUser } = await supabaseAdmin
+            .from('users')
+            .select('contactNo')
+            .eq('id', userId)
+            .single();
+        const clientContactNo = clientUser?.contactNo || null;
 
         // Since the database schema might not have latitude/longitude columns yet,
         // we securely bundle them into the location text field.
@@ -57,6 +65,10 @@ export const createBooking = async (req: Request, res: Response) => {
                 location: finalLocation,
                 duration: duration || 4,
                 totalPrice: totalPrice,
+                package: pkg || 'SINGLE_SHIFT',
+                notes: notes || null,
+                clientName: clientName,
+                clientContactNo: clientContactNo,
                 status: 'PENDING',
             })
             .select()
@@ -277,10 +289,10 @@ export const getBookingDetail = async (req: Request, res: Response) => {
         const userId = (req as any).user.id;
         const { id } = req.params;
 
-        // Fetch booking with user details
+        // Fetch booking with user and bouncer details
         const { data: booking, error } = await supabaseAdmin
             .from('bookings')
-            .select('*, users(id, name, contactNo, email, profilePhoto)')
+            .select('*, users(id, name, contactNo, email, profilePhoto), bouncers(id, name, contactNo, profilePhoto)')
             .eq('id', id)
             .single();
 
@@ -306,6 +318,10 @@ export const getBookingDetail = async (req: Request, res: Response) => {
         if (booking.users) {
             formatted.user = camelCaseKeys(booking.users);
             delete formatted.users;
+        }
+        if (booking.bouncers) {
+            formatted.bouncer = camelCaseKeys(booking.bouncers);
+            delete formatted.bouncers;
         }
 
         res.json(formatted);

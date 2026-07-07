@@ -23,7 +23,7 @@ import Geolocation from 'react-native-geolocation-service';
 import { useNavigation } from '@react-navigation/native';
 
 export default function ProfileScreen() {
-    const { user, logout, updateUser, pendingRoute, consumePendingRoute } = useContext(AuthContext);
+    const { user, token, logout, updateUser, pendingRoute, consumePendingRoute, requireAuth } = useContext(AuthContext);
     const navigation = useNavigation<any>();
 
     // State
@@ -252,7 +252,13 @@ export default function ProfileScreen() {
 
                     <TouchableOpacity
                         style={[styles.actionBtn, isEditing ? styles.saveBtn : styles.editBtn]}
-                        onPress={toggleEdit}
+                        onPress={() => {
+                            if (token === 'guest_token') {
+                                requireAuth(navigation, 'Profile');
+                            } else {
+                                toggleEdit();
+                            }
+                        }}
                         disabled={saving}
                     >
                         {saving ? (
@@ -277,7 +283,10 @@ export default function ProfileScreen() {
                             <Text style={styles.activeText}>{membership.status}</Text>
                         </View>
 
-                        <TouchableOpacity style={styles.manageBtn}>
+                        <TouchableOpacity
+                            style={styles.manageBtn}
+                            onPress={() => requireAuth(navigation, 'Profile')}
+                        >
                             <Text style={styles.manageBtnText}>Upgrade Plan</Text>
                         </TouchableOpacity>
                     </View>
@@ -300,7 +309,21 @@ export default function ProfileScreen() {
 
                 {/* Settings Menu */}
                 <View style={styles.menuContainer}>
-                    <TouchableOpacity style={styles.menuItem}>
+                    <TouchableOpacity
+                        style={styles.menuItem}
+                        onPress={() => requireAuth(navigation, 'PaymentScreen', {
+                            bouncerId: 'setup-only',
+                            date: new Date().toISOString().split('T')[0],
+                            time: '00:00',
+                            location: 'Profile Setup',
+                            latitude: null,
+                            longitude: null,
+                            duration: 0,
+                            totalPrice: 0,
+                            package: 'SINGLE_SHIFT',
+                            notes: 'Payment Method Setup Only'
+                        })}
+                    >
                         <View style={styles.menuLeft}>
                             <Ionicons name="card-outline" size={22} color="#ccc" />
                             <Text style={styles.menuText}>Payment Methods</Text>
@@ -308,10 +331,24 @@ export default function ProfileScreen() {
                         <Ionicons name="chevron-forward" size={20} color="#666" />
                     </TouchableOpacity>
 
-                    <TouchableOpacity style={styles.menuItem}>
+                    <TouchableOpacity
+                        style={styles.menuItem}
+                        onPress={() => requireAuth(navigation, 'Profile')}
+                    >
                         <View style={styles.menuLeft}>
                             <Ionicons name="shield-checkmark-outline" size={22} color="#ccc" />
                             <Text style={styles.menuText}>Verification Status</Text>
+                        </View>
+                        <Ionicons name="chevron-forward" size={20} color="#666" />
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={styles.menuItem}
+                        onPress={() => navigation.navigate('ContactUs')}
+                    >
+                        <View style={styles.menuLeft}>
+                            <Ionicons name="chatbubbles-outline" size={22} color="#ccc" />
+                            <Text style={styles.menuText}>Contact Us</Text>
                         </View>
                         <Ionicons name="chevron-forward" size={20} color="#666" />
                     </TouchableOpacity>

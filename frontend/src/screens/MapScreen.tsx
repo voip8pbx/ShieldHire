@@ -16,7 +16,7 @@ type Props = {
 };
 
 export default function MapScreen({ navigation, route }: Props) {
-    const { initialLatitude, initialLongitude, bouncerId, price } = route.params;
+    const { initialLatitude, initialLongitude, bouncerId, price, package: bookingPackage } = route.params;
     
     const [markerCoords, setMarkerCoords] = useState({
         latitude: initialLatitude,
@@ -63,6 +63,7 @@ export default function MapScreen({ navigation, route }: Props) {
         navigation.navigate('BookingFlow', { 
             bouncerId, 
             price, 
+            package: bookingPackage,
             selectedCoordinate: markerCoords 
         });
     };

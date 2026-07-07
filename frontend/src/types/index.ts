@@ -51,6 +51,7 @@ export type RootStackParamList = {
     BouncerRegistration: { name?: string; email?: string; photo?: string };
     VerificationPending: { userId: string };
     BouncerBookingDetail: { bookingId: string };
+    BookingDetails: { bookingId: string };
     Notifications: undefined;
 };
 
@@ -64,9 +65,22 @@ export type HomeStackParamList = {
     BouncerList: undefined;
     ExploreProfessionals: undefined;
     BouncerDetail: { bouncerId: string };
+    ContactUs: undefined;
 
-    BookingFlow: { bouncerId: string; price: number; selectedCoordinate?: { latitude: number; longitude: number } };
-    MapScreen: { initialLatitude: number; initialLongitude: number; bouncerId: string; price: number };
+    BookingFlow: { bouncerId: string; price: number; package: 'SINGLE_SHIFT' | 'VIP_BODYGUARD'; selectedCoordinate?: { latitude: number; longitude: number } };
+    PaymentScreen: {
+        bouncerId: string;
+        date: string;
+        time: string;
+        location: string;
+        latitude: number | null;
+        longitude: number | null;
+        duration: number;
+        totalPrice: number;
+        package: 'SINGLE_SHIFT' | 'VIP_BODYGUARD';
+        notes: string | null;
+    };
+    MapScreen: { initialLatitude: number; initialLongitude: number; bouncerId: string; price: number; package: 'SINGLE_SHIFT' | 'VIP_BODYGUARD' };
 };
 
 export type BouncerTabParamList = {

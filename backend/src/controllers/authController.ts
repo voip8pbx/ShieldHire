@@ -24,6 +24,7 @@ const formatUserResponse = (user: any) => {
         email: user.email,
         name: user.name,
         role,
+        contactNo: user.contactNo,
         profilePhoto: user.profilePhoto, // camelCase
         bouncerProfile,
     };

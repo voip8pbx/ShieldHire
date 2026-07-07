@@ -104,19 +104,23 @@ CREATE INDEX IF NOT EXISTS "idx_bouncer_available"    ON "bouncers"("isAvailable
 -- 3. BOOKINGS TABLE
 -- =============================================
 CREATE TABLE IF NOT EXISTS "bookings" (
-    "id"         UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    "userId"     UUID NOT NULL REFERENCES "users"("id"),
-    "bouncerId"  UUID NOT NULL REFERENCES "bouncers"("id"),
-    "date"       TIMESTAMPTZ NOT NULL,
-    "time"       TEXT,
-    "status"     TEXT DEFAULT 'PENDING',            -- PENDING, CONFIRMED, REJECTED, COMPLETED
-    "location"   TEXT,                              -- Event location name/address
-    "latitude"   FLOAT,                             -- Event location latitude for map marker
-    "longitude"  FLOAT,                             -- Event location longitude for map marker
-    "duration"   INTEGER DEFAULT 4,
-    "totalPrice" FLOAT,
-    "createdAt"  TIMESTAMPTZ DEFAULT NOW(),
-    "updatedAt"  TIMESTAMPTZ DEFAULT NOW()
+    "id"              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    "userId"          UUID NOT NULL REFERENCES "users"("id"),
+    "bouncerId"       UUID NOT NULL REFERENCES "bouncers"("id"),
+    "date"            TIMESTAMPTZ NOT NULL,
+    "time"            TEXT,
+    "status"          TEXT DEFAULT 'PENDING',            -- PENDING, CONFIRMED, REJECTED, COMPLETED
+    "location"        TEXT,                              -- Event location name/address
+    "latitude"        FLOAT,                             -- Event location latitude for map marker
+    "longitude"       FLOAT,                             -- Event location longitude for map marker
+    "duration"        INTEGER DEFAULT 4,
+    "totalPrice"      FLOAT,
+    "package"         TEXT DEFAULT 'SINGLE_SHIFT',       -- SINGLE_SHIFT | VIP_BODYGUARD
+    "notes"           TEXT,                              -- Special instructions from client
+    "clientName"      TEXT,                              -- Denormalized client name
+    "clientContactNo" TEXT,                              -- Denormalized client contact number
+    "createdAt"       TIMESTAMPTZ DEFAULT NOW(),
+    "updatedAt"       TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE INDEX IF NOT EXISTS "idx_booking_user"    ON "bookings"("userId");
@@ -335,9 +339,11 @@ CREATE POLICY "Anyone can view approved bouncers"
   USING ("verificationStatus" = 'APPROVED');
 
 -- Clients RLS
+DROP POLICY IF EXISTS "Clients are viewable by everyone" ON public."clients";
 CREATE POLICY "Clients are viewable by everyone" ON public."clients"
 FOR SELECT USING (true);
 
+DROP POLICY IF EXISTS "Users can update their own client profile" ON public."clients";
 CREATE POLICY "Users can update their own client profile" ON public."clients"
 FOR UPDATE USING (auth.uid() = (SELECT "authId" FROM public."users" WHERE id = "userId"));
 
@@ -422,4 +428,10 @@ CREATE POLICY "Users can mark own notifications as read"
 ALTER TABLE "bouncers" ADD COLUMN IF NOT EXISTS "identity_verified" BOOLEAN DEFAULT FALSE;
 ALTER TABLE "bouncers" ADD COLUMN IF NOT EXISTS "aadhaar_last_4" TEXT;
 ALTER TABLE "bouncers" ADD COLUMN IF NOT EXISTS "liveness_verified_at" TIMESTAMPTZ;
+
+-- Migration: Booking package selection + client info denormalization (added 2026-07)
+ALTER TABLE "bookings" ADD COLUMN IF NOT EXISTS "package"         TEXT DEFAULT 'SINGLE_SHIFT';
+ALTER TABLE "bookings" ADD COLUMN IF NOT EXISTS "notes"           TEXT;
+ALTER TABLE "bookings" ADD COLUMN IF NOT EXISTS "clientName"      TEXT;
+ALTER TABLE "bookings" ADD COLUMN IF NOT EXISTS "clientContactNo" TEXT;
 

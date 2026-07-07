@@ -683,7 +683,7 @@ export default function HomeScreen({ navigation }: Props) {
                         <TouchableOpacity style={styles.ctaBtnPrimary} onPress={() => requireAuth(navigation, 'ExploreProfessionals')}>
                             <Text style={styles.ctaBtnPrimaryText}>Hire Now</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity style={styles.ctaBtnSecondary}>
+                        <TouchableOpacity style={styles.ctaBtnSecondary} onPress={() => navigation.navigate('ContactUs')}>
                             <Text style={styles.ctaBtnSecondaryText}>Contact Support</Text>
                         </TouchableOpacity>
                     </View>
