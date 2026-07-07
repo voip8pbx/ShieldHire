@@ -103,6 +103,7 @@ You will need to create `.env` files in each directory. Refer to the `.env.examp
 - `JWT_SECRET`: Secure string for token signing
 - `SUPABASE_URL` & `SUPABASE_ANON_KEY`
 - `FIREBASE_PROJECT_ID` & `FIREBASE_PRIVATE_KEY`
+- `KEEP_ALIVE_SECRET`: Bearer token for the database keep-alive endpoint (**mandatory** — see [`backend/docs/keep-alive.md`](backend/docs/keep-alive.md))
 
 **Frontend `.env`:**
 - `API_URL`: Backend server address

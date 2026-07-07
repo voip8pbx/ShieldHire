@@ -22,6 +22,7 @@ import verificationRoutes from './routes/verificationRoutes';
 import bouncerStatusRoutes from './routes/bouncerStatusRoutes';
 import alertRoutes from './routes/alertRoutes';
 import uploadRoutes from './routes/uploadRoutes';
+import systemRoutes from './routes/systemRoutes';
 
 app.use(['/auth', '/api/auth'], authRoutes);
 app.use(['/upload', '/api/upload'], uploadRoutes);
@@ -31,6 +32,7 @@ app.use(['/bouncers', '/api/bouncers', '/bouncer', '/api/bouncer'], bouncerRoute
 app.use(['/verifications', '/api/verifications'], verificationRoutes);
 app.use(['/bouncer-status', '/api/bouncer-status'], bouncerStatusRoutes);
 app.use(['/alerts', '/api/alerts'], alertRoutes);
+app.use('/api/system', systemRoutes);
 
 app.get('/api', (req, res) => {
     res.json({ message: 'Home Gym Trainer API is running (via /api)' });
