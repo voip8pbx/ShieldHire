@@ -27,6 +27,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import Geolocation from 'react-native-geolocation-service';
 import { PermissionsAndroid } from 'react-native';
 import LottieView from 'lottie-react-native';
+import SOSConfirmationModal, { SOSModalState } from '../components/SOSConfirmationModal';
 import LinearGradient from 'react-native-linear-gradient';
 import { BlurView } from '@react-native-community/blur';
 import { AuthContext } from '../context/AuthContext';
@@ -200,7 +201,12 @@ export default function HomeScreen({ navigation }: Props) {
     const [search, setSearch] = useState('');
     const [activeFilter, setActiveFilter] = useState('All');
     const [locationName, setLocationName] = useState('Mumbai, India');
-    const [sosLoading, setSosLoading] = useState(false);
+    const [refreshing, setRefreshing] = useState(false);
+    
+    // SOS Modal State
+    const [sosModalVisible, setSosModalVisible] = useState(false);
+    const [sosModalState, setSosModalState] = useState<SOSModalState>('INITIAL');
+    const [sosErrorMessage, setSosErrorMessage] = useState('');
 
     // Search focus animation
     const searchFocus = useRef(new Animated.Value(0)).current;
@@ -325,20 +331,13 @@ export default function HomeScreen({ navigation }: Props) {
                     PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
                     {
                         title: "Location Permission Required",
-                        message: "Shield Of Security needs access to your location to show relevant security personnel near you.",
+                        message: "Shield Of Security needs access to your location.",
                         buttonNeutral: "Ask Me Later",
                         buttonNegative: "Cancel",
                         buttonPositive: "OK"
                     }
                 );
                 if (granted === PermissionsAndroid.RESULTS.GRANTED) return true;
-                if (granted === PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN) {
-                    Alert.alert('Permission Required', 'Location permission is required for SOS.', [
-                        { text: 'Cancel', style: 'cancel' },
-                        { text: 'Open Settings', onPress: () => Linking.openSettings() }
-                    ]);
-                    return false;
-                }
                 return false;
             } catch (err) {
                 return false;
@@ -350,11 +349,11 @@ export default function HomeScreen({ navigation }: Props) {
     const sendSOS = async () => {
         const hasPermission = await requestLocationPermission();
         if (!hasPermission) {
-            Alert.alert('Permission Denied', 'Location permission is required for SOS.');
+            setSosModalState('PERMISSION');
             return;
         }
 
-        setSosLoading(true);
+        setSosModalState('LOADING');
         Geolocation.getCurrentPosition(
             async (position) => {
                 const { latitude, longitude } = position.coords;
@@ -364,30 +363,23 @@ export default function HomeScreen({ navigation }: Props) {
                         latitude,
                         longitude
                     });
-                    Alert.alert('Alert Sent', 'Admin and nearby Bouncers have been notified of your emergency.');
+                    setSosModalState('SUCCESS');
                 } catch (error) {
-                    Alert.alert('Error', 'Failed to send SOS alert');
-                } finally {
-                    setSosLoading(false);
+                    setSosErrorMessage('Failed to send SOS alert. Please check your connection and try again.');
+                    setSosModalState('ERROR');
                 }
             },
             (error) => {
-                Alert.alert('Error', 'Failed to get location: ' + error.message);
-                setSosLoading(false);
+                setSosErrorMessage('Failed to get your precise location: ' + error.message);
+                setSosModalState('ERROR');
             },
             { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
         );
     };
 
-    const handleSOS = async () => {
-        Alert.alert(
-            'Emergency SOS',
-            'Are you sure you want to trigger a high-priority emergency alert?',
-            [
-                { text: 'Cancel', style: 'cancel' },
-                { text: 'SEND ALERT', style: 'destructive', onPress: sendSOS }
-            ]
-        );
+    const handleSOS = () => {
+        setSosModalState('INITIAL');
+        setSosModalVisible(true);
     };
 
     const onSearchFocus = () => Animated.timing(searchFocus, { toValue: 1, duration: 250, useNativeDriver: false }).start();
@@ -718,20 +710,26 @@ export default function HomeScreen({ navigation }: Props) {
                 />
 
                 {/* Floating SOS Button */}
-                <TouchableOpacity style={styles.sosWrapper} onPress={handleSOS} disabled={sosLoading} activeOpacity={0.8}>
+                <TouchableOpacity style={styles.sosWrapper} onPress={handleSOS} activeOpacity={0.8}>
                     <Animated.View style={[styles.sosGlow, { transform: [{ scale: sosPulseAnim }] }]} />
                     <LinearGradient colors={['#ff4d4d', '#cc0000']} style={styles.sosButton}>
-                        {sosLoading ? (
-                            <ActivityIndicator color="#fff" />
-                        ) : (
-                            <>
-                                <MaterialCommunityIcons name="shield-alert-outline" size={28} color="#fff" />
-                                <Text style={styles.sosText}>SOS</Text>
-                            </>
-                        )}
+                        <MaterialCommunityIcons name="shield-alert-outline" size={28} color="#fff" />
+                        <Text style={styles.sosText}>SOS</Text>
                     </LinearGradient>
                 </TouchableOpacity>
             </View>
+            <SOSConfirmationModal
+                isVisible={sosModalVisible}
+                state={sosModalState}
+                errorMessage={sosErrorMessage}
+                onCancel={() => setSosModalVisible(false)}
+                onClose={() => setSosModalVisible(false)}
+                onSend={sendSOS}
+                onOpenSettings={() => {
+                    Linking.openSettings();
+                    setSosModalVisible(false);
+                }}
+            />
         </SafeAreaView>
     );
 }

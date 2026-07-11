@@ -13,6 +13,8 @@ import Geolocation from 'react-native-geolocation-service';
 import { notificationService } from '../../services/notificationService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import OnboardingTooltip from '../../components/OnboardingTooltip';
+import SOSConfirmationModal, { SOSModalState } from '../../components/SOSConfirmationModal';
+
 
 interface BouncerBooking {
     id: string;
@@ -143,7 +145,12 @@ export default function BouncerHomeScreen() {
     const { user } = useContext(AuthContext);
     const [bookings, setBookings] = useState<BouncerBooking[]>([]);
     const [loading, setLoading] = useState(true);
-    const [sosLoading, setSosLoading] = useState(false);
+    
+    // SOS Modal State
+    const [sosModalVisible, setSosModalVisible] = useState(false);
+    const [sosModalState, setSosModalState] = useState<SOSModalState>('INITIAL');
+    const [sosErrorMessage, setSosErrorMessage] = useState('');
+
     const [locationName, setLocationName] = useState('Locating...');
 
     // Onboarding State
@@ -313,13 +320,6 @@ export default function BouncerHomeScreen() {
                     }
                 );
                 if (granted === PermissionsAndroid.RESULTS.GRANTED) return true;
-                if (granted === PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN) {
-                    Alert.alert('Permission Required', 'Location permission is required for SOS.', [
-                        { text: 'Cancel', style: 'cancel' },
-                        { text: 'Open Settings', onPress: () => Linking.openSettings() }
-                    ]);
-                    return false;
-                }
                 return false;
             } catch (err) {
                 return false;
@@ -330,9 +330,12 @@ export default function BouncerHomeScreen() {
 
     const sendSOS = async () => {
         const hasPermission = await requestLocationPermission();
-        if (!hasPermission) return Alert.alert('Permission Denied', 'Location permission is required for SOS.');
+        if (!hasPermission) {
+            setSosModalState('PERMISSION');
+            return;
+        }
 
-        setSosLoading(true);
+        setSosModalState('LOADING');
         Geolocation.getCurrentPosition(
             async (position) => {
                 const { latitude, longitude } = position.coords;
@@ -342,26 +345,23 @@ export default function BouncerHomeScreen() {
                         latitude,
                         longitude
                     });
-                    Alert.alert('SOS Sent', 'Admin has been notified of your emergency and location.');
+                    setSosModalState('SUCCESS');
                 } catch (error) {
-                    Alert.alert('Error', 'Failed to send SOS alert');
-                } finally {
-                    setSosLoading(false);
+                    setSosErrorMessage('Failed to send SOS alert. Please check your connection and try again.');
+                    setSosModalState('ERROR');
                 }
             },
             (error) => {
-                Alert.alert('Error', 'Failed to get location: ' + error.message);
-                setSosLoading(false);
+                setSosErrorMessage('Failed to get your precise location: ' + error.message);
+                setSosModalState('ERROR');
             },
             { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
         );
     };
 
     const handleSOS = () => {
-        Alert.alert('SOS Alert', 'Are you sure you want to send an emergency alert?', [
-            { text: 'Cancel', style: 'cancel' },
-            { text: 'SEND ALERT', style: 'destructive', onPress: sendSOS }
-        ]);
+        setSosModalState('INITIAL');
+        setSosModalVisible(true);
     };
 
     // UI Renderers
@@ -520,19 +520,12 @@ export default function BouncerHomeScreen() {
 
             {/* Redesigned Floating SOS Button */}
             <TouchableOpacity
-                style={[styles.sosButton, sosLoading && styles.sosLoading]}
+                style={styles.sosButton}
                 onPress={handleSOS}
-                disabled={sosLoading}
                 activeOpacity={0.8}
             >
-                {sosLoading ? (
-                    <ActivityIndicator color="#fff" />
-                ) : (
-                    <>
-                        <MaterialCommunityIcons name="car-emergency" size={26} color="#fff" />
-                        <Text style={styles.sosText}>SOS</Text>
-                    </>
-                )}
+                <MaterialCommunityIcons name="car-emergency" size={26} color="#fff" />
+                <Text style={styles.sosText}>SOS</Text>
             </TouchableOpacity>
 
 
@@ -549,6 +542,19 @@ export default function BouncerHomeScreen() {
                 nextLabel="Go to Profile"
                 onNext={handleOnboardingNext}
                 onSkip={handleOnboardingSkip}
+            />
+
+            <SOSConfirmationModal
+                isVisible={sosModalVisible}
+                state={sosModalState}
+                errorMessage={sosErrorMessage}
+                onCancel={() => setSosModalVisible(false)}
+                onClose={() => setSosModalVisible(false)}
+                onSend={sendSOS}
+                onOpenSettings={() => {
+                    Linking.openSettings();
+                    setSosModalVisible(false);
+                }}
             />
         </View>
     );
