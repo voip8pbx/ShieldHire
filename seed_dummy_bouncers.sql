@@ -6,11 +6,11 @@
 -- 1. Create corresponding dummy users first
 INSERT INTO "users" ("id", "email", "name", "contactNo", "age", "role", "profilePhoto") 
 VALUES
-('b1000000-0000-0000-0000-000000000001', 'ramesh.bouncer@example.com', 'Ramesh Singh', '+919876543210', 28, 'BOUNCER', 'https://randomuser.me/api/portraits/men/32.jpg'),
-('b2000000-0000-0000-0000-000000000002', 'suresh.bouncer@example.com', 'Suresh Kumar', '+919876543211', 32, 'BOUNCER', 'https://randomuser.me/api/portraits/men/44.jpg'),
-('b3000000-0000-0000-0000-000000000003', 'vikram.bouncer@example.com', 'Vikram Yadav', '+919876543212', 30, 'BOUNCER', 'https://randomuser.me/api/portraits/men/55.jpg'),
-('b4000000-0000-0000-0000-000000000004', 'amit.bouncer@example.com', 'Amit Sharma', '+919876543213', 29, 'BOUNCER', 'https://randomuser.me/api/portraits/men/66.jpg'),
-('b5000000-0000-0000-0000-000000000005', 'deepak.bouncer@example.com', 'Deepak Verma', '+919876543214', 35, 'BOUNCER', 'https://randomuser.me/api/portraits/men/77.jpg')
+('b1000000-0000-0000-0000-000000000001', 'ramesh.bouncer@example.com', 'Ramesh Singh', '+919876543210', 28, 'BOUNCER', 'https://nyedypqduffj2hmb.public.blob.vercel-storage.com/images-xuXEPxsteKh3Sh28VcEoCslpbJwUbV.jpg'),
+('b2000000-0000-0000-0000-000000000002', 'suresh.bouncer@example.com', 'Suresh Kumar', '+919876543211', 32, 'BOUNCER', 'https://nyedypqduffj2hmb.public.blob.vercel-storage.com/WhatsApp%20Image%202026-07-09%20at%2016.57.02%20%281%29-bqIoHnYPgELa6fEjC8pZArJVs4VSX1.jpeg'),
+('b3000000-0000-0000-0000-000000000003', 'vikram.bouncer@example.com', 'Vikram Yadav', '+919876543212', 30, 'BOUNCER', 'https://nyedypqduffj2hmb.public.blob.vercel-storage.com/WhatsApp%20Image%202026-07-09%20at%2016.57.02%20%282%29-HL8HTDVZShulxPyLrygTnmcRY3a3DT.jpeg'),
+('b4000000-0000-0000-0000-000000000004', 'amit.bouncer@example.com', 'Amit Sharma', '+919876543213', 29, 'BOUNCER', 'https://nyedypqduffj2hmb.public.blob.vercel-storage.com/WhatsApp%20Image%202026-07-09%20at%2016.57.02%20%283%29-UVU7xjMSmyPyc05RMfbq0jatp48tcP.jpeg'),
+('b5000000-0000-0000-0000-000000000005', 'deepak.bouncer@example.com', 'Deepak Verma', '+919876543214', 35, 'BOUNCER', 'https://nyedypqduffj2hmb.public.blob.vercel-storage.com/WhatsApp%20Image%202026-07-09%20at%2016.57.02-CmW7F2uVSdqhCauZVNRZslO3TKOI34.jpeg')
 ON CONFLICT ("id") DO NOTHING;
 
 -- 2. Create the bouncer profiles
@@ -42,7 +42,7 @@ INSERT INTO "bouncers" (
     '+919876543210', 
     28, 
     'Male', 
-    'https://randomuser.me/api/portraits/men/32.jpg',
+    'https://nyedypqduffj2hmb.public.blob.vercel-storage.com/images-xuXEPxsteKh3Sh28VcEoCslpbJwUbV.jpg',
     'https://dummyimage.com/600x400/cccccc/000000&text=Govt+ID+Ramesh',
     true,
     'https://dummyimage.com/600x400/cccccc/000000&text=Gun+License+Ramesh',
@@ -68,7 +68,7 @@ INSERT INTO "bouncers" (
     '+919876543211', 
     32, 
     'Male', 
-    'https://randomuser.me/api/portraits/men/44.jpg',
+    'https://nyedypqduffj2hmb.public.blob.vercel-storage.com/WhatsApp%20Image%202026-07-09%20at%2016.57.02%20%281%29-bqIoHnYPgELa6fEjC8pZArJVs4VSX1.jpeg',
     'https://dummyimage.com/600x400/cccccc/000000&text=Govt+ID+Suresh',
     false,
     NULL,
@@ -94,7 +94,7 @@ INSERT INTO "bouncers" (
     '+919876543212', 
     30, 
     'Male', 
-    'https://randomuser.me/api/portraits/men/55.jpg',
+    'https://nyedypqduffj2hmb.public.blob.vercel-storage.com/WhatsApp%20Image%202026-07-09%20at%2016.57.02%20%282%29-HL8HTDVZShulxPyLrygTnmcRY3a3DT.jpeg',
     'https://dummyimage.com/600x400/cccccc/000000&text=Govt+ID+Vikram',
     true,
     'https://dummyimage.com/600x400/cccccc/000000&text=Gun+License+Vikram',
@@ -120,7 +120,7 @@ INSERT INTO "bouncers" (
     '+919876543213', 
     29, 
     'Male', 
-    'https://randomuser.me/api/portraits/men/66.jpg',
+    'https://nyedypqduffj2hmb.public.blob.vercel-storage.com/WhatsApp%20Image%202026-07-09%20at%2016.57.02%20%283%29-UVU7xjMSmyPyc05RMfbq0jatp48tcP.jpeg',
     'https://dummyimage.com/600x400/cccccc/000000&text=Govt+ID+Amit',
     false,
     NULL,
@@ -146,7 +146,7 @@ INSERT INTO "bouncers" (
     '+919876543214', 
     35, 
     'Male', 
-    'https://randomuser.me/api/portraits/men/77.jpg',
+    'https://nyedypqduffj2hmb.public.blob.vercel-storage.com/WhatsApp%20Image%202026-07-09%20at%2016.57.02-CmW7F2uVSdqhCauZVNRZslO3TKOI34.jpeg',
     'https://dummyimage.com/600x400/cccccc/000000&text=Govt+ID+Deepak',
     true,
     'https://dummyimage.com/600x400/cccccc/000000&text=Gun+License+Deepak',
