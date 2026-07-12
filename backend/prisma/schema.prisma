@@ -87,6 +87,23 @@ model Bouncer {
   skills     String[]
   experience Int      @default(0)
   gallery    String[]
+  profileImageUrl         String?   @map("profile_image_url")
+  galleryImage1           String?   @map("gallery_image_1")
+  galleryImage2           String?   @map("gallery_image_2")
+  galleryImage3           String?   @map("gallery_image_3")
+  galleryImage4           String?   @map("gallery_image_4")
+  gunLicenseUrl           String?   @map("gun_license_url")
+  adminNotes              String?   @map("admin_notes")
+  professionalDescription String?   @map("professional_description")
+  languages               String[]
+  height                  Float?
+  weight                  Float?
+  bloodGroup              String?   @map("blood_group")
+  emergencyContact        String?   @map("emergency_contact")
+  updatedByAdmin          String?   @map("updated_by_admin")
+  lastAdminUpdate         DateTime? @map("last_admin_update")
+  galleryUpdatedAt        DateTime? @map("gallery_updated_at")
+  licenseUpdatedAt        DateTime? @map("license_updated_at")
 
   // Verification fields
   verificationStatus String    @default("PENDING")

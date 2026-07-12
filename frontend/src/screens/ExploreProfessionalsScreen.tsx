@@ -194,7 +194,7 @@ const SkeletonListCard = () => {
     );
 };
 
-const FeaturedCard = React.memo(({ item }: { item: Bouncer }) => {
+const FeaturedCard = React.memo(({ item, onPress }: { item: Bouncer, onPress: () => void }) => {
     if (!item) return null;
     return (
         <View style={styles.featuredContainer}>
@@ -211,8 +211,8 @@ const FeaturedCard = React.memo(({ item }: { item: Bouncer }) => {
                 <View style={styles.featuredContent}>
                     <Text style={styles.featuredName}>{item.name}</Text>
                     <Text style={styles.featuredRole}>{item.isGunman ? 'Elite Gunman' : 'Premium Bouncer'} • {item.experience} Yrs Exp</Text>
-                    <TouchableOpacity style={styles.featuredBtn}>
-                        <Text style={styles.featuredBtnText}>Quick Book</Text>
+                    <TouchableOpacity style={styles.featuredBtn} onPress={onPress}>
+                        <Text style={styles.featuredBtnText}>Book</Text>
                     </TouchableOpacity>
                 </View>
             </View>
@@ -366,7 +366,7 @@ export default function ExploreProfessionalsScreen({ navigation }: Props) {
                 </TouchableOpacity>
             </View>
 
-            {!loading && featuredBouncer && <FeaturedCard item={featuredBouncer} />}
+            {!loading && featuredBouncer && <FeaturedCard item={featuredBouncer} onPress={() => handleBouncerPress(featuredBouncer.id)} />}
         </View>
     ), [navigation, viewMode, search, activeFilter, loading, filteredBouncers.length, featuredBouncer, searchBorderColor]);
 

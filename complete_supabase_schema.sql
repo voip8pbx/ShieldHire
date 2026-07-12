@@ -82,6 +82,25 @@ CREATE TABLE IF NOT EXISTS "bouncers" (
     "experience" INTEGER DEFAULT 0,
     "gallery"    TEXT[] DEFAULT '{}',
 
+    -- Advanced Profile Details (Added from migration)
+    "profile_image_url" TEXT,
+    "gallery_image_1" TEXT,
+    "gallery_image_2" TEXT,
+    "gallery_image_3" TEXT,
+    "gallery_image_4" TEXT,
+    "gun_license_url" TEXT,
+    "admin_notes" TEXT,
+    "professional_description" TEXT,
+    "languages" TEXT[],
+    "height" FLOAT,
+    "weight" FLOAT,
+    "blood_group" TEXT,
+    "emergency_contact" TEXT,
+    "updated_by_admin" TEXT,
+    "last_admin_update" TIMESTAMPTZ,
+    "gallery_updated_at" TIMESTAMPTZ,
+    "license_updated_at" TIMESTAMPTZ,
+
     -- Verification
     "verificationStatus" TEXT DEFAULT 'PENDING',    -- PENDING, APPROVED, REJECTED
     "verifiedBy"         TEXT,
@@ -434,4 +453,23 @@ ALTER TABLE "bookings" ADD COLUMN IF NOT EXISTS "package"         TEXT DEFAULT '
 ALTER TABLE "bookings" ADD COLUMN IF NOT EXISTS "notes"           TEXT;
 ALTER TABLE "bookings" ADD COLUMN IF NOT EXISTS "clientName"      TEXT;
 ALTER TABLE "bookings" ADD COLUMN IF NOT EXISTS "clientContactNo" TEXT;
+
+-- Migration: Advanced Bouncer Profile Fields (added 2026-07)
+ALTER TABLE "bouncers" ADD COLUMN IF NOT EXISTS "profile_image_url" TEXT;
+ALTER TABLE "bouncers" ADD COLUMN IF NOT EXISTS "gallery_image_1" TEXT;
+ALTER TABLE "bouncers" ADD COLUMN IF NOT EXISTS "gallery_image_2" TEXT;
+ALTER TABLE "bouncers" ADD COLUMN IF NOT EXISTS "gallery_image_3" TEXT;
+ALTER TABLE "bouncers" ADD COLUMN IF NOT EXISTS "gallery_image_4" TEXT;
+ALTER TABLE "bouncers" ADD COLUMN IF NOT EXISTS "gun_license_url" TEXT;
+ALTER TABLE "bouncers" ADD COLUMN IF NOT EXISTS "admin_notes" TEXT;
+ALTER TABLE "bouncers" ADD COLUMN IF NOT EXISTS "professional_description" TEXT;
+ALTER TABLE "bouncers" ADD COLUMN IF NOT EXISTS "languages" TEXT[];
+ALTER TABLE "bouncers" ADD COLUMN IF NOT EXISTS "height" FLOAT;
+ALTER TABLE "bouncers" ADD COLUMN IF NOT EXISTS "weight" FLOAT;
+ALTER TABLE "bouncers" ADD COLUMN IF NOT EXISTS "blood_group" TEXT;
+ALTER TABLE "bouncers" ADD COLUMN IF NOT EXISTS "emergency_contact" TEXT;
+ALTER TABLE "bouncers" ADD COLUMN IF NOT EXISTS "updated_by_admin" TEXT;
+ALTER TABLE "bouncers" ADD COLUMN IF NOT EXISTS "last_admin_update" TIMESTAMPTZ;
+ALTER TABLE "bouncers" ADD COLUMN IF NOT EXISTS "gallery_updated_at" TIMESTAMPTZ;
+ALTER TABLE "bouncers" ADD COLUMN IF NOT EXISTS "license_updated_at" TIMESTAMPTZ;
 

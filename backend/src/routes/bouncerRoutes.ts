@@ -8,7 +8,7 @@ const camelCaseKeys = (obj: any): any => {
     if (!obj) return null;
     const newObj: any = {};
     for (const key in obj) {
-        const camelKey = key.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
+        const camelKey = key.replace(/_([a-z0-9])/g, (g) => g[1].toUpperCase());
         newObj[camelKey] = obj[key];
     }
     return newObj;
@@ -37,6 +37,26 @@ router.get('/', async (req, res) => {
                 formatted.user = camelCaseKeys(user);
                 delete formatted.users;
             }
+            // Map the new image URLs back to the legacy fields expected by the mobile app
+            if (formatted.profileImageUrl) {
+                formatted.profilePhoto = formatted.profileImageUrl;
+            }
+            
+            // Map new gallery images to the legacy gallery array
+            const newGallery = Array.isArray(formatted.gallery) ? [...formatted.gallery] : [];
+            if (formatted.galleryImage1 && !newGallery.includes(formatted.galleryImage1)) newGallery.push(formatted.galleryImage1);
+            if (formatted.galleryImage2 && !newGallery.includes(formatted.galleryImage2)) newGallery.push(formatted.galleryImage2);
+            if (formatted.galleryImage3 && !newGallery.includes(formatted.galleryImage3)) newGallery.push(formatted.galleryImage3);
+            if (formatted.galleryImage4 && !newGallery.includes(formatted.galleryImage4)) newGallery.push(formatted.galleryImage4);
+            
+            if (newGallery.length > 0) {
+                formatted.gallery = newGallery;
+            }
+
+            if (formatted.gunLicenseUrl) {
+                formatted.gunLicensePhoto = formatted.gunLicenseUrl;
+            }
+
             return formatted;
         });
 
@@ -67,6 +87,26 @@ router.get('/:id', async (req, res) => {
             const user = Array.isArray(bouncer.users) ? bouncer.users[0] : bouncer.users;
             formatted.user = camelCaseKeys(user);
             delete formatted.users;
+        }
+
+        // Map the new image URLs back to the legacy fields expected by the mobile app
+        if (formatted.profileImageUrl) {
+            formatted.profilePhoto = formatted.profileImageUrl;
+        }
+        
+        // Map new gallery images to the legacy gallery array
+        const newGallery = Array.isArray(formatted.gallery) ? [...formatted.gallery] : [];
+        if (formatted.galleryImage1 && !newGallery.includes(formatted.galleryImage1)) newGallery.push(formatted.galleryImage1);
+        if (formatted.galleryImage2 && !newGallery.includes(formatted.galleryImage2)) newGallery.push(formatted.galleryImage2);
+        if (formatted.galleryImage3 && !newGallery.includes(formatted.galleryImage3)) newGallery.push(formatted.galleryImage3);
+        if (formatted.galleryImage4 && !newGallery.includes(formatted.galleryImage4)) newGallery.push(formatted.galleryImage4);
+        
+        if (newGallery.length > 0) {
+            formatted.gallery = newGallery;
+        }
+
+        if (formatted.gunLicenseUrl) {
+            formatted.gunLicensePhoto = formatted.gunLicenseUrl;
         }
 
         res.json(formatted);

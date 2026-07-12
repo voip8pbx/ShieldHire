@@ -21,16 +21,17 @@ INSERT INTO "bouncers" (
     "contactNo", 
     "age", 
     "gender", 
-    "profilePhoto",
+    "profile_image_url",
     "govtIdPhoto",
     "hasGunLicense",
-    "gunLicensePhoto",
+    "gun_license_url",
     "rating", 
     "isAvailable", 
     "bio", 
     "skills",
     "experience",
-    "gallery",
+    "gallery_image_1",
+    "gallery_image_2",
     "verificationStatus", 
     "verifiedBy", 
     "verifiedAt"
@@ -51,12 +52,8 @@ INSERT INTO "bouncers" (
     'Experienced event bouncer with a calm demeanor.', 
     ARRAY['Crowd Control', 'Event Security', 'First Aid'],
     5,
-    ARRAY[
-        'https://dummyimage.com/800x600/1a1a1a/ffffff&text=Event+1',
-        'https://dummyimage.com/800x600/1a1a1a/ffffff&text=Event+2',
-        'https://dummyimage.com/800x600/1a1a1a/ffffff&text=Event+3',
-        'https://dummyimage.com/800x600/1a1a1a/ffffff&text=Event+4'
-    ],
+    'https://images.unsplash.com/photo-1574170623305-64906f361138?w=800',
+    'https://images.unsplash.com/photo-1549429402-9ff7fb986e68?w=800',
     'APPROVED', 
     'admin@example.com', 
     NOW()
@@ -77,12 +74,8 @@ INSERT INTO "bouncers" (
     'Expert in club security and VIP protection.', 
     ARRAY['VIP Protection', 'Conflict Resolution'],
     8,
-    ARRAY[
-        'https://dummyimage.com/800x600/2b2b2b/ffffff&text=Club+Duty+1',
-        'https://dummyimage.com/800x600/2b2b2b/ffffff&text=Club+Duty+2',
-        'https://dummyimage.com/800x600/2b2b2b/ffffff&text=VIP+Escort',
-        'https://dummyimage.com/800x600/2b2b2b/ffffff&text=Team+Briefing'
-    ],
+    'https://dummyimage.com/800x600/2b2b2b/ffffff&text=Club+Duty+1',
+    'https://dummyimage.com/800x600/2b2b2b/ffffff&text=Club+Duty+2',
     'APPROVED', 
     'admin@example.com', 
     NOW()
@@ -103,12 +96,8 @@ INSERT INTO "bouncers" (
     'Ex-military, highly disciplined security professional.', 
     ARRAY['Unarmed Combat', 'Surveillance'],
     6,
-    ARRAY[
-        'https://dummyimage.com/800x600/3c3c3c/ffffff&text=Training+Session',
-        'https://dummyimage.com/800x600/3c3c3c/ffffff&text=Surveillance',
-        'https://dummyimage.com/800x600/3c3c3c/ffffff&text=Security+Detail',
-        'https://dummyimage.com/800x600/3c3c3c/ffffff&text=Patrol'
-    ],
+    'https://dummyimage.com/800x600/3c3c3c/ffffff&text=Training+Session',
+    'https://dummyimage.com/800x600/3c3c3c/ffffff&text=Surveillance',
     'APPROVED', 
     'admin@example.com', 
     NOW()
@@ -129,12 +118,8 @@ INSERT INTO "bouncers" (
     'Certified security professional specializing in private events.', 
     ARRAY['Access Control', 'Emergency Response'],
     4,
-    ARRAY[
-        'https://dummyimage.com/800x600/4d4d4d/ffffff&text=Private+Event',
-        'https://dummyimage.com/800x600/4d4d4d/ffffff&text=Access+Control',
-        'https://dummyimage.com/800x600/4d4d4d/ffffff&text=Crowd+Management',
-        'https://dummyimage.com/800x600/4d4d4d/ffffff&text=Event+Security'
-    ],
+    'https://dummyimage.com/800x600/4d4d4d/ffffff&text=Private+Event',
+    'https://dummyimage.com/800x600/4d4d4d/ffffff&text=Access+Control',
     'APPROVED', 
     'admin@example.com', 
     NOW()
@@ -155,12 +140,8 @@ INSERT INTO "bouncers" (
     'Heavy-duty security for high-risk environments.', 
     ARRAY['Risk Assessment', 'Physical Security'],
     10,
-    ARRAY[
-        'https://dummyimage.com/800x600/5e5e5e/ffffff&text=High+Risk+Operation',
-        'https://dummyimage.com/800x600/5e5e5e/ffffff&text=Tactical+Gear',
-        'https://dummyimage.com/800x600/5e5e5e/ffffff&text=Security+Assessment',
-        'https://dummyimage.com/800x600/5e5e5e/ffffff&text=Convoy+Security'
-    ],
+    'https://dummyimage.com/800x600/5e5e5e/ffffff&text=High+Risk+Operation',
+    'https://dummyimage.com/800x600/5e5e5e/ffffff&text=Tactical+Gear',
     'APPROVED', 
     'admin@example.com', 
     NOW()

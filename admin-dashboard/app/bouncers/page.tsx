@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import BouncerDrawer from '@/components/BouncerDrawer';
 
 interface Bouncer {
     id: string;
@@ -23,7 +24,7 @@ export default function BouncersPage() {
     const [bouncers, setBouncers] = useState<Bouncer[]>([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState<'all' | 'available' | 'unavailable'>('all');
-    const [selectedBouncer, setSelectedBouncer] = useState<Bouncer | null>(null);
+    const [selectedBouncerId, setSelectedBouncerId] = useState<string | null>(null);
 
     useEffect(() => {
         fetchBouncers();
@@ -233,7 +234,7 @@ export default function BouncersPage() {
                                         <td>
                                             <div className="flex gap-2">
                                                 <button
-                                                    onClick={() => setSelectedBouncer(bouncer)}
+                                                    onClick={() => setSelectedBouncerId(bouncer.id)}
                                                     className="bg-primary-yellow text-black hover:brightness-110 transition-all font-semibold rounded-full"
                                                     style={{ padding: '2px 6px' }}
                                                 >
@@ -259,121 +260,13 @@ export default function BouncersPage() {
                 </div>
             </div>
 
-            {/* Detail Modal */}
-            {selectedBouncer && (
-                <div
-                    className="fixed inset-0 bg-black bg-opacity-80 flex items-start justify-center p-8 pt-20 z-[99999999] "
-                    onClick={() => setSelectedBouncer(null)}
-                >
-                    <div
-                        className="card p-10 max-w-3xl w-full max-h-[65vh] overflow-y-auto flex flex-col relative bg-[#1a1a1a]"
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        <button
-                            onClick={() => setSelectedBouncer(null)}
-                            className=" sticky top-0 z-50 float-right h-0 overflow-visible text-right text-3xl text-text-tertiary hover:text-text-primary font-bold"
-                        >
-                            ×
-                        </button>
-
-                        <h2 className="sticky top-0 z-40 mt-0 px-12 pb-4 text-center text-3xl font-bold text-text-primary bg-[#1a1a1a]">
-                            Bouncer Details
-                        </h2>
-
-                        <div className="space-y-2  divide-y divide-gray-500 flex-1">
-                            <div className="detail-row bg-zinc-800 p-3 rounded-lg" style={{ paddingLeft: '20px' }}>
-                                <div className="detail-label text-gray-300 text-lg">Full Name</div>
-                                <div className="detail-value text-gray-300 text-lg">{selectedBouncer.name}</div>
-                            </div>
-                            <div className="detail-row bg-zinc-800 p-3 rounded-lg " style={{ paddingLeft: '20px' }}>
-                                <div className="detail-label text-gray-300 text-lg">Contact Number</div>
-                                <div className="detail-value text-gray-300 text-lg">{selectedBouncer.contactNo}</div>
-                            </div>
-
-                            <div className="detail-row bg-zinc-800 p-3 rounded-lg " style={{ paddingLeft: '20px' }}>
-                                <div className="detail-label text-gray-300 text-lg">Email Address</div>
-                                <div className="detail-value text-gray-300 text-lg">{selectedBouncer.user.email}</div>
-                            </div>
-
-                            <div className="detail-row bg-zinc-800 p-3 rounded-lg " style={{ paddingLeft: '20px' }}>
-                                <div className="detail-label text-gray-300 text-lg">Age</div>
-                                <div className="detail-value text-gray-300 text-lg">{selectedBouncer.age} years</div>
-                            </div>
-
-                            <div className="detail-row bg-zinc-800 p-3 rounded-lg " style={{ paddingLeft: '20px' }}>
-                                <div className="detail-label text-gray-300 text-lg">Gender</div>
-                                <div className="detail-value text-gray-300 text-lg">{selectedBouncer.gender}</div>
-                            </div>
-
-                            <div className="detail-row bg-zinc-800 p-3 rounded-lg " style={{ paddingLeft: '20px' }}>
-                                <div className="detail-label text-gray-300 text-lg">Rating</div>
-                                <div className="detail-value text-primary font-bold">
-                                    {selectedBouncer.rating.toFixed(1)} / 5.0
-                                </div>
-                            </div>
-
-                            <div className="detail-row bg-zinc-800 p-3 rounded-lg " style={{ paddingLeft: '20px' }}>
-                                <div className="detail-label text-gray-300 text-lg">Registration Type</div>
-                                <div className="detail-value text-gray-300 text-lg">{selectedBouncer.registrationType}</div>
-                            </div>
-
-                            <div className="detail-row bg-zinc-800 p-3 rounded-lg " style={{ paddingLeft: '20px' }}>
-                                <div className="detail-label text-gray-300 text-lg">Gun License</div>
-                                <div className="detail-value text-gray-300 text-lg">
-                                    {selectedBouncer.hasGunLicense ? 'Licensed' : 'Not Licensed'}
-                                </div>
-                            </div>
-
-                            <div className="detail-row bg-zinc-800 p-3 rounded-lg " style={{ paddingLeft: '20px' }}>
-                                <div className="detail-label text-gray-300 text-lg">Gunman Status</div>
-                                <div className="detail-value text-gray-300 text-lg">
-                                    {selectedBouncer.isGunman ? 'Yes' : 'No'}
-                                </div>
-                            </div>
-
-                            <div className="detail-row bg-zinc-800 p-3 rounded-lg " style={{ paddingLeft: '20px' }}>
-                                <div className="detail-label text-gray-300 text-lg">Availability</div>
-                                <div className="detail-value text-gray-300 text-lg">
-                                    {selectedBouncer.isAvailable ? (
-                                        <span className="status-badge status-active">Available</span>
-                                    ) : (
-                                        <span className="status-badge status-inactive">Unavailable</span>
-                                    )}
-                                </div>
-                            </div>
-
-                            <div className="detail-row bg-zinc-800 p-3 rounded-lg " style={{ paddingLeft: '20px' }}>
-                                <div className="detail-label text-gray-300 text-lg">Registered On</div>
-                                <div className="detail-value text-gray-300 text-lg">
-                                    {new Date(selectedBouncer.createdAt).toLocaleDateString('en-IN', {
-                                        day: 'numeric',
-                                        month: 'long',
-                                        year: 'numeric',
-                                    })}
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="flex gap-4 mt-auto pt-8 border-t border-border-gray sticky bottom-0 z-10 bg-[#1a1a1a]">
-                            <button
-                                onClick={() => handleToggleAvailability(selectedBouncer.id, selectedBouncer.isAvailable)}
-                                className={`flex-1 py-4 rounded-lg font-bold transition-all ${selectedBouncer.isAvailable
-                                    ? 'btn btn-danger'
-                                    : 'btn btn-success'
-                                    }`}
-                            >
-                                {selectedBouncer.isAvailable ? 'Mark as Unavailable' : 'Mark as Available'}
-                            </button>
-                            <button
-                                onClick={() => setSelectedBouncer(null)}
-                                className="flex-1 btn btn-secondary py-4"
-                            >
-                                Close
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+            {/* Detail Drawer */}
+            <BouncerDrawer 
+                bouncerId={selectedBouncerId || ''} 
+                isOpen={!!selectedBouncerId} 
+                onClose={() => setSelectedBouncerId(null)} 
+                onRefresh={fetchBouncers}
+            />
         </div>
     );
 }
