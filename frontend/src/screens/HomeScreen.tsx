@@ -226,7 +226,7 @@ export default function HomeScreen({ navigation }: Props) {
                     PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
                     {
                         title: "Location Permission Required",
-                        message: "Shield Of Security needs access to your location to show relevant security personnel near you.",
+                        message: "SOS Guard needs access to your location to show relevant security personnel near you.",
                         buttonNeutral: "Ask Me Later",
                         buttonNegative: "Cancel",
                         buttonPositive: "OK"
@@ -331,7 +331,7 @@ export default function HomeScreen({ navigation }: Props) {
                     PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
                     {
                         title: "Location Permission Required",
-                        message: "Shield Of Security needs access to your location.",
+                        message: "SOS Guard needs access to your location.",
                         buttonNeutral: "Ask Me Later",
                         buttonNegative: "Cancel",
                         buttonPositive: "OK"
@@ -518,7 +518,7 @@ export default function HomeScreen({ navigation }: Props) {
         <View style={styles.footerContainer}>
             {/* SECTION 1: WHY CHOOSE SHIELD OF SECURITY */}
             <View style={styles.footerSection}>
-                <Text style={styles.footerTitle}>Why Choose Shield Of Security</Text>
+                <Text style={styles.footerTitle}>Why Choose SOS Guard</Text>
                 <Text style={styles.footerSubtitle}>Trusted by thousands of clients for premium security services across India.</Text>
                 <View style={styles.featuresGrid}>
                     {[
@@ -542,7 +542,7 @@ export default function HomeScreen({ navigation }: Props) {
 
             {/* SECTION 2: OUR ACHIEVEMENTS */}
             <View style={styles.footerSection}>
-                <Text style={styles.footerTitle}>Shield Of Security Excellence</Text>
+                <Text style={styles.footerTitle}>SOS Guard Excellence</Text>
                 <View style={styles.achievementsGrid}>
                     {[
                         { title: 'Successful Bookings', value: '50,000+', icon: 'check-decagram-outline' },
@@ -567,7 +567,7 @@ export default function HomeScreen({ navigation }: Props) {
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.testimonialScroll}>
                     {[
                         { name: 'Rahul Sharma', role: 'Corporate Event Manager', text: 'Outstanding professionalism. The security staff arrived early, were well-dressed, polite and handled the entire event flawlessly.', img: 'https://randomuser.me/api/portraits/men/32.jpg' },
-                        { name: 'Priya Mehta', role: 'Wedding Planner', text: 'Booking through Shield Of Security was effortless. Every guard was experienced and extremely professional.', img: 'https://randomuser.me/api/portraits/women/44.jpg' },
+                        { name: 'Priya Mehta', role: 'Wedding Planner', text: 'Booking through SOS Guard was effortless. Every guard was experienced and extremely professional.', img: 'https://randomuser.me/api/portraits/women/44.jpg' },
                         { name: 'Aman Verma', role: 'Hotel Manager', text: 'The best private security platform we\'ve worked with. Highly recommended for luxury events.', img: 'https://randomuser.me/api/portraits/men/46.jpg' },
                         { name: 'Neha Kapoor', role: 'Event Organizer', text: 'The staff was disciplined, punctual and made all our guests feel safe.', img: 'https://randomuser.me/api/portraits/women/65.jpg' }
                     ].map((test, idx) => (
@@ -604,7 +604,7 @@ export default function HomeScreen({ navigation }: Props) {
 
             {/* SECTION 5: ADVANTAGES */}
             <View style={styles.footerSection}>
-                <Text style={styles.footerTitle}>Why Hire Through Shield Of Security?</Text>
+                <Text style={styles.footerTitle}>Why Hire Through SOS Guard?</Text>
                 <View style={styles.comparisonContainer}>
                     <View style={styles.compColumn}>
                         <Text style={styles.compHeaderBad}>Traditional Hiring</Text>
@@ -616,7 +616,7 @@ export default function HomeScreen({ navigation }: Props) {
                         ))}
                     </View>
                     <View style={[styles.compColumn, styles.compColumnGood]}>
-                        <Text style={styles.compHeaderGood}>Shield Of Security</Text>
+                        <Text style={styles.compHeaderGood}>SOS Guard</Text>
                         {['Background Verified', 'Secure Digital Payments', 'Real Customer Reviews', 'Instant Booking', '24×7 Support', 'Transparent Pricing'].map((txt, idx) => (
                             <View key={idx} style={styles.compRow}>
                                 <Ionicons name="checkmark-circle" size={16} color="#4ade80" style={{ marginRight: 8 }} />

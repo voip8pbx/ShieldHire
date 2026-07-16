@@ -91,7 +91,7 @@ export async function requestNotificationPermission(): Promise<boolean> {
         {
           title: 'Notification Permission',
           message:
-            'Shield Of Security needs permission to send you notifications about bookings and alerts.',
+            'SOS Guard needs permission to send you notifications about bookings and alerts.',
           buttonPositive: 'Allow',
           buttonNegative: 'Deny',
         },
@@ -249,7 +249,7 @@ async function displayForegroundNotification(
     });
 
     await notifee.displayNotification({
-      title: remoteMessage.notification?.title ?? 'Shield Of Security',
+      title: remoteMessage.notification?.title ?? 'SOS Guard',
       body:
         remoteMessage.notification?.body ?? 'You have a new notification.',
       data: remoteMessage.data as Record<string, string>,

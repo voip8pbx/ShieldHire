@@ -130,7 +130,7 @@ export default function BouncerProfileScreen() {
                     PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
                     {
                         title: "Location Permission Required",
-                        message: "Shield Of Security needs access to your location for verification and SOS features.",
+                        message: "SOS Guard needs access to your location for verification and SOS features.",
                         buttonNeutral: "Ask Me Later",
                         buttonNegative: "Cancel",
                         buttonPositive: "OK"

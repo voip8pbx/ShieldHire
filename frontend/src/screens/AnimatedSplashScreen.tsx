@@ -144,7 +144,7 @@ const AnimatedSplashScreen: React.FC<AnimatedSplashScreenProps> = ({ onAnimation
                         ]} />
                         
                         <Animated.Image 
-                            source={require('../assets/images/logo.png')}
+                            source={require('../assets/images/SOS!.png')}
                             style={styles.logo}
                             resizeMode="contain"
                         />
@@ -153,7 +153,7 @@ const AnimatedSplashScreen: React.FC<AnimatedSplashScreenProps> = ({ onAnimation
                     {/* Text Section */}
                     <Animated.View style={[styles.textContainer, { opacity: fadeAnim }]}>
                         <View style={styles.appNameWrapper}>
-                            <Text style={styles.appName}>Shield Of Security</Text>
+                            <Text style={styles.appName}>SOS Guard</Text>
                             {/* Shine effect over text */}
                             <Animated.View style={[styles.shineWrapper, { transform: [{ translateX: shineTranslateX }] }]}>
                                 <LinearGradient
@@ -198,15 +198,15 @@ const styles = StyleSheet.create({
         marginBottom: 40,
     },
     logo: {
-        width: 140,
-        height: 140,
+        width: 170,
+        height: 170,
         zIndex: 10,
     },
     glow: {
         position: 'absolute',
-        width: 160,
-        height: 160,
-        borderRadius: 80,
+        width: 190,
+        height: 190,
+        borderRadius: 95,
         backgroundColor: '#F4B400',
         shadowColor: '#F4B400',
         shadowOffset: { width: 0, height: 0 },
@@ -216,9 +216,9 @@ const styles = StyleSheet.create({
     },
     pulseRing: {
         position: 'absolute',
-        width: 130,
-        height: 130,
-        borderRadius: 65,
+        width: 160,
+        height: 160,
+        borderRadius: 80,
         borderWidth: 2,
         borderColor: '#F4B400',
     },

@@ -313,7 +313,7 @@ export default function BouncerHomeScreen() {
                     PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
                     {
                         title: "Location Permission Required",
-                        message: "Shield Of Security needs access to your location to send accurate SOS alerts.",
+                        message: "SOS Guard needs access to your location to send accurate SOS alerts.",
                         buttonNeutral: "Ask Me Later",
                         buttonNegative: "Cancel",
                         buttonPositive: "OK"

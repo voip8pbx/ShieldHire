@@ -89,7 +89,7 @@ export default function GuestAuthSheet() {
                                 <View style={styles.logoBox}>
                                     <Image source={require('../../../SOS!.png')} style={{ width: 32, height: 32, resizeMode: 'contain' }} />
                                 </View>
-                                <Text style={styles.title}>Continue to Shield Of Security</Text>
+                                <Text style={styles.title}>Continue to SOS Guard</Text>
                                 <Text style={styles.subtitle}>Sign in to continue using all client features.</Text>
                             </View>
 
