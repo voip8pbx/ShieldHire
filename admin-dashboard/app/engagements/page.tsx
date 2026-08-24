@@ -30,15 +30,17 @@ interface Booking {
     eventDate: string;
     duration: number;
     status: 'PENDING' | 'CONFIRMED' | 'COMPLETED' | 'CANCELLED';
-    paymentStatus: 'PENDING' | 'PAID' | 'REFUNDED' | 'FAILED';
+    paymentStatus: PaymentStatus;
     totalAmount: number;
     createdAt: string;
     updatedAt: string;
     notes?: string;
+    transactionId?: string;
+    paymentProofUrl?: string;
 }
 
 type BookingStatus = 'PENDING' | 'CONFIRMED' | 'COMPLETED' | 'CANCELLED';
-type PaymentStatus = 'PENDING' | 'PAID' | 'REFUNDED' | 'FAILED';
+type PaymentStatus = 'PENDING' | 'PAYMENT_PROOF_SUBMITTED' | 'PAID' | 'REFUNDED' | 'FAILED';
 
 const ITEMS_PER_PAGE = 10;
 
@@ -58,6 +60,31 @@ export default function EngagementsPage() {
         fetchBookings();
     }, []);
 
+    const parseNotesMetadata = (notesStr: string | null) => {
+        const defaultVal = { userNotes: notesStr || '', transactionId: 'N/A', paymentStatus: 'PENDING' as PaymentStatus, paymentProofUrl: '' };
+        if (!notesStr) return defaultVal;
+        
+        const parts = notesStr.split(' | ');
+        let userNotes = '';
+        let transactionId = 'N/A';
+        let paymentStatus = 'PENDING' as PaymentStatus;
+        let paymentProofUrl = '';
+        
+        parts.forEach(part => {
+            if (part.startsWith('Txn ID: ')) {
+                transactionId = part.replace('Txn ID: ', '');
+            } else if (part.startsWith('Payment Status: ')) {
+                paymentStatus = part.replace('Payment Status: ', '') as PaymentStatus;
+            } else if (part.startsWith('Proof: ')) {
+                paymentProofUrl = part.replace('Proof: ', '');
+            } else {
+                userNotes = userNotes ? userNotes + ' | ' + part : part;
+            }
+        });
+        
+        return { userNotes, transactionId, paymentStatus, paymentProofUrl };
+    };
+
     const fetchBookings = async () => {
         try {
             setLoading(true);
@@ -74,7 +101,33 @@ export default function EngagementsPage() {
                 throw error;
             }
 
-            setBookings(data || []);
+            const mappedBookings: Booking[] = (data || []).map((b: any) => {
+                const { userNotes, transactionId, paymentStatus, paymentProofUrl } = parseNotesMetadata(b.notes);
+                const cleanLocation = b.location ? b.location.split('|COORDS:')[0] : 'N/A';
+                
+                return {
+                    id: b.id,
+                    userId: b.userId,
+                    user: b.user,
+                    bouncerId: b.bouncerId,
+                    bouncer: b.bouncer,
+                    eventType: b.package === 'VIP_BODYGUARD' ? 'VIP Bodyguard' : 'Single Event Shift',
+                    eventLocation: cleanLocation,
+                    bookingDate: b.createdAt,
+                    eventDate: b.date,
+                    duration: b.duration || 4,
+                    status: b.status,
+                    paymentStatus: paymentStatus,
+                    totalAmount: b.totalPrice || 0,
+                    createdAt: b.createdAt,
+                    updatedAt: b.updatedAt,
+                    notes: userNotes || undefined,
+                    transactionId: transactionId,
+                    paymentProofUrl: paymentProofUrl || undefined
+                };
+            });
+
+            setBookings(mappedBookings);
         } catch (error) {
             console.error('Failed to fetch bookings:', error);
         } finally {
@@ -125,23 +178,80 @@ export default function EngagementsPage() {
     };
 
     const handleConfirmBooking = async (bookingId: string) => {
-        setBookings(prev => prev.map(b =>
-            b.id === bookingId
-                ? { ...b, status: 'CONFIRMED', updatedAt: new Date().toISOString() }
-                : b
-        ));
+        try {
+            const response = await fetch(`/api/bookings/${bookingId}/status`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: 'CONFIRMED' })
+            });
+
+            if (!response.ok) {
+                const err = await response.json();
+                throw new Error(err.error || 'Failed to confirm booking');
+            }
+
+            setBookings(prev => prev.map(b =>
+                b.id === bookingId
+                    ? { ...b, status: 'CONFIRMED', updatedAt: new Date().toISOString() }
+                    : b
+            ));
+        } catch (error: any) {
+            alert(error.message || 'Error confirming booking');
+        }
         setIsConfirmModalOpen(false);
         setBookingToAction(null);
     };
 
     const handleCancelBooking = async (bookingId: string) => {
-        setBookings(prev => prev.map(b =>
-            b.id === bookingId
-                ? { ...b, status: 'CANCELLED', paymentStatus: 'REFUNDED', updatedAt: new Date().toISOString() }
-                : b
-        ));
+        try {
+            const response = await fetch(`/api/bookings/${bookingId}/status`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: 'CANCELLED' })
+            });
+
+            if (!response.ok) {
+                const err = await response.json();
+                throw new Error(err.error || 'Failed to cancel booking');
+            }
+
+            setBookings(prev => prev.map(b =>
+                b.id === bookingId
+                    ? { ...b, status: 'CANCELLED', paymentStatus: 'REFUNDED', updatedAt: new Date().toISOString() }
+                    : b
+            ));
+        } catch (error: any) {
+            alert(error.message || 'Error cancelling booking');
+        }
         setIsConfirmModalOpen(false);
         setBookingToAction(null);
+    };
+
+    const handleUpdatePaymentStatus = async (bookingId: string, newPaymentStatus: PaymentStatus) => {
+        try {
+            const response = await fetch(`/api/bookings/${bookingId}/payment`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ paymentStatus: newPaymentStatus })
+            });
+
+            if (!response.ok) {
+                const err = await response.json();
+                throw new Error(err.error || 'Failed to update payment status');
+            }
+
+            setBookings(prev => prev.map(b =>
+                b.id === bookingId
+                    ? { ...b, paymentStatus: newPaymentStatus, updatedAt: new Date().toISOString() }
+                    : b
+            ));
+            
+            setSelectedBooking(prev => prev && prev.id === bookingId ? { ...prev, paymentStatus: newPaymentStatus, updatedAt: new Date().toISOString() } : prev);
+            
+            alert(`Payment status successfully updated to ${newPaymentStatus}!`);
+        } catch (error: any) {
+            alert(error.message || 'Error updating payment status');
+        }
     };
 
     const openActionModal = (id: string, action: 'confirm' | 'cancel') => {
@@ -165,13 +275,15 @@ export default function EngagementsPage() {
 
     const getPaymentStatusBadge = (status: PaymentStatus) => {
         const styles = {
-            PENDING: 'bg-[var(--warning-bg)] text-[var(--warning)]',
-            PAID: 'bg-[var(--success-bg)] text-[var(--success)]',
-            REFUNDED: 'bg-[var(--text-muted)] text-[var(--text-tertiary)]',
-            FAILED: 'bg-[var(--error-bg)] text-[var(--error)]',
+            PENDING: 'bg-[var(--warning-bg)] text-[var(--warning)] border border-[var(--warning)]/15',
+            PAYMENT_PROOF_SUBMITTED: 'bg-[var(--info-bg)] text-[var(--info)] border border-[var(--info)]/20',
+            PAID: 'bg-[var(--success-bg)] text-[var(--success)] border border-[var(--success)]/15',
+            REFUNDED: 'bg-[var(--text-muted)]/10 text-[var(--text-tertiary)] border border-[var(--text-muted)]/10',
+            FAILED: 'bg-[var(--error-bg)] text-[var(--error)] border border-[var(--error)]/15',
         };
+        const styleClass = styles[status] || 'bg-zinc-800 text-zinc-400 border border-zinc-700/30';
         return (
-            <span className={`px-2 py-1 rounded text-xs font-medium ${styles[status]}`}>
+            <span className={`px-2 py-1 rounded text-xs font-medium ${styleClass}`}>
                 {status}
             </span>
         );
@@ -656,22 +768,61 @@ export default function EngagementsPage() {
                             {/* Payment Details */}
                             <div className="card p-4">
                                 <h3 className="text-sm font-bold text-[var(--text-muted)] uppercase tracking-wider mb-4">Payment Information</h3>
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                                     <div>
                                         <div className="text-xs text-[var(--text-muted)]">Total Amount</div>
                                         <div className="text-xl font-bold text-[var(--primary-yellow)]">{formatCurrency(selectedBooking.totalAmount)}</div>
                                     </div>
                                     <div>
                                         <div className="text-xs text-[var(--text-muted)]">Payment Status</div>
-                                        <div className="mt-1">{getPaymentStatusBadge(selectedBooking.paymentStatus)}</div>
+                                        <div className="flex items-center gap-2 mt-1">
+                                            {getPaymentStatusBadge(selectedBooking.paymentStatus)}
+                                            {(selectedBooking.paymentStatus === 'PENDING' || selectedBooking.paymentStatus === 'PAYMENT_PROOF_SUBMITTED') && (
+                                                <div className="flex gap-1.5 ml-2">
+                                                    <button
+                                                        onClick={() => handleUpdatePaymentStatus(selectedBooking.id, 'PAID')}
+                                                        className="px-2 py-0.5 bg-[var(--success)] text-white text-[10px] font-semibold rounded hover:brightness-110 transition-all cursor-pointer"
+                                                    >
+                                                        Verify
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleUpdatePaymentStatus(selectedBooking.id, 'FAILED')}
+                                                        className="px-2 py-0.5 bg-[var(--error)] text-white text-[10px] font-semibold rounded hover:brightness-110 transition-all cursor-pointer"
+                                                    >
+                                                        Reject
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div className="text-xs text-[var(--text-muted)]">UPI Txn ID</div>
+                                        <div className="text-sm font-mono font-semibold text-[var(--text-primary)] mt-1">{selectedBooking.transactionId || 'N/A'}</div>
                                     </div>
                                     <div>
                                         <div className="text-xs text-[var(--text-muted)]">Rate</div>
-                                        <div className="text-sm text-[var(--text-primary)]">
+                                        <div className="text-sm text-[var(--text-primary)] mt-1">
                                             {formatCurrency(selectedBooking.totalAmount / selectedBooking.duration)} / hour
                                         </div>
                                     </div>
                                 </div>
+                                
+                                {selectedBooking.paymentProofUrl && (
+                                    <div className="mt-4 pt-4 border-t border-[var(--border-gray)]">
+                                        <div className="text-xs text-[var(--text-muted)] mb-2 font-semibold">Uploaded Payment Proof Screenshot</div>
+                                        <div className="relative inline-block border border-[var(--border-gray)] rounded-lg overflow-hidden bg-black/40 p-1 group">
+                                            <img 
+                                                src={selectedBooking.paymentProofUrl} 
+                                                alt="Payment Proof" 
+                                                className="max-h-64 object-contain rounded hover:scale-[1.01] transition-transform duration-200 cursor-pointer"
+                                                onClick={() => window.open(selectedBooking.paymentProofUrl, '_blank')}
+                                            />
+                                            <div className="absolute top-2 right-2 bg-black/60 backdrop-blur px-2 py-1 rounded text-[10px] text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                                                Click to open in new tab
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
 
                             {/* Notes */}

@@ -113,13 +113,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                     setIsLoading(false);
                 }
             } else {
-                // If the SDK says no user, but we haven't checked AsyncStorage yet, 
-                // do nothing and let checkStoredToken finish.
+                // No active Firebase user session
+                setIsLoading(false);
             }
         });
 
         return () => unsubscribe();
     }, []);
+
 
     const fetchAndSetUser = async (accessToken: string) => {
         try {
@@ -159,6 +160,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                     const cachedUserJson = await AsyncStorage.getItem(USER_KEY);
                     if (cachedUserJson) {
                         setUser(JSON.parse(cachedUserJson));
+                    } else {
+                        // No cached user to restore — token is useless offline, clear it
+                        setAuthToken(null);
+                        setToken(null);
+                        await AsyncStorage.removeItem(TOKEN_KEY);
                     }
                 } catch (_) { }
             }
@@ -230,12 +236,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
 
     const requireAuth = (navigation: any, routeName: string, params?: any) => {
-        if (token === 'guest_token') {
-            setPendingRoute({ name: routeName, params });
-            setGuestSheetVisible(true);
-        } else {
-            navigation.navigate(routeName, params);
-        }
+        navigation.navigate(routeName, params);
     };
 
     const hideGuestSheet = () => {

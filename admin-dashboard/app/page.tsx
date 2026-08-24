@@ -23,20 +23,24 @@ export default function DashboardPage() {
   });
   const [loading, setLoading] = useState(true);
 
-  // Use mock data for now if API fails (common in dev environment without full backend)
+  // Fetch real statistics from stats endpoint
   useEffect(() => {
-    // Simulate API call
-    setTimeout(() => {
-      setStats({
-        totalBouncers: 124,
-        activeBouncers: 45,
-        pendingVerifications: 8,
-        totalUsers: 892,
-        activeEngagements: 12,
-        totalRevenue: 1250000
-      });
-      setLoading(false);
-    }, 1000);
+    const fetchStats = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('/api/dashboard/stats', { cache: 'no-store' });
+        if (!response.ok) {
+          throw new Error('Failed to fetch dashboard stats');
+        }
+        const data = await response.json();
+        setStats(data);
+      } catch (error) {
+        console.error('Error fetching dashboard stats:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchStats();
   }, []);
 
   const StatCard = ({ title, value, change, icon, color }: { title: string, value: string | number, change?: string, icon: React.ReactNode, color: string }) => (
@@ -79,7 +83,24 @@ export default function DashboardPage() {
             Real-time insights into security operations and performance
           </p>
         </div>
-        <button className="btn btn-primary shadow-lg hover:shadow-xl hover:scale-105 transition-all w-full sm:w-auto">
+        <button
+          className="btn btn-primary shadow-lg hover:shadow-xl hover:scale-105 transition-all w-full sm:w-auto"
+          onClick={async () => {
+            try {
+              const res = await fetch('/api/dashboard/report');
+              if (!res.ok) throw new Error('Failed');
+              const blob = await res.blob();
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = `shieldhire-report-${new Date().toISOString().slice(0,10)}.csv`;
+              a.click();
+              URL.revokeObjectURL(url);
+            } catch {
+              alert('Report generation failed. Please try again.');
+            }
+          }}
+        >
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
           </svg>

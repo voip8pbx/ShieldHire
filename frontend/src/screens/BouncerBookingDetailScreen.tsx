@@ -8,6 +8,18 @@ import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../types';
 import api from '../services/api';
 
+const mapStyle = [
+  { "elementType": "geometry", "stylers": [{"color": "#212121"}] },
+  { "elementType": "labels.icon", "stylers": [{"visibility": "off"}] },
+  { "elementType": "labels.text.fill", "stylers": [{"color": "#757575"}] },
+  { "elementType": "labels.text.stroke", "stylers": [{"color": "#212121"}] },
+  { "featureType": "administrative", "elementType": "geometry", "stylers": [{"color": "#757575"}] },
+  { "featureType": "poi", "elementType": "geometry", "stylers": [{"color": "#181818"}] },
+  { "featureType": "road", "elementType": "geometry.fill", "stylers": [{"color": "#2c2c2c"}] },
+  { "featureType": "road", "elementType": "labels.text.fill", "stylers": [{"color": "#8a8a8a"}] },
+  { "featureType": "water", "elementType": "geometry", "stylers": [{"color": "#000000"}] }
+];
+
 type BouncerBookingDetailScreenNavigationProp = StackNavigationProp<RootStackParamList, 'BouncerBookingDetail'>;
 type BouncerBookingDetailScreenRouteProp = RouteProp<RootStackParamList, 'BouncerBookingDetail'>;
 
@@ -26,6 +38,7 @@ interface BookingDetail {
     duration: number;
     totalPrice: number;
     status: string;
+    paymentStatus?: string;
     user: {
         id: string;
         name: string;
@@ -130,11 +143,11 @@ export default function BouncerBookingDetailScreen({ navigation, route }: Props)
         if (url) Linking.openURL(url);
     };
 
-    const handleStatusUpdate = async (newStatus: 'CONFIRMED' | 'REJECTED') => {
+    const handleStatusUpdate = async (newStatus: 'CONFIRMED' | 'REJECTED' | 'ACTIVE' | 'COMPLETED') => {
         try {
             setLoading(true);
             await api.patch(`/bookings/${booking?.id}/status`, { status: newStatus });
-            Alert.alert('Success', `Booking has been ${newStatus.toLowerCase()}.`);
+            Alert.alert('Success', `Shift status updated to ${newStatus.toLowerCase()}.`);
             fetchBookingDetail(); // Reload booking
         } catch (error) {
             console.error('Failed to update status:', error);
@@ -199,6 +212,15 @@ export default function BouncerBookingDetailScreen({ navigation, route }: Props)
                         </View>
                     </View>
                 )}
+
+                {/* Chat Button */}
+                <TouchableOpacity
+                    style={styles.chatButtonContainer}
+                    onPress={() => (navigation as any).navigate('Chat', { bookingId: booking.id })}
+                >
+                    <Ionicons name="chatbubbles-outline" size={22} color="#000" />
+                    <Text style={styles.chatButtonText}>CHAT & DISCUSS DETAILS</Text>
+                </TouchableOpacity>
 
                 {/* Client Info */}
                 <View style={styles.card}>
@@ -275,6 +297,7 @@ export default function BouncerBookingDetailScreen({ navigation, route }: Props)
                                 scrollEnabled={false}
                                 zoomEnabled={false}
                                 loadingEnabled={true}
+                                customMapStyle={mapStyle}
                             >
                                 <Marker coordinate={{ 
                                     latitude: Number(booking.latitude), 
@@ -314,6 +337,37 @@ export default function BouncerBookingDetailScreen({ navigation, route }: Props)
                     </View>
                 )}
 
+                {booking.status === 'CONFIRMED' && (
+                    <View style={styles.actionButtonsContainer}>
+                        {booking.paymentStatus === 'PAID' ? (
+                            <TouchableOpacity 
+                                style={[styles.actionButton, styles.acceptButton]} 
+                                onPress={() => handleStatusUpdate('ACTIVE')}
+                            >
+                                <Ionicons name="play-circle" size={20} color="#000" />
+                                <Text style={[styles.actionButtonText, { color: '#000' }]}>START SHIFT</Text>
+                            </TouchableOpacity>
+                        ) : (
+                            <View style={styles.pendingPaymentBanner}>
+                                <Ionicons name="time-outline" size={20} color="#FFD700" style={{ marginRight: 8 }} />
+                                <Text style={styles.pendingPaymentText}>Waiting for client payment verification...</Text>
+                            </View>
+                        )}
+                    </View>
+                )}
+
+                {booking.status === 'ACTIVE' && (
+                    <View style={styles.actionButtonsContainer}>
+                        <TouchableOpacity 
+                            style={[styles.actionButton, { backgroundColor: '#4ade80' }]} 
+                            onPress={() => handleStatusUpdate('COMPLETED')}
+                        >
+                            <Ionicons name="checkmark-circle" size={20} color="#000" />
+                            <Text style={[styles.actionButtonText, { color: '#000' }]}>COMPLETE SHIFT</Text>
+                        </TouchableOpacity>
+                    </View>
+                )}
+
                 <View style={{ height: 40 }} />
             </ScrollView>
         </View>
@@ -323,16 +377,16 @@ export default function BouncerBookingDetailScreen({ navigation, route }: Props)
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#0F0F0F',
+        backgroundColor: '#121214',
     },
     loadingContainer: {
         flex: 1,
-        backgroundColor: '#0F0F0F',
+        backgroundColor: '#121214',
         justifyContent: 'center',
         alignItems: 'center',
     },
     loadingText: {
-        color: '#888',
+        color: '#8E8E93',
         marginTop: 15,
         fontSize: 14,
     },
@@ -343,7 +397,9 @@ const styles = StyleSheet.create({
         paddingHorizontal: 15,
         paddingTop: Platform.OS === 'ios' ? 50 : 20,
         paddingBottom: 20,
-        backgroundColor: '#1E1E1E',
+        backgroundColor: '#121214',
+        borderBottomWidth: 1,
+        borderBottomColor: 'rgba(255, 255, 255, 0.06)',
     },
     backBtn: {
         padding: 5,
@@ -361,32 +417,34 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: 'rgba(74, 222, 128, 0.15)',
+        backgroundColor: 'rgba(74, 222, 128, 0.08)',
         padding: 12,
-        borderRadius: 12,
+        borderRadius: 24,
         marginBottom: 20,
         borderWidth: 1,
-        borderColor: 'rgba(74, 222, 128, 0.4)',
+        borderColor: 'rgba(74, 222, 128, 0.25)',
     },
     confirmedBadgeText: {
         color: '#4ade80',
-        fontWeight: 'bold',
-        fontSize: 14,
+        fontWeight: '800',
+        fontSize: 12,
         marginLeft: 8,
         letterSpacing: 1,
     },
     // Timer
     timerSection: {
-        backgroundColor: '#FFD700',
-        borderRadius: 20,
+        backgroundColor: '#1A1A1E',
+        borderRadius: 24,
         padding: 20,
         marginBottom: 20,
         alignItems: 'center',
+        borderWidth: 1,
+        borderColor: 'rgba(255, 215, 0, 0.25)',
     },
     timerHeader: {
-        color: '#000',
-        fontSize: 12,
-        fontWeight: '900',
+        color: '#FFD700',
+        fontSize: 11,
+        fontWeight: '800',
         letterSpacing: 2,
         marginBottom: 15,
     },
@@ -400,24 +458,25 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     timerValue: {
-        color: '#000',
+        color: '#FFF',
         fontSize: 28,
-        fontWeight: 'bold',
+        fontWeight: '800',
     },
     timerLabel: {
-        color: 'rgba(0,0,0,0.6)',
-        fontSize: 10,
-        fontWeight: 'bold',
+        color: '#888',
+        fontSize: 9,
+        fontWeight: '700',
         textTransform: 'uppercase',
+        marginTop: 4,
     },
     // Cards
     card: {
-        backgroundColor: '#1E1E1E',
-        borderRadius: 20,
-        padding: 15,
+        backgroundColor: '#1A1A1E',
+        borderRadius: 24,
+        padding: 16,
         marginBottom: 20,
         borderWidth: 1,
-        borderColor: '#2A2A2A',
+        borderColor: 'rgba(255, 255, 255, 0.06)',
     },
     cardHeader: {
         flexDirection: 'row',
@@ -425,7 +484,7 @@ const styles = StyleSheet.create({
         marginBottom: 15,
         paddingBottom: 10,
         borderBottomWidth: 1,
-        borderBottomColor: '#2A2A2A',
+        borderBottomColor: 'rgba(255, 255, 255, 0.04)',
     },
     cardTitle: {
         color: '#fff',
@@ -441,7 +500,7 @@ const styles = StyleSheet.create({
         width: 50,
         height: 50,
         borderRadius: 15,
-        backgroundColor: '#333',
+        backgroundColor: '#121214',
         justifyContent: 'center',
         alignItems: 'center',
         borderWidth: 1,
@@ -502,7 +561,7 @@ const styles = StyleSheet.create({
         borderRadius: 15,
         // overflow: 'hidden', // Some Android devices crash when overflow: 'hidden' is used with MapView
         borderWidth: 1,
-        borderColor: '#333',
+        borderColor: 'rgba(255, 255, 255, 0.06)',
     },
     map: {
         ...StyleSheet.absoluteFillObject,
@@ -521,13 +580,13 @@ const styles = StyleSheet.create({
     },
     noMap: {
         height: 100,
-        backgroundColor: '#161616',
+        backgroundColor: '#121214',
         borderRadius: 15,
         justifyContent: 'center',
         alignItems: 'center',
         borderStyle: 'dashed',
         borderWidth: 1,
-        borderColor: '#333',
+        borderColor: 'rgba(255, 255, 255, 0.06)',
     },
     noMapText: {
         color: '#444',
@@ -544,11 +603,11 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         paddingVertical: 15,
-        borderRadius: 12,
+        borderRadius: 24,
         marginHorizontal: 5,
     },
     rejectButton: {
-        backgroundColor: '#e53935',
+        backgroundColor: '#ef4444',
     },
     acceptButton: {
         backgroundColor: '#FFD700',
@@ -556,7 +615,41 @@ const styles = StyleSheet.create({
     actionButtonText: {
         color: '#fff',
         fontSize: 14,
-        fontWeight: 'bold',
+        fontWeight: '800',
         marginLeft: 8,
+    },
+    chatButtonContainer: {
+        backgroundColor: '#FFD700',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 14,
+        paddingHorizontal: 20,
+        borderRadius: 24,
+        marginHorizontal: 16,
+        marginVertical: 12,
+    },
+    chatButtonText: {
+        color: '#000',
+        fontSize: 14,
+        fontWeight: '800',
+        marginLeft: 8,
+    },
+    pendingPaymentBanner: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: 'rgba(255, 215, 0, 0.1)',
+        paddingVertical: 15,
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: 'rgba(255, 215, 0, 0.3)',
+        marginHorizontal: 5,
+    },
+    pendingPaymentText: {
+        color: '#FFD700',
+        fontSize: 14,
+        fontWeight: 'bold',
     },
 });

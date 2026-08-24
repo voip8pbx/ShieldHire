@@ -6,6 +6,14 @@ export type User = {
     profilePhoto?: string;
     role: 'USER' | 'ADMIN' | 'BOUNCER' | 'GUNMAN';
     bouncerProfile?: Bouncer;
+    clientProfile?: ClientProfile;
+};
+
+export type ClientProfile = {
+    id: string;
+    userId: string;
+    verificationStatus: 'PENDING' | 'APPROVED' | 'REJECTED';
+    rejectionReason?: string;
 };
 
 export type Bouncer = {
@@ -25,13 +33,20 @@ export type Bouncer = {
     rating: number;
     isAvailable: boolean;
     verificationStatus: 'PENDING' | 'APPROVED' | 'REJECTED';
+    rejectionReason?: string;
     bio?: string;
+    upiId?: string;
     skills?: string[];
     experience?: number;
     gallery?: string[];
     identityVerified?: boolean;
     aadhaarLast4?: string;
     livenessVerifiedAt?: string;
+    user?: {
+        name?: string;
+        email?: string;
+        profilePhoto?: string;
+    };
 };
 
 
@@ -49,10 +64,13 @@ export type RootStackParamList = {
     ClientMain: undefined;
     BouncerSurvey: undefined;
     BouncerRegistration: { name?: string; email?: string; photo?: string };
-    VerificationPending: { userId: string };
+    VerificationPending: undefined;
+    ClientVerificationPending: undefined;
+    ClientProfileSetup: undefined;
     BouncerBookingDetail: { bookingId: string };
     BookingDetails: { bookingId: string };
     Notifications: undefined;
+    Chat: { bookingId: string };
 };
 
 export type MainTabParamList = {
@@ -79,8 +97,16 @@ export type HomeStackParamList = {
         totalPrice: number;
         package: 'SINGLE_SHIFT' | 'VIP_BODYGUARD';
         notes: string | null;
+        bookingId?: string;
     };
-    MapScreen: { initialLatitude: number; initialLongitude: number; bouncerId: string; price: number; package: 'SINGLE_SHIFT' | 'VIP_BODYGUARD' };
+    MapScreen: {
+        initialLatitude?: number;
+        initialLongitude?: number;
+        bouncerId?: string;
+        price?: number;
+        package?: 'SINGLE_SHIFT' | 'VIP_BODYGUARD';
+        mode?: 'pin' | 'explore';
+    };
 };
 
 export type BouncerTabParamList = {

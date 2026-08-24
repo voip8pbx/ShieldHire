@@ -57,11 +57,11 @@ export default function BenefitsCard() {
 
 const styles = StyleSheet.create({
     container: {
-        backgroundColor: 'rgba(30, 30, 30, 0.6)',
+        backgroundColor: '#121214',
         padding: 20,
         borderRadius: 16,
         borderWidth: 1,
-        borderColor: 'rgba(255, 215, 0, 0.1)',
+        borderColor: 'rgba(255, 255, 255, 0.04)',
         marginTop: 10,
     },
     title: {

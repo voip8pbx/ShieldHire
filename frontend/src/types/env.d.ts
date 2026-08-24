@@ -10,4 +10,7 @@ declare module '@env' {
     export const SUPABASE_URL: string;
     export const SUPABASE_ANON_KEY: string;
     export const PORT: string;
+    export const GOOGLE_WEB_CLIENT_ID: string;
+    export const UPI_ID: string;
+    export const PROD_BASE_URL: string;
 }

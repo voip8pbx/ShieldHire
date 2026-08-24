@@ -11,11 +11,11 @@ export default function AuthenticationCard({ children, style }: { children: Reac
 
 const styles = StyleSheet.create({
     card: {
-        backgroundColor: 'rgba(30, 30, 30, 0.4)',
+        backgroundColor: 'rgba(18, 18, 20, 0.7)',
         borderRadius: 24,
         padding: 20,
         borderWidth: 1,
-        borderColor: 'rgba(255, 255, 255, 0.05)',
+        borderColor: 'rgba(255, 255, 255, 0.04)',
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 10 },
         shadowOpacity: 0.5,

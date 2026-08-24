@@ -1,4 +1,5 @@
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import { ENV } from '../config/env';
 import {
     getAuth,
     signOut as firebaseSignOut,
@@ -11,7 +12,7 @@ import {
 // Initialize Google Sign-In
 export const initGoogleSignIn = () => {
     GoogleSignin.configure({
-        webClientId: '475575826072-boqj4svjnan55e3ba887qd0nsmj3ivtu.apps.googleusercontent.com',
+        webClientId: ENV.GOOGLE_WEB_CLIENT_ID,
         scopes: ['email', 'profile'],
     });
 };

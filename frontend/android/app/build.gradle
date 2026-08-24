@@ -1,4 +1,21 @@
 apply plugin: "com.android.application"
+
+def env = [:]
+def envFile = file("../../../.env")
+if (envFile.exists()) {
+    envFile.eachLine { line ->
+        def matcher = (line =~ /^\s*([\w\.\-]+)\s*=\s*(.*)\s*$/)
+        if (matcher) {
+            def key = matcher[0][1]
+            def value = matcher[0][2]
+            if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+                value = value.substring(1, value.length() - 1)
+            }
+            env[key] = value
+        }
+    }
+}
+
 apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
 apply plugin: "com.google.gms.google-services"
@@ -50,7 +67,7 @@ react {
     //   The cli.js file which is the React Native CLI entrypoint. Default is ../../node_modules/react-native/cli.js
     cliFile = file("../../../node_modules/react-native/cli.js")
     entryFile = file("../../index.js")
-    hermesCommand = "D:\\.React\\HomeGymTrainer\\node_modules\\react-native\\sdks\\hermesc\\win64-bin\\hermesc.exe"
+    hermesCommand = "../../../node_modules/react-native/sdks/hermesc/win64-bin/hermesc.exe"
 
 
 
@@ -89,6 +106,9 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0"
+        
+        // Inject Google Maps API Key dynamically from .env
+        resValue "string", "map_api_key", env['GOOGLE_MAPS_API_KEY'] ?: "AIzaSyCV1MNMAyPMvM0jXnPmVG01ikwxa1ETERg"
     }
     signingConfigs {
         debug {
@@ -97,15 +117,33 @@ android {
             keyAlias 'androiddebugkey'
             keyPassword 'android'
         }
+        release {
+            def storeFilePath = env['MYAPP_UPLOAD_STORE_FILE'] ?: System.getenv('MYAPP_UPLOAD_STORE_FILE')
+            def storePass = env['MYAPP_UPLOAD_STORE_PASSWORD'] ?: System.getenv('MYAPP_UPLOAD_STORE_PASSWORD')
+            def keyAliasVal = env['MYAPP_UPLOAD_KEY_ALIAS'] ?: System.getenv('MYAPP_UPLOAD_KEY_ALIAS')
+            def keyPass = env['MYAPP_UPLOAD_KEY_PASSWORD'] ?: System.getenv('MYAPP_UPLOAD_KEY_PASSWORD')
+
+            if (!storeFilePath || !storePass || !keyAliasVal || !keyPass) {
+                throw new GradleException(
+                    "RELEASE BUILD FAILED: Missing required signing environment variables.\n" +
+                    "Set MYAPP_UPLOAD_STORE_FILE, MYAPP_UPLOAD_STORE_PASSWORD, " +
+                    "MYAPP_UPLOAD_KEY_ALIAS, MYAPP_UPLOAD_KEY_PASSWORD.\n" +
+                    "DO NOT use debug.keystore for production releases."
+                )
+            }
+
+            storeFile file(storeFilePath)
+            storePassword storePass
+            keyAlias keyAliasVal
+            keyPassword keyPass
+        }
     }
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
         }
         release {
-            // Caution! In production, you need to generate your own keystore file.
-            // see https://reactnative.dev/docs/signed-apk-android.
-            signingConfig signingConfigs.debug
+            signingConfig signingConfigs.release
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }

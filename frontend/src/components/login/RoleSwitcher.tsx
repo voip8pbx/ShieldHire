@@ -53,7 +53,7 @@ export default function RoleSwitcher({ mode, onModeChange }: RoleSwitcherProps) 
                 <MaterialCommunityIcons 
                     name="account-tie" 
                     size={20} 
-                    color={mode === 'client' ? '#000' : '#888'} 
+                    color={mode === 'client' ? '#000' : '#8E8E93'} 
                 />
                 <Text style={[styles.tabText, mode === 'client' && styles.tabTextActive]}>
                     Client
@@ -68,7 +68,7 @@ export default function RoleSwitcher({ mode, onModeChange }: RoleSwitcherProps) 
                 <MaterialCommunityIcons 
                     name="shield-account" 
                     size={20} 
-                    color={mode === 'bouncer' ? '#000' : '#888'} 
+                    color={mode === 'bouncer' ? '#000' : '#8E8E93'} 
                 />
                 <Text style={[styles.tabText, mode === 'bouncer' && styles.tabTextActive]}>
                     Bouncer
@@ -81,12 +81,12 @@ export default function RoleSwitcher({ mode, onModeChange }: RoleSwitcherProps) 
 const styles = StyleSheet.create({
     container: {
         flexDirection: 'row',
-        backgroundColor: '#1A1A1A',
+        backgroundColor: '#121214',
         borderRadius: 16,
         padding: 4,
         marginBottom: 20,
         borderWidth: 1,
-        borderColor: '#333',
+        borderColor: 'rgba(255, 255, 255, 0.04)',
         height: 48,
         position: 'relative',
     },
@@ -99,7 +99,7 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         shadowColor: '#FFD700',
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.3,
+        shadowOpacity: 0.2,
         shadowRadius: 5,
         elevation: 4,
     },
@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
         zIndex: 1,
     },
     tabText: {
-        color: '#888',
+        color: '#8E8E93',
         fontSize: 15,
         fontWeight: '600',
         marginLeft: 8,

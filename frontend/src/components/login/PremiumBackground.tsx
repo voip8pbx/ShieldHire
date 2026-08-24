@@ -27,21 +27,21 @@ export default function PremiumBackground({ children }: { children: React.ReactN
     return (
         <View style={styles.container}>
             <LinearGradient
-                colors={['#050505', '#0F0F0F', '#151515']}
+                colors={['#070708', '#0E0E10', '#070708']}
                 style={StyleSheet.absoluteFillObject}
             />
             {/* Glowing Orb 1 */}
             <Animated.View style={[
                 styles.glowOrb, 
                 styles.orbTopRight, 
-                { transform: [{ scale: pulseAnim }], opacity: 0.15 }
+                { transform: [{ scale: pulseAnim }], opacity: 0.08 }
             ]} />
             
             {/* Glowing Orb 2 */}
             <Animated.View style={[
                 styles.glowOrb, 
                 styles.orbBottomLeft, 
-                { transform: [{ scale: pulseAnim }], opacity: 0.1 }
+                { transform: [{ scale: pulseAnim }], opacity: 0.05 }
             ]} />
 
             {/* Content overlay */}
@@ -55,7 +55,7 @@ export default function PremiumBackground({ children }: { children: React.ReactN
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#0F0F0F',
+        backgroundColor: '#070708',
     },
     glowOrb: {
         position: 'absolute',

@@ -1,10 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
+    const pathname = usePathname();
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 0);
     const [mounted, setMounted] = useState(false);
@@ -59,6 +61,10 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
 
     if (!mounted) {
         return null;
+    }
+
+    if (pathname === '/login') {
+        return <>{children}</>;
     }
 
     return (

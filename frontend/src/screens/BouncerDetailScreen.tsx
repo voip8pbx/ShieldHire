@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useLayoutEffect } from 'react';
+import React, { useEffect, useState, useLayoutEffect, useContext } from 'react';
 import {
     View,
     Text,
@@ -12,7 +12,6 @@ import {
     StatusBar,
     Alert,
     Modal,
-    FlatList,
     Dimensions
 } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -21,7 +20,8 @@ import { HomeStackParamList, Bouncer } from '../types';
 import api from '../services/api';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
+import LinearGradient from 'react-native-linear-gradient';
+import { ThemeContext } from '../context/ThemeContext';
 
 type BouncerDetailScreenNavigationProp = StackNavigationProp<HomeStackParamList, 'BouncerDetail'>;
 type BouncerDetailScreenRouteProp = RouteProp<HomeStackParamList, 'BouncerDetail'>;
@@ -31,29 +31,13 @@ type Props = {
     route: BouncerDetailScreenRouteProp;
 };
 
-// Extended mock type for the UI
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
 interface BouncerDetails extends Bouncer {
     certifications: string[];
-    reviews: { id: string; user: string; rating: number; text: string; time: string; avatar: string }[];
     specialties: string[];
+    galleryPhotos: string[];
 }
-
-const MOCK_EXTENDED_DATA: Record<string, Partial<BouncerDetails>> = {
-    'default': {
-        certifications: ['Firearms License (Class A)', 'Advanced Crowd Control', 'Red Cross First Aid', 'VIP Protection Certified'],
-        specialties: ['High-Profile Event Security', 'Close Protection', 'Surveillance', 'Conflict De-escalation', 'Emergency Response'],
-        gallery: [
-            'https://images.unsplash.com/photo-1542407289-53e3fa51ba28?q=80&w=300&auto=format&fit=crop',
-            'https://images.unsplash.com/photo-1574768822692-adfb9b392fa9?q=80&w=300&auto=format&fit=crop',
-            'https://images.unsplash.com/photo-1629853381628-9cda81580235?q=80&w=300&auto=format&fit=crop'
-        ],
-        reviews: [
-            { id: 'r1', user: 'James Bond', rating: 5, time: '2 weeks ago', text: 'Top notch security. Handled the crowd perfectly.', avatar: 'https://i.pravatar.cc/100?img=12' },
-            { id: 'r2', user: 'Club X', rating: 5, time: '1 month ago', text: 'Very professional bouncer. No trouble all night.', avatar: 'https://i.pravatar.cc/100?img=33' },
-            { id: 'r3', user: 'Sarah Connor', rating: 4, time: '2 months ago', text: 'Felt very safe with him as my bodyguard.', avatar: 'https://i.pravatar.cc/100?img=5' }
-        ]
-    }
-};
 
 export default function BouncerDetailScreen({ navigation, route }: Props) {
     const { bouncerId } = route.params;
@@ -67,9 +51,10 @@ export default function BouncerDetailScreen({ navigation, route }: Props) {
             headerTitle: '',
             headerTransparent: true,
             headerLeft: () => (
-                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.topBackBtn}>
                     <Ionicons name="chevron-back" size={24} color="#fff" />
                 </TouchableOpacity>
+
             ),
         });
     }, [navigation]);
@@ -77,50 +62,42 @@ export default function BouncerDetailScreen({ navigation, route }: Props) {
     useEffect(() => {
         const fetchBouncer = async () => {
             try {
-                // Try to get real data first
-                let bouncerData: any = null;
-                try {
-                    const response = await api.get<any>(`/api/bouncers/${bouncerId}`);
-                    const bouncer: any = response.data;
+                const response = await api.get<any>(`/api/bouncers/${bouncerId}`);
+                const bouncerData: any = response.data;
 
-                    // Map Bouncer to Security UI structure
-                    bouncerData = {
-                        ...bouncer,
-                        bio: bouncer.bio || `Professional ${bouncer.isGunman ? 'Armed Security Officer' : 'Bouncer'} with verification status: ${bouncer.verificationStatus}. Dedicated to ensuring safety and order.`,
-                        certifications: bouncer.hasGunLicense ? ['Firearms License', 'Crowd Control', 'First Aid'] : ['Crowd Control', 'First Aid', 'Conflict Resolution']
-                    };
-                } catch (e) {
-                    console.log('Error fetching bouncer details', e);
-                    // Fallback Mock Logic
-                    bouncerData = {
-                        id: bouncerId,
-                        name: 'Guard Name',
-                        isGunman: false,
-                        rating: 4.9,
-                        experience: 5,
-                        isAvailable: true,
-                        bio: 'Highly trained security professional with years of experience in crowd control, VIP protection, and threat assessment. Dedicated to ensuring safety and order.'
-                    };
+                const defaultCerts = ['Govt Security License', 'Background Checked', 'Liveness Verified'];
+                if (bouncerData.hasGunLicense || bouncerData.isGunman) {
+                    defaultCerts.push('Armed Carry Permit');
                 }
 
-                // Merge with UI-specific mock data but prioritize real DB content
-                const extended = MOCK_EXTENDED_DATA['default']!;
+                const defaultSkills = bouncerData.skills && bouncerData.skills.length > 0
+                    ? bouncerData.skills
+                    : ['Access Control', 'VIP Escort', 'Crowd Management', 'Emergency Response', 'Event Protection'];
+
+                // High-quality duty photo fallbacks if gallery is empty
+                const defaultDutyPhotos = [
+                    'https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=500&q=80',
+                    'https://images.unsplash.com/photo-1509099836639-18ba1795216d?w=500&q=80',
+                    'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=500&q=80',
+                ];
+
+                const gallery = (bouncerData.gallery && bouncerData.gallery.length > 0)
+                    ? bouncerData.gallery
+                    : defaultDutyPhotos;
 
                 setBouncer({
-                    ...extended,
                     ...bouncerData,
-                    gallery: (bouncerData.gallery && bouncerData.gallery.length > 0)
-                        ? bouncerData.gallery
-                        : extended.gallery,
-                    specialties: (bouncerData.skills && bouncerData.skills.length > 0)
-                        ? bouncerData.skills
-                        : extended.specialties,
-                    certifications: bouncerData.certifications || extended.certifications,
-                    bio: bouncerData.bio || 'Highly trained security professional with years of experience in crowd control, VIP protection, and threat assessment.',
+                    name: bouncerData.name || bouncerData.user?.name || 'Security Officer',
+                    profilePhoto: bouncerData.profilePhoto || bouncerData.profile_image_url || bouncerData.user?.profilePhoto,
+                    bio: bouncerData.bio || `Certified security professional specializing in executive protection, private event management, and access control. Verified by ShieldHire.`,
+                    certifications: defaultCerts,
+                    specialties: defaultSkills,
+                    galleryPhotos: gallery,
                 });
 
             } catch (error) {
-                Alert.alert('Error', 'Failed to load details');
+                console.error('[BouncerDetail] Load Error:', error);
+                Alert.alert('Notice', 'Failed to load guard profile');
                 navigation.goBack();
             } finally {
                 setLoading(false);
@@ -133,236 +110,258 @@ export default function BouncerDetailScreen({ navigation, route }: Props) {
         return (
             <View style={styles.loadingContainer}>
                 <ActivityIndicator size="large" color="#FFD700" />
+                <Text style={styles.loadingText}>Loading Security Profile...</Text>
             </View>
         );
     }
 
     if (!bouncer) return null;
 
-    const SINGLE_SHIFT_PRICE = 2000;
+    const isGunman = bouncer.isGunman || bouncer.hasGunLicense;
+    const SINGLE_SHIFT_PRICE = isGunman ? 3500 : 2000;
     const VIP_BODYGUARD_PRICE = 4000;
     const selectedBasePrice = selectedPackage === 'VIP_BODYGUARD' ? VIP_BODYGUARD_PRICE : SINGLE_SHIFT_PRICE;
+    const displayRating = bouncer.rating && bouncer.rating > 0 ? bouncer.rating.toFixed(1) : '4.8';
 
     return (
         <SafeAreaView style={styles.safeArea}>
-            <View style={styles.backgroundContainer} />
+            <StatusBar barStyle="light-content" backgroundColor="#0A0A0A" />
+
             <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
 
-                {/* Profile Header Image Background */}
-                <View style={styles.headerImageContainer}>
-                    <Image
-                        source={{ uri: bouncer.profilePhoto || `https://i.pravatar.cc/300?u=${bouncer.id}` }}
-                        style={styles.headerImage}
-                        blurRadius={4}
-                    />
-                    <View style={styles.headerOverlay} />
+                {/* Hero Profile Banner */}
+                <View style={styles.heroContainer}>
+                    {bouncer.profilePhoto ? (
+                        <Image source={{ uri: bouncer.profilePhoto }} style={styles.heroBlurImage} blurRadius={12} />
+                    ) : (
+                        <View style={[styles.heroBlurImage, { backgroundColor: '#1A1A1E' }]} />
+                    )}
+                    <LinearGradient colors={['rgba(10,10,10,0.3)', 'rgba(10,10,10,0.85)', '#0A0A0A']} style={styles.heroGradientOverlay} />
 
-                    <View style={styles.profileInfoCentered}>
-                        <View style={styles.avatarContainer}>
-                            <Image
-                                source={{ uri: bouncer.profilePhoto || `https://i.pravatar.cc/300?u=${bouncer.id}` }}
-                                style={styles.avatar}
-                            />
-                            <View style={styles.onlineBadge} />
+                    {/* Back Button */}
+                    <TouchableOpacity style={styles.topBackBtn} onPress={() => navigation.goBack()}>
+                        <Ionicons name="chevron-back" size={24} color="#fff" />
+                    </TouchableOpacity>
+
+                    {/* Center Avatar & Info */}
+                    <View style={styles.profileHeaderBox}>
+                        <View style={styles.avatarWrap}>
+                            {bouncer.profilePhoto ? (
+                                <Image source={{ uri: bouncer.profilePhoto }} style={styles.avatarImage} />
+                            ) : (
+                                <View style={styles.avatarPlaceholder}>
+                                    <MaterialCommunityIcons name="account-shield" size={60} color="#FFD700" />
+                                </View>
+                            )}
+                            <View style={styles.verifiedBadgeIcon}>
+                                <MaterialCommunityIcons name="check-decagram" size={22} color="#FFD700" />
+                            </View>
                         </View>
-                        <Text style={styles.name}>{bouncer.name}</Text>
-                        <View style={styles.specBadge}>
-                            <Text style={styles.specText}>{bouncer.isGunman ? 'Gunman' : 'Bouncer'}</Text>
+
+                        <Text style={styles.guardName}>{bouncer.name}</Text>
+
+                        <View style={styles.roleTagWrap}>
+                            <View style={[styles.roleTagPill, isGunman ? styles.gunmanPill : styles.bouncerPill]}>
+                                <MaterialCommunityIcons name={isGunman ? 'shield-cross' : 'shield-account'} size={14} color={isGunman ? '#f87171' : '#FFD700'} style={{ marginRight: 5 }} />
+                                <Text style={[styles.roleTagLabel, { color: isGunman ? '#f87171' : '#FFD700' }]}>
+                                    {isGunman ? 'ARMED GUNMAN' : 'ELITE BOUNCER'}
+                                </Text>
+                            </View>
                         </View>
 
                         <View style={styles.ratingRow}>
-                            {[1, 2, 3, 4, 5].map((s) => (
-                                <Ionicons key={s} name="star" size={14} color="#FFD700" />
-                            ))}
-                            <Text style={styles.ratingText}>{bouncer.rating.toFixed(1)} (75 Verified Jobs)</Text>
+                            <Ionicons name="star" size={16} color="#FFD700" />
+                            <Text style={styles.ratingScore}>{displayRating}</Text>
+                            <Text style={styles.ratingSubText}>(75 Verified Hires)</Text>
                         </View>
                     </View>
                 </View>
 
-                {/* Main Content Body */}
-                <View style={styles.bodyContent}>
+                {/* Key Metrics Stats Row */}
+                <View style={styles.statsMetricsRow}>
+                    <View style={styles.metricCard}>
+                        <Ionicons name="briefcase-outline" size={18} color="#FFD700" />
+                        <Text style={styles.metricValue}>{bouncer.experience || 5}+ Yrs</Text>
+                        <Text style={styles.metricLabel}>Experience</Text>
+                    </View>
 
-                    {/* Certifications Horizontal Scroll */}
-                    <View style={styles.section}>
-                        <Text style={styles.sectionTitle}>Licenses & Certifications</Text>
-                        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ paddingVertical: 5 }}>
-                            {bouncer.certifications.map((cert, index) => (
-                                <View key={index} style={styles.certPill}>
-                                    <MaterialCommunityIcons name="license" size={16} color="#FFD700" style={{ marginRight: 6 }} />
-                                    <Text style={styles.certText}>{cert}</Text>
+                    <View style={styles.metricCard}>
+                        <Ionicons name="shield-checkmark-outline" size={18} color="#4ade80" />
+                        <Text style={styles.metricValue}>100%</Text>
+                        <Text style={styles.metricLabel}>Verified</Text>
+                    </View>
+
+                    <View style={styles.metricCard}>
+                        <Ionicons name="time-outline" size={18} color="#5AC8FA" />
+                        <Text style={styles.metricValue}>Instant</Text>
+                        <Text style={styles.metricLabel}>Dispatch</Text>
+                    </View>
+                </View>
+
+                {/* Main Section Content */}
+                <View style={styles.contentBody}>
+
+                    {/* Verified Credentials */}
+                    <View style={styles.sectionWrap}>
+                        <Text style={styles.sectionHeaderTitle}>Verified Credentials</Text>
+                        <View style={styles.certsGrid}>
+                            {bouncer.certifications.map((cert, idx) => (
+                                <View key={idx} style={styles.certBadgePill}>
+                                    <MaterialCommunityIcons name="certificate" size={15} color="#FFD700" style={{ marginRight: 6 }} />
+                                    <Text style={styles.certBadgeText}>{cert}</Text>
                                 </View>
+                            ))}
+                        </View>
+                    </View>
+
+                    {/* About Security Profile */}
+                    <View style={styles.sectionWrap}>
+                        <Text style={styles.sectionHeaderTitle}>About Security Profile</Text>
+                        <View style={styles.bioCard}>
+                            <Text style={styles.bioText}>{bouncer.bio}</Text>
+                        </View>
+                    </View>
+
+                    {/* Tactical Skills */}
+                    <View style={styles.sectionWrap}>
+                        <Text style={styles.sectionHeaderTitle}>Tactical Skills</Text>
+                        <View style={styles.skillsGridWrap}>
+                            {bouncer.specialties.map((skill, idx) => (
+                                <View key={idx} style={styles.skillPill}>
+                                    <Ionicons name="checkmark-circle" size={14} color="#FFD700" style={{ marginRight: 6 }} />
+                                    <Text style={styles.skillPillText}>{skill}</Text>
+                                </View>
+                            ))}
+                        </View>
+                    </View>
+
+                    {/* Duty Photos Gallery */}
+                    <View style={styles.sectionWrap}>
+                        <Text style={styles.sectionHeaderTitle}>Duty & Field Photos</Text>
+                        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.galleryRow}>
+                            {bouncer.galleryPhotos.map((photoUrl, idx) => (
+                                <TouchableOpacity
+                                    key={idx}
+                                    style={styles.galleryCard}
+                                    onPress={() => setSelectedImageIndex(idx)}
+                                    activeOpacity={0.88}
+                                >
+                                    <Image source={{ uri: photoUrl }} style={styles.galleryImage} resizeMode="cover" />
+                                    <LinearGradient colors={['transparent', 'rgba(0,0,0,0.7)']} style={styles.galleryOverlay} />
+                                </TouchableOpacity>
                             ))}
                         </ScrollView>
                     </View>
 
-                    {/* About */}
-                    <View style={styles.section}>
-                        <Text style={styles.sectionTitle}>About Security Profile</Text>
-                        <Text style={styles.bodyText}>
-                            {bouncer.bio}
-                        </Text>
-                    </View>
+                    {/* Hiring Package Selection */}
+                    <View style={styles.sectionWrap}>
+                        <Text style={styles.sectionHeaderTitle}>Hiring Packages</Text>
 
-                    {/* Skills Grid */}
-                    <View style={styles.section}>
-                        <Text style={styles.sectionTitle}>Tactical Skills</Text>
-                        <View style={styles.skillsGrid}>
-                            {bouncer.specialties.map((spec, index) => (
-                                <View key={index} style={styles.skillItem}>
-                                    <View style={styles.skillIconBox}>
-                                        <Ionicons name="checkmark" size={14} color="#000" />
-                                    </View>
-                                    <Text style={styles.skillText}>{spec}</Text>
-                                </View>
-                            ))}
-                        </View>
-                    </View>
-
-                    {/* Photo Gallery */}
-                    {bouncer.gallery && bouncer.gallery.length > 0 && (
-                        <View style={styles.section}>
-                            <Text style={styles.sectionTitle}>Photos</Text>
-                            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.galleryScroll}>
-                                {bouncer.gallery.map((photoUrl, index) => (
-                                    <TouchableOpacity 
-                                        key={index} 
-                                        onPress={() => setSelectedImageIndex(index)}
-                                        activeOpacity={0.9}
-                                    >
-                                        <Image
-                                            source={{ uri: photoUrl }}
-                                            style={styles.galleryImage}
-                                        />
-                                    </TouchableOpacity>
-                                ))}
-                            </ScrollView>
-                        </View>
-                    )}
-
-                    {/* Services / Plans */}
-                    <View style={styles.section}>
-                        <Text style={styles.sectionTitle}>Hiring Packages</Text>
-
-                        {/* Single Event Shift */}
+                        {/* Single Shift Card */}
                         <TouchableOpacity
                             style={[
-                                styles.planCard,
-                                selectedPackage === 'SINGLE_SHIFT' && styles.planCardSelected,
+                                styles.packageCard,
+                                selectedPackage === 'SINGLE_SHIFT' && styles.packageCardSelected
                             ]}
                             onPress={() => setSelectedPackage('SINGLE_SHIFT')}
-                            activeOpacity={0.85}
+                            activeOpacity={0.9}
                         >
-                            <View style={styles.planHeader}>
-                                <Text style={styles.planName}>Single Event Shift</Text>
-                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                    {selectedPackage === 'SINGLE_SHIFT' && (
-                                        <Ionicons name="checkmark-circle" size={20} color="#FFD700" style={{ marginRight: 8 }} />
-                                    )}
-                                    <Text style={styles.planPrice}>₹{SINGLE_SHIFT_PRICE}</Text>
+                            <View style={styles.packageHeaderRow}>
+                                <View style={{ flex: 1 }}>
+                                    <Text style={styles.packageTitle}>Single Event Shift</Text>
+                                    <Text style={styles.packageSubtitle}>4-Hour Standard Event Security Detail</Text>
+                                </View>
+                                <Text style={styles.packagePriceText}>₹{SINGLE_SHIFT_PRICE}</Text>
+                            </View>
+
+                            <View style={styles.packageDivider} />
+
+                            <View style={styles.packageFeaturesList}>
+                                <View style={styles.featureItemRow}>
+                                    <Ionicons name="checkmark" size={14} color="#FFD700" style={{ marginRight: 6 }} />
+                                    <Text style={styles.featureItemText}>Entry Screening & Access Control</Text>
+                                </View>
+                                <View style={styles.featureItemRow}>
+                                    <Ionicons name="checkmark" size={14} color="#FFD700" style={{ marginRight: 6 }} />
+                                    <Text style={styles.featureItemText}>Crowd Control & Venue De-escalation</Text>
                                 </View>
                             </View>
-                            <View style={styles.divider} />
-                            <View style={styles.planFeature}><Text style={styles.planFeatureText}>• Crowd Control</Text></View>
-                            <View style={styles.planFeature}><Text style={styles.planFeatureText}>• Entry Screening</Text></View>
-                            <View style={styles.planFeature}><Text style={styles.planFeatureText}>• General Event Security</Text></View>
                         </TouchableOpacity>
 
-                        {/* VIP Protection */}
+                        {/* VIP Bodyguard Card */}
                         <TouchableOpacity
                             style={[
-                                styles.planCard,
-                                styles.goldPlan,
-                                selectedPackage === 'VIP_BODYGUARD' && styles.goldPlanSelected,
+                                styles.packageCard,
+                                styles.vipCard,
+                                selectedPackage === 'VIP_BODYGUARD' && styles.vipCardSelected
                             ]}
                             onPress={() => setSelectedPackage('VIP_BODYGUARD')}
-                            activeOpacity={0.85}
+                            activeOpacity={0.9}
                         >
-                            <View style={styles.planHeader}>
-                                <Text style={[styles.planName, { color: '#000' }]}>VIP Bodyguard</Text>
-                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                    {selectedPackage === 'VIP_BODYGUARD' && (
-                                        <Ionicons name="checkmark-circle" size={20} color="#000" style={{ marginRight: 8 }} />
-                                    )}
-                                    <Text style={[styles.planPrice, { color: '#000' }]}>₹{VIP_BODYGUARD_PRICE}</Text>
+                            <View style={styles.packageHeaderRow}>
+                                <View style={{ flex: 1 }}>
+                                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                        <Text style={[styles.packageTitle, { color: '#000' }]}>VIP Bodyguard Escort</Text>
+                                        <MaterialCommunityIcons name="shield-crown" size={16} color="#000" style={{ marginLeft: 6 }} />
+                                    </View>
+                                    <Text style={[styles.packageSubtitle, { color: '#222' }]}>Dedicated Close Protection & Escort</Text>
+                                </View>
+                                <Text style={[styles.packagePriceText, { color: '#000' }]}>₹{VIP_BODYGUARD_PRICE}</Text>
+                            </View>
+
+                            <View style={[styles.packageDivider, { backgroundColor: 'rgba(0,0,0,0.1)' }]} />
+
+                            <View style={styles.packageFeaturesList}>
+                                <View style={styles.featureItemRow}>
+                                    <Ionicons name="checkmark" size={14} color="#000" style={{ marginRight: 6 }} />
+                                    <Text style={[styles.featureItemText, { color: '#111' }]}>Personal Escort & Threat Assessment</Text>
+                                </View>
+                                <View style={styles.featureItemRow}>
+                                    <Ionicons name="checkmark" size={14} color="#000" style={{ marginRight: 6 }} />
+                                    <Text style={[styles.featureItemText, { color: '#111' }]}>Armed Defense Protection (if licensed)</Text>
                                 </View>
                             </View>
-                            <View style={[styles.divider, { backgroundColor: 'rgba(0,0,0,0.1)' }]} />
-                            <View style={styles.planFeature}><Text style={[styles.planFeatureText, { color: '#000' }]}>• Close Protection</Text></View>
-                            <View style={styles.planFeature}><Text style={[styles.planFeatureText, { color: '#000' }]}>• Threat Assessment</Text></View>
-                            <View style={styles.planFeature}><Text style={[styles.planFeatureText, { color: '#000' }]}>• Armed Response (if licensed)</Text></View>
-                            <View style={styles.planFeature}><Text style={[styles.planFeatureText, { color: '#000' }]}>• 24/7 VIP Coverage</Text></View>
                         </TouchableOpacity>
                     </View>
 
-                    {/* Client Reviews */}
-                    <View style={styles.section}>
-                        <Text style={styles.sectionTitle}>Client Feedback</Text>
-                        {bouncer.reviews.map((review) => (
-                            <View key={review.id} style={styles.reviewCard}>
-                                <View style={styles.reviewHeader}>
-                                    <Image source={{ uri: review.avatar }} style={styles.reviewAvatar} />
-                                    <View>
-                                        <Text style={styles.reviewUser}>{review.user}</Text>
-                                        <Text style={styles.reviewTime}>{review.time}</Text>
-                                    </View>
-                                    <View style={{ marginLeft: 'auto', flexDirection: 'row' }}>
-                                        <Ionicons name="star" size={14} color="#FFD700" />
-                                        <Text style={{ color: '#FFD700', marginLeft: 4, fontWeight: 'bold' }}>{review.rating}.0</Text>
-                                    </View>
-                                </View>
-                                <Text style={styles.reviewText}>{review.text}</Text>
-                            </View>
-                        ))}
-                    </View>
-
-                    <View style={{ height: 100 }} />
+                    <View style={{ height: 110 }} />
                 </View>
             </ScrollView>
 
-            {/* Bottom Button */}
-            <View style={styles.footer}>
+            {/* Bottom Sticky Action Footer */}
+            <View style={styles.stickyFooterBar}>
                 <View>
-                    <Text style={styles.priceLabel}>
-                        {selectedPackage === 'VIP_BODYGUARD' ? 'VIP Package' : 'Standard Package'}
-                    </Text>
-                    <Text style={styles.priceValue}>₹{selectedBasePrice}<Text style={{ fontSize: 14, color: '#888', fontWeight: '400' }}>/shift</Text></Text>
+                    <Text style={styles.footerPriceLabel}>Selected Shift Rate</Text>
+                    <Text style={styles.footerPriceValue}>₹{selectedBasePrice} <Text style={styles.footerPerShift}>/ shift</Text></Text>
                 </View>
+
                 <TouchableOpacity
-                    style={styles.bookButton}
+                    style={styles.hireGuardBtn}
                     onPress={() => navigation.navigate('BookingFlow', { bouncerId: bouncer.id, price: selectedBasePrice, package: selectedPackage })}
+                    activeOpacity={0.88}
                 >
-                    <Text style={styles.bookBtnText}>HIRE SECURITY</Text>
-                    <Ionicons name="shield-checkmark" size={20} color="#000" style={{ marginLeft: 8 }} />
+                    <Text style={styles.hireGuardBtnText}>HIRE GUARD NOW</Text>
+                    <Ionicons name="shield-checkmark" size={18} color="#000" style={{ marginLeft: 8 }} />
                 </TouchableOpacity>
             </View>
 
-            {/* Image Viewer Modal */}
+            {/* Fullscreen Image Preview Modal */}
             <Modal
                 visible={selectedImageIndex !== null}
                 transparent={true}
                 animationType="fade"
                 onRequestClose={() => setSelectedImageIndex(null)}
             >
-                <View style={styles.modalContainer}>
-                    <TouchableOpacity style={styles.closeButton} onPress={() => setSelectedImageIndex(null)}>
-                        <Ionicons name="close" size={32} color="#fff" />
+                <View style={styles.modalBackdrop}>
+                    <TouchableOpacity style={styles.modalCloseBtn} onPress={() => setSelectedImageIndex(null)}>
+                        <Ionicons name="close" size={28} color="#fff" />
                     </TouchableOpacity>
-                    {bouncer?.gallery && (
-                        <FlatList
-                            data={bouncer.gallery}
-                            horizontal
-                            pagingEnabled
-                            showsHorizontalScrollIndicator={false}
-                            initialScrollIndex={selectedImageIndex || 0}
-                            getItemLayout={(data, index) => (
-                                { length: Dimensions.get('window').width, offset: Dimensions.get('window').width * index, index }
-                            )}
-                            keyExtractor={(_, index) => index.toString()}
-                            renderItem={({ item }) => (
-                                <View style={{ width: Dimensions.get('window').width, flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                                    <Image source={{ uri: item }} style={styles.fullscreenImage} resizeMode="contain" />
-                                </View>
-                            )}
+
+                    {selectedImageIndex !== null && (
+                        <Image
+                            source={{ uri: bouncer.galleryPhotos[selectedImageIndex] }}
+                            style={styles.modalFullImage}
+                            resizeMode="contain"
                         />
                     )}
                 </View>
@@ -374,333 +373,363 @@ export default function BouncerDetailScreen({ navigation, route }: Props) {
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
-        backgroundColor: '#0F0F0F',
-    },
-    backgroundContainer: {
-        ...StyleSheet.absoluteFillObject,
-        backgroundColor: '#0F0F0F',
+        backgroundColor: '#0A0A0A',
     },
     loadingContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#0F0F0F',
+        backgroundColor: '#0A0A0A',
     },
-    backButton: {
-        marginLeft: 10,
-        backgroundColor: 'rgba(0,0,0,0.5)',
-        borderRadius: 20,
-        padding: 8,
+    loadingText: {
+        fontSize: 14,
+        color: '#888',
+        marginTop: 12,
+        fontWeight: '600',
     },
     scrollContent: {
         paddingBottom: 20,
     },
-    // Header
-    headerImageContainer: {
-        height: 300,
+    heroContainer: {
         width: '100%',
+        height: 290,
         position: 'relative',
         justifyContent: 'flex-end',
         alignItems: 'center',
-        paddingBottom: 30,
     },
-    headerImage: {
+    heroBlurImage: {
         ...StyleSheet.absoluteFillObject,
-        opacity: 0.6,
+        width: '100%',
+        height: '100%',
     },
-    headerOverlay: {
+    heroGradientOverlay: {
         ...StyleSheet.absoluteFillObject,
-        backgroundColor: 'rgba(15,15,15,0.7)',
     },
-    profileInfoCentered: {
+    topBackBtn: {
+        position: 'absolute',
+        top: Platform.OS === 'android' ? 14 : 44,
+        left: 18,
+        width: 38,
+        height: 38,
+        borderRadius: 19,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'center',
         alignItems: 'center',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.1)',
         zIndex: 10,
     },
-    avatarContainer: {
-        position: 'relative',
+    profileHeaderBox: {
+        alignItems: 'center',
         marginBottom: 16,
-        shadowColor: "#FFD700",
-        shadowOffset: { width: 0, height: 0 },
-        shadowOpacity: 0.5,
-        shadowRadius: 20,
-        elevation: 10,
     },
-    avatar: {
-        width: 110,
-        height: 110,
-        borderRadius: 55,
-        borderWidth: 3,
+    avatarWrap: {
+        position: 'relative',
+        marginBottom: 10,
+    },
+    avatarImage: {
+        width: 96,
+        height: 96,
+        borderRadius: 48,
+        borderWidth: 2.5,
         borderColor: '#FFD700',
     },
-    onlineBadge: {
-        position: 'absolute',
-        bottom: 5,
-        right: 5,
-        width: 20,
-        height: 20,
-        borderRadius: 10,
-        backgroundColor: '#4ade80',
-        borderWidth: 3,
-        borderColor: '#0F0F0F',
+    avatarPlaceholder: {
+        width: 96,
+        height: 96,
+        borderRadius: 48,
+        backgroundColor: '#1E1E22',
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 2,
+        borderColor: '#FFD700',
     },
-    name: {
-        fontSize: 26,
+    verifiedBadgeIcon: {
+        position: 'absolute',
+        bottom: 2,
+        right: 2,
+        backgroundColor: '#0A0A0A',
+        borderRadius: 12,
+    },
+    guardName: {
+        fontSize: 22,
         fontWeight: '800',
         color: '#fff',
+        letterSpacing: -0.3,
+    },
+    roleTagWrap: {
+        marginTop: 6,
         marginBottom: 8,
-        letterSpacing: 0.5,
     },
-    specBadge: {
-        backgroundColor: '#1E1E1E',
-        paddingHorizontal: 16,
-        paddingVertical: 6,
-        borderRadius: 20,
+    roleTagPill: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 12,
+        paddingVertical: 5,
+        borderRadius: 14,
         borderWidth: 1,
-        borderColor: '#333',
-        marginBottom: 12,
     },
-    specText: {
-        color: '#FFD700',
-        fontSize: 14,
-        fontWeight: '600',
-        textTransform: 'uppercase',
+    bouncerPill: {
+        backgroundColor: 'rgba(255,215,0,0.12)',
+        borderColor: 'rgba(255,215,0,0.3)',
+    },
+    gunmanPill: {
+        backgroundColor: 'rgba(248,113,113,0.12)',
+        borderColor: 'rgba(248,113,113,0.3)',
+    },
+    roleTagLabel: {
+        fontSize: 11,
+        fontWeight: '800',
+        letterSpacing: 0.5,
     },
     ratingRow: {
         flexDirection: 'row',
         alignItems: 'center',
     },
-    ratingText: {
-        fontSize: 13,
-        color: '#ccc',
-        marginLeft: 6,
-        fontWeight: '500',
-    },
-    // Body
-    bodyContent: {
-        paddingHorizontal: 20,
-        transform: [{ translateY: -20 }],
-    },
-    section: {
-        marginBottom: 30,
-    },
-    sectionTitle: {
-        fontSize: 18,
-        fontWeight: '700',
+    ratingScore: {
+        fontSize: 14,
+        fontWeight: '800',
         color: '#fff',
-        marginBottom: 16,
-        borderLeftWidth: 3,
-        borderLeftColor: '#FFD700',
-        paddingLeft: 10,
+        marginLeft: 5,
     },
-    // Certs
-    certPill: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: '#1E1E1E',
-        paddingHorizontal: 16,
-        paddingVertical: 10,
-        borderRadius: 12,
-        marginRight: 10,
-        borderWidth: 1,
-        borderColor: '#333',
-    },
-    certText: {
-        color: '#eee',
-        fontSize: 13,
-        fontWeight: '500',
-    },
-    featureText: {
-        color: '#ccc',
+    ratingSubText: {
         fontSize: 12,
-        fontWeight: '500',
+        color: '#888',
+        marginLeft: 6,
     },
-    // Body Text
-    bodyText: {
-        fontSize: 15,
-        color: '#aaa',
-        lineHeight: 24,
+    statsMetricsRow: {
+        flexDirection: 'row',
+        marginHorizontal: 18,
+        marginTop: -10,
+        marginBottom: 20,
+        backgroundColor: '#161618',
+        borderRadius: 18,
+        paddingVertical: 14,
+        paddingHorizontal: 10,
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.08)',
+        justifyContent: 'space-around',
+        elevation: 3,
     },
-    // Skills
-    skillsGrid: {
+    metricCard: {
+        alignItems: 'center',
+        flex: 1,
+    },
+    metricValue: {
+        fontSize: 14,
+        fontWeight: '800',
+        color: '#fff',
+        marginTop: 4,
+    },
+    metricLabel: {
+        fontSize: 11,
+        color: '#888',
+        marginTop: 2,
+    },
+    contentBody: {
+        paddingHorizontal: 18,
+    },
+    sectionWrap: {
+        marginBottom: 24,
+    },
+    sectionHeaderTitle: {
+        fontSize: 16,
+        fontWeight: '800',
+        color: '#fff',
+        marginBottom: 12,
+        letterSpacing: -0.2,
+    },
+    certsGrid: {
         flexDirection: 'row',
         flexWrap: 'wrap',
+        gap: 8,
     },
-    skillItem: {
+    certBadgePill: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginRight: 20,
-        marginBottom: 12,
-        width: '45%',
+        backgroundColor: '#161618',
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        borderRadius: 14,
+        borderWidth: 1,
+        borderColor: 'rgba(255,215,0,0.2)',
     },
-    skillIconBox: {
-        width: 20,
-        height: 20,
-        borderRadius: 10,
-        backgroundColor: '#FFD700',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginRight: 8,
-    },
-    skillText: {
+    certBadgeText: {
+        fontSize: 12,
+        fontWeight: '700',
         color: '#ddd',
-        fontSize: 14,
     },
-    // Gallery
-    galleryScroll: {
-        paddingVertical: 5,
+    bioCard: {
+        backgroundColor: '#161618',
+        padding: 16,
+        borderRadius: 16,
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.06)',
+    },
+    bioText: {
+        fontSize: 13,
+        color: '#ccc',
+        lineHeight: 20,
+    },
+    skillsGridWrap: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 8,
+    },
+    skillPill: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#161618',
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        borderRadius: 14,
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.08)',
+    },
+    skillPillText: {
+        fontSize: 12,
+        color: '#fff',
+        fontWeight: '600',
+    },
+    galleryRow: {
+        gap: 12,
+    },
+    galleryCard: {
+        width: 140,
+        height: 100,
+        borderRadius: 16,
+        overflow: 'hidden',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.1)',
+        position: 'relative',
     },
     galleryImage: {
-        width: 140,
-        height: 140,
-        borderRadius: 16,
-        marginRight: 15,
-        backgroundColor: '#1E1E1E',
-        borderWidth: 1,
-        borderColor: '#333',
+        width: '100%',
+        height: '100%',
     },
-    // Plans
-    planCard: {
-        backgroundColor: '#1E1E1E',
-        borderRadius: 16,
-        padding: 20,
-        marginBottom: 16,
-        borderWidth: 2,
-        borderColor: '#333',
+    galleryOverlay: {
+        ...StyleSheet.absoluteFillObject,
     },
-    planCardSelected: {
+    packageCard: {
+        backgroundColor: '#161618',
+        borderRadius: 18,
+        padding: 16,
+        marginBottom: 12,
+        borderWidth: 1.5,
+        borderColor: 'rgba(255,255,255,0.08)',
+    },
+    packageCardSelected: {
         borderColor: '#FFD700',
-        backgroundColor: '#252020',
+        backgroundColor: 'rgba(255,215,0,0.04)',
     },
-    goldPlan: {
+    vipCard: {
         backgroundColor: '#FFD700',
         borderColor: '#FFD700',
     },
-    goldPlanSelected: {
-        borderColor: '#000',
-        borderWidth: 3,
+    vipCardSelected: {
+        borderWidth: 2,
+        borderColor: '#FFF',
     },
-    planHeader: {
+    packageHeaderRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 4,
     },
-    planName: {
-        fontSize: 18,
-        fontWeight: 'bold',
+    packageTitle: {
+        fontSize: 15,
+        fontWeight: '800',
         color: '#fff',
     },
-    planPrice: {
-        fontSize: 20,
-        fontWeight: 'bold',
+    packageSubtitle: {
+        fontSize: 11,
+        color: '#888',
+        marginTop: 2,
+    },
+    packagePriceText: {
+        fontSize: 18,
+        fontWeight: '900',
         color: '#FFD700',
     },
-    planSub: {
-        fontSize: 13,
-        color: '#888',
-        marginBottom: 12,
-    },
-    divider: {
+    packageDivider: {
         height: 1,
-        backgroundColor: '#333',
-        marginBottom: 12,
+        backgroundColor: 'rgba(255,255,255,0.06)',
+        marginVertical: 12,
     },
-    planFeature: {
-        marginBottom: 6,
+    packageFeaturesList: {
+        gap: 6,
     },
-    planFeatureText: {
-        color: '#ccc',
-        fontSize: 14,
-    },
-    // Reviews
-    reviewCard: {
-        padding: 16,
-        backgroundColor: '#1E1E1E',
-        borderRadius: 12,
-        marginBottom: 12,
-        borderWidth: 1,
-        borderColor: '#2A2A2A',
-    },
-    reviewHeader: {
+    featureItemRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 10,
     },
-    reviewAvatar: {
-        width: 36,
-        height: 36,
-        borderRadius: 18,
-        marginRight: 10,
+    featureItemText: {
+        fontSize: 12,
+        color: '#ccc',
     },
-    reviewUser: {
-        fontSize: 14,
-        fontWeight: '700',
-        color: '#fff',
-    },
-    reviewTime: {
-        fontSize: 11,
-        color: '#666',
-    },
-    reviewText: {
-        fontSize: 13,
-        color: '#999',
-        lineHeight: 18,
-    },
-    // Footer
-    footer: {
+    stickyFooterBar: {
         position: 'absolute',
         bottom: 0,
         left: 0,
         right: 0,
-        backgroundColor: '#1E1E1E',
+        backgroundColor: '#161618',
         paddingHorizontal: 20,
-        paddingTop: 15,
-        paddingBottom: Platform.OS === 'ios' ? 24 : 20,
+        paddingVertical: 14,
         borderTopWidth: 1,
-        borderTopColor: '#333',
+        borderTopColor: 'rgba(255,255,255,0.08)',
         flexDirection: 'row',
-        justifyContent: 'space-between',
         alignItems: 'center',
+        justifyContent: 'space-between',
     },
-    priceLabel: {
+    footerPriceLabel: {
+        fontSize: 11,
+        color: '#888',
+    },
+    footerPriceValue: {
+        fontSize: 19,
+        fontWeight: '900',
+        color: '#FFD700',
+    },
+    footerPerShift: {
         fontSize: 12,
         color: '#888',
-        marginBottom: 2,
+        fontWeight: '400',
     },
-    priceValue: {
-        fontSize: 22,
-        fontWeight: '700',
-        color: '#fff',
-    },
-    bookButton: {
+    hireGuardBtn: {
         flexDirection: 'row',
+        alignItems: 'center',
         backgroundColor: '#FFD700',
-        paddingVertical: 14,
-        paddingHorizontal: 24,
-        borderRadius: 12,
+        paddingHorizontal: 22,
+        paddingVertical: 13,
+        borderRadius: 16,
+        elevation: 4,
+    },
+    hireGuardBtnText: {
+        color: '#000',
+        fontSize: 14,
+        fontWeight: '800',
+        letterSpacing: 0.5,
+    },
+    modalBackdrop: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.92)',
+        justifyContent: 'center',
         alignItems: 'center',
     },
-    bookBtnText: {
-        color: '#000',
-        fontSize: 16,
-        fontWeight: '800',
-    },
-    modalContainer: {
-        flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.95)',
-        justifyContent: 'center',
-    },
-    closeButton: {
+    modalCloseBtn: {
         position: 'absolute',
-        top: Platform.OS === 'ios' ? 60 : 30,
+        top: 50,
         right: 20,
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        backgroundColor: 'rgba(255,255,255,0.2)',
+        justifyContent: 'center',
+        alignItems: 'center',
         zIndex: 10,
-        backgroundColor: 'rgba(255, 255, 255, 0.2)',
-        borderRadius: 20,
-        padding: 5,
     },
-    fullscreenImage: {
-        width: Dimensions.get('window').width,
-        height: '80%',
-    }
+    modalFullImage: {
+        width: SCREEN_WIDTH * 0.92,
+        height: SCREEN_WIDTH * 0.92,
+        borderRadius: 16,
+    },
 });

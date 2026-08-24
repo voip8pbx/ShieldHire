@@ -1,6 +1,16 @@
 import './init-env';
 import dns from 'dns';
 dns.setDefaultResultOrder('ipv4first');
+
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('[CRASH] Unhandled Rejection at:', promise, 'reason:', reason);
+    process.exit(1);
+});
+
+process.on('uncaughtException', (err) => {
+    console.error('[CRASH] Uncaught Exception:', err);
+    process.exit(1);
+});
 import app from './app';
 import { createServer } from 'http';
 import { connectDB } from './config/db';

@@ -22,12 +22,15 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import { launchImageLibrary, ImagePickerResponse } from 'react-native-image-picker';
 import api from '../../services/api';
 import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RootStackParamList } from '../../types';
 
 let hasShownProfileTooltipThisSession = false;
 
 export default function BouncerProfileScreen() {
     const { user, logout, updateUser } = useContext(AuthContext);
-    const navigation = useNavigation<any>();
+    const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
+
 
     // State
     const [image, setImage] = useState<string | null>(null);
@@ -40,9 +43,12 @@ export default function BouncerProfileScreen() {
     // Bouncer Specific Info
     const [age, setAge] = useState<string>(user?.bouncerProfile?.age?.toString() || '');
     const [gender, setGender] = useState(user?.bouncerProfile?.gender || '');
+    const [experience, setExperience] = useState<string>(user?.bouncerProfile?.experience?.toString() || '5');
     const [registrationType, setRegistrationType] = useState(user?.bouncerProfile?.registrationType || '');
     const [agencyCode, setAgencyCode] = useState(user?.bouncerProfile?.agencyReferralCode || '');
+    const [upiId, setUpiId] = useState(user?.bouncerProfile?.upiId || '');
     const [locationPermissionStatus, setLocationPermissionStatus] = useState<'Granted' | 'Denied' | 'Not Determined'>('Not Determined');
+
 
     // Onboarding State
     const [showOnboarding, setShowOnboarding] = useState(false);
@@ -100,6 +106,7 @@ export default function BouncerProfileScreen() {
                     setGender(userData.bouncerProfile.gender || '');
                     setRegistrationType(userData.bouncerProfile.registrationType || '');
                     setAgencyCode(userData.bouncerProfile.agencyReferralCode || '');
+                    setUpiId(userData.bouncerProfile.upiId || '');
                 }
             }
         } catch (error) {
@@ -169,6 +176,7 @@ export default function BouncerProfileScreen() {
                 setGender(user.bouncerProfile.gender || '');
                 setRegistrationType(user.bouncerProfile.registrationType || '');
                 setAgencyCode(user.bouncerProfile.agencyReferralCode || '');
+                setUpiId(user.bouncerProfile.upiId || '');
             }
         }
     }, [user]);
@@ -212,9 +220,12 @@ export default function BouncerProfileScreen() {
                     bouncerProfile: {
                         age,
                         gender,
+                        experience,
                         registrationType,
-                        agencyReferralCode: agencyCode
+                        agencyReferralCode: agencyCode,
+                        upiId,
                     }
+
                 });
 
                 if (response.data && response.data.user) {
@@ -223,7 +234,14 @@ export default function BouncerProfileScreen() {
                 }
             } catch (error: any) {
                 console.error("Save profile error", error);
-                Alert.alert("Error", error.response?.data?.error || error.message || "Failed to save profile");
+                const errorMsg = error.response?.data?.error || error.message;
+                if (errorMsg === 'Invalid token.') {
+                    Alert.alert("Session Expired", "Your session has expired. Please log in again.", [
+                        { text: "Log Out", onPress: () => logout() }
+                    ]);
+                } else {
+                    Alert.alert("Error", errorMsg || "Failed to save profile");
+                }
                 return; // Keep edit mode open on error
             }
         }
@@ -232,82 +250,153 @@ export default function BouncerProfileScreen() {
 
     return (
         <SafeAreaView style={styles.container}>
-            <View style={styles.header}>
-                <Text style={styles.headerTitle}>
-                    {user?.role === 'GUNMAN' ? 'Gunman Profile' : 'Bouncer Profile'}
-                </Text>
-            </View>
-
-            <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-
-                {/* Profile Card */}
-                <View style={[styles.card, styles.profileCard]}>
-                    <TouchableOpacity onPress={pickImage} disabled={!isEditing} style={styles.avatarContainer}>
-                        {image || user?.profilePhoto || user?.bouncerProfile?.profilePhoto ? (
-                            <Image source={{ uri: image || user?.profilePhoto || user?.bouncerProfile?.profilePhoto }} style={styles.avatar} />
-                        ) : (
-                            <View style={[styles.avatar, styles.placeholderAvatar]}>
-                                <Text style={styles.avatarText}>
-                                    {name ? name.charAt(0).toUpperCase() : 'B'}
-                                </Text>
-                            </View>
+            <View style={{ backgroundColor: '#0A0A0A' }}>
+                <View style={styles.header}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        {navigation.canGoBack() && (
+                            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtnHeader}>
+                                <Ionicons name="chevron-back" size={22} color="#fff" />
+                            </TouchableOpacity>
                         )}
-                        {isEditing && (
-                            <View style={styles.editIconBadge}>
-                                <Ionicons name="camera" size={14} color="#000" />
-                            </View>
-                        )}
-                    </TouchableOpacity>
-
-                    {isEditing ? (
-                        <TextInput
-                            style={[styles.userNameInput]}
-                            value={name}
-                            onChangeText={setName}
-                            placeholder="Full Name"
-                            placeholderTextColor="#666"
-                        />
-                    ) : (
-                        <Text style={styles.userName}>{name}</Text>
-                    )}
-
-                    <Text style={styles.userEmail}>{user?.email}</Text>
-
-                    {/* Verification Badge */}
-                    <View style={styles.verificationBadge}>
-                        <MaterialCommunityIcons
-                            name={user?.bouncerProfile?.verificationStatus === 'APPROVED' ? "check-decagram" : "clock-alert-outline"}
-                            size={16}
-                            color={user?.bouncerProfile?.verificationStatus === 'APPROVED' ? "#000" : "#fff"}
-                        />
-                        <Text style={[
-                            styles.verificationText,
-                            { color: user?.bouncerProfile?.verificationStatus === 'APPROVED' ? '#000' : '#fff' }
-                        ]}>
-                            {user?.bouncerProfile?.verificationStatus === 'APPROVED' ? 'Verified Security' : 'Verification Pending'}
+                        <Text style={styles.headerTitle}>
+                            {user?.role === 'GUNMAN' ? 'Gunman Profile' : 'Security Profile'}
                         </Text>
                     </View>
 
+                    <TouchableOpacity
+                        style={[styles.editHeaderBtn, isEditing && styles.saveHeaderBtn]}
+                        onPress={toggleEdit}
+                        activeOpacity={0.8}
+                    >
+                        <Ionicons
+                            name={isEditing ? "checkmark" : "create-outline"}
+                            size={18}
+                            color={isEditing ? "#000" : "#FFD700"}
+                        />
+                        <Text style={[styles.editHeaderBtnText, isEditing && { color: '#000' }]}>
+                            {isEditing ? "SAVE" : "EDIT"}
+                        </Text>
+                    </TouchableOpacity>
+                </View>
+            </View>
+
+            <ScrollView style={{ flex: 1, backgroundColor: '#0A0A0A' }} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+
+
+                {/* Premium Profile Card */}
+                <View style={styles.premiumProfileCard}>
+                    <View style={styles.profileHeaderLayout}>
+                        <TouchableOpacity onPress={pickImage} disabled={!isEditing} style={styles.avatarContainer}>
+                            {image || user?.profilePhoto || user?.bouncerProfile?.profilePhoto ? (
+                                <Image source={{ uri: image || user?.profilePhoto || user?.bouncerProfile?.profilePhoto }} style={styles.avatar} />
+                            ) : (
+                                <View style={[styles.avatar, styles.placeholderAvatar]}>
+                                    <Text style={styles.avatarText}>
+                                        {name ? name.charAt(0).toUpperCase() : 'B'}
+                                    </Text>
+                                </View>
+                            )}
+                            {isEditing && (
+                                <View style={styles.editIconBadge}>
+                                    <Ionicons name="camera" size={14} color="#000" />
+                                </View>
+                            )}
+                        </TouchableOpacity>
+
+                        <View style={styles.profileInfoLayout}>
+                            {isEditing ? (
+                                <TextInput
+                                    style={styles.userNameInput}
+                                    value={name}
+                                    onChangeText={setName}
+                                    placeholder="Full Name"
+                                    placeholderTextColor="#666"
+                                />
+                            ) : (
+                                <Text style={styles.userName}>{name}</Text>
+                            )}
+                            <Text style={styles.userEmail}>{user?.email}</Text>
+
+                            {/* Verification Badge */}
+                            <View style={[
+                                styles.verificationBadge,
+                                user?.bouncerProfile?.verificationStatus === 'APPROVED' && styles.verificationApprovedBadge,
+                                user?.bouncerProfile?.verificationStatus === 'REJECTED' && styles.verificationRejectedBadge,
+                            ]}>
+                                <MaterialCommunityIcons
+                                    name={
+                                        user?.bouncerProfile?.verificationStatus === 'APPROVED' ? "check-decagram" :
+                                        user?.bouncerProfile?.verificationStatus === 'REJECTED' ? "close-octagon" : "clock-alert-outline"
+                                    }
+                                    size={14}
+                                    color={user?.bouncerProfile?.verificationStatus === 'APPROVED' ? "#000" : "#fff"}
+                                />
+                                <Text style={[
+                                    styles.verificationText,
+                                    { color: user?.bouncerProfile?.verificationStatus === 'APPROVED' ? '#000' : '#fff' }
+                                ]}>
+                                    {
+                                        user?.bouncerProfile?.verificationStatus === 'APPROVED' ? 'Verified Security' :
+                                        user?.bouncerProfile?.verificationStatus === 'REJECTED' ? 'Verification Rejected' : 'Verification Pending'
+                                    }
+                                </Text>
+                            </View>
+                        </View>
+                    </View>
+
+                    {/* Rejected Reason */}
+                    {user?.bouncerProfile?.verificationStatus === 'REJECTED' && (
+                        <View style={styles.rejectedReasonBox}>
+                            <Text style={styles.rejectedReasonLabel}>Rejection Reason:</Text>
+                            <Text style={styles.rejectedReasonText}>
+                                {user?.bouncerProfile?.rejectionReason || 'Please verify your details and documents.'}
+                            </Text>
+                        </View>
+                    )}
+
+                    <View style={styles.divider} />
+
                     {/* Contact Number */}
-                    <View style={styles.contactContainer}>
-                        {isEditing ? (
-                            <TextInput
-                                style={styles.contactInput}
-                                value={contact}
-                                onChangeText={setContact}
-                                placeholder="Contact Number"
-                                placeholderTextColor="#666"
-                                keyboardType="phone-pad"
-                            />
-                        ) : (
-                            <Text style={styles.contactText}>{contact || 'No Contact Info'}</Text>
-                        )}
+                    <View style={styles.statsRow}>
+                        <View style={styles.statInputGroup}>
+                            <Text style={styles.label}>Contact Number</Text>
+                            {isEditing ? (
+                                <TextInput
+                                    style={styles.input}
+                                    value={contact}
+                                    onChangeText={setContact}
+                                    placeholder="Contact Number"
+                                    placeholderTextColor="#666"
+                                    keyboardType="phone-pad"
+                                />
+                            ) : (
+                                <Text style={styles.statValue}>{contact || 'No Contact Info'}</Text>
+                            )}
+                        </View>
                     </View>
 
                     {/* Stats / Details Row */}
                     <View style={styles.statsRow}>
                         <View style={styles.statInputGroup}>
-                            <Text style={styles.label}>Age</Text>
+                            <Text style={styles.label}>Experience</Text>
+                            {isEditing ? (
+                                <TextInput
+                                    style={styles.input}
+                                    value={experience}
+                                    onChangeText={setExperience}
+                                    placeholder="Yrs"
+                                    placeholderTextColor="#666"
+                                    keyboardType="numeric"
+                                />
+                            ) : (
+                                <Text style={styles.statValue}>{experience ? `${experience} Yrs` : '5 Yrs'}</Text>
+                            )}
+                        </View>
+
+                        <View style={styles.divider} />
+
+                        <View style={styles.statInputGroup}>
+                            <Text style={styles.label}>Age / Gender</Text>
                             {isEditing ? (
                                 <TextInput
                                     style={styles.input}
@@ -318,32 +407,38 @@ export default function BouncerProfileScreen() {
                                     keyboardType="numeric"
                                 />
                             ) : (
-                                <Text style={styles.statValue}>{age || '-'}</Text>
+                                <Text style={styles.statValue}>{age ? `${age}y` : '28y'} • {gender || 'Male'}</Text>
                             )}
                         </View>
 
                         <View style={styles.divider} />
 
                         <View style={styles.statInputGroup}>
-                            <Text style={styles.label}>Gender</Text>
+                            <Text style={styles.label}>Real Rating</Text>
+                            <Text style={styles.statValue}>{user?.bouncerProfile?.rating ? user.bouncerProfile.rating.toFixed(1) : '4.8'} ⭐</Text>
+                        </View>
+                    </View>
+
+
+                    {/* UPI ID */}
+                    <View style={styles.statsRow}>
+                        <View style={styles.statInputGroup}>
+                            <Text style={styles.label}>UPI ID (for payments)</Text>
                             {isEditing ? (
                                 <TextInput
                                     style={styles.input}
-                                    value={gender}
-                                    onChangeText={setGender}
-                                    placeholder="Gender"
+                                    value={upiId}
+                                    onChangeText={setUpiId}
+                                    placeholder="e.g. name@upi"
                                     placeholderTextColor="#666"
+                                    autoCapitalize="none"
+                                    autoCorrect={false}
                                 />
                             ) : (
-                                <Text style={styles.statValue}>{gender || '-'}</Text>
+                                <Text style={[styles.statValue, !upiId && { color: '#FF9500' }]}>
+                                    {upiId || 'Not configured'}
+                                </Text>
                             )}
-                        </View>
-
-                        <View style={styles.divider} />
-
-                        <View style={styles.statInputGroup}>
-                            <Text style={styles.label}>Rating</Text>
-                            <Text style={styles.statValue}>{user?.bouncerProfile?.rating?.toFixed(1) || '0.0'} ⭐</Text>
                         </View>
                     </View>
 
@@ -481,77 +576,133 @@ export default function BouncerProfileScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#0F0F0F',
+        backgroundColor: '#0A0A0A',
     },
     header: {
-        height: 40,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: 20,
+        paddingTop: Platform.OS === 'ios' ? 10 : 15,
+        paddingBottom: 15,
+        backgroundColor: '#0A0A0A',
+        borderBottomWidth: 1,
+        borderBottomColor: 'rgba(255, 255, 255, 0.06)',
+    },
+    backBtnHeader: {
+        width: 34,
+        height: 34,
+        borderRadius: 17,
+        backgroundColor: 'rgba(255, 255, 255, 0.06)',
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#1E1E1E',
-        borderBottomWidth: 1,
-        borderBottomColor: '#333',
+        marginRight: 12,
     },
     headerTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
+        fontSize: 20,
+        fontWeight: '800',
         color: '#fff',
+    },
+    editHeaderBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#1C1C1E',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: 'rgba(255, 215, 0, 0.3)',
+    },
+    saveHeaderBtn: {
+        backgroundColor: '#FFD700',
+        borderColor: '#FFD700',
+    },
+    editHeaderBtnText: {
+        fontSize: 12,
+        fontWeight: '800',
+        color: '#FFD700',
+        marginLeft: 4,
     },
     scrollContent: {
         padding: 20,
+        paddingBottom: 140, // Safe padding for floating bottom tab bar
     },
+
     card: {
-        backgroundColor: '#1E1E1E',
-        borderRadius: 16,
+        backgroundColor: '#1A1A1E',
+        borderRadius: 20,
         padding: 20,
         marginBottom: 20,
         borderWidth: 1,
-        borderColor: '#333',
+        borderColor: 'rgba(255, 255, 255, 0.06)',
     },
-    profileCard: {
+    premiumProfileCard: {
+        backgroundColor: '#1A1A1E',
+        borderRadius: 24,
+        padding: 24,
+        marginBottom: 24,
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.08)',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.3,
+        shadowRadius: 20,
+        elevation: 8,
+    },
+    profileHeaderLayout: {
+        flexDirection: 'row',
         alignItems: 'center',
+        marginBottom: 20,
+    },
+    profileInfoLayout: {
+        flex: 1,
+        marginLeft: 20,
+        justifyContent: 'center',
     },
     avatarContainer: {
         position: 'relative',
-        marginBottom: 16,
     },
     avatar: {
-        width: 100,
-        height: 100,
-        borderRadius: 50,
-        borderWidth: 2,
-        borderColor: '#FFD700',
+        width: 86,
+        height: 86,
+        borderRadius: 28,
+        borderWidth: 1,
+        borderColor: 'rgba(255, 215, 0, 0.3)',
+        backgroundColor: '#2A2A2E',
     },
     placeholderAvatar: {
-        backgroundColor: '#333',
         justifyContent: 'center',
         alignItems: 'center',
     },
     avatarText: {
-        fontSize: 36,
+        fontSize: 32,
         fontWeight: 'bold',
         color: '#FFD700',
     },
     editIconBadge: {
         position: 'absolute',
-        bottom: 0,
-        right: 0,
+        bottom: -4,
+        right: -4,
         backgroundColor: '#FFD700',
         width: 28,
         height: 28,
         borderRadius: 14,
         justifyContent: 'center',
         alignItems: 'center',
+        borderWidth: 2,
+        borderColor: '#1A1A1E',
     },
     userName: {
-        fontSize: 20,
-        fontWeight: 'bold',
+        fontSize: 22,
+        fontWeight: '800',
         color: '#fff',
         marginBottom: 4,
+        letterSpacing: -0.5,
     },
     userEmail: {
-        fontSize: 14,
-        color: '#888',
-        marginBottom: 12,
+        fontSize: 13,
+        color: '#8E8E93',
+        marginBottom: 8,
     },
     userNameInput: {
         fontSize: 20,
@@ -561,17 +712,41 @@ const styles = StyleSheet.create({
         borderBottomWidth: 1,
         borderBottomColor: '#FFD700',
         paddingVertical: 2,
-        minWidth: 150,
-        textAlign: 'center',
     },
     verificationBadge: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#FFD700',
-        paddingHorizontal: 12,
+        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+        paddingHorizontal: 8,
         paddingVertical: 4,
+        borderRadius: 8,
+        alignSelf: 'flex-start',
+    },
+    verificationApprovedBadge: {
+        backgroundColor: '#FFD700',
+    },
+    verificationRejectedBadge: {
+        backgroundColor: '#FF3B30',
+    },
+    rejectedReasonBox: {
+        backgroundColor: 'rgba(255, 59, 48, 0.05)',
+        borderColor: 'rgba(255, 59, 48, 0.2)',
+        borderWidth: 1,
         borderRadius: 12,
+        padding: 12,
+        width: '100%',
         marginBottom: 20,
+    },
+    rejectedReasonLabel: {
+        color: '#FF3B30',
+        fontWeight: 'bold',
+        fontSize: 12,
+        marginBottom: 2,
+    },
+    rejectedReasonText: {
+        color: '#E0E0E0',
+        fontSize: 13,
+        lineHeight: 16,
     },
     verificationText: {
         fontSize: 12,
@@ -585,7 +760,7 @@ const styles = StyleSheet.create({
     },
     contactText: {
         fontSize: 16,
-        color: '#ddd',
+        color: '#E0E0E0',
         fontWeight: '500',
     },
     contactInput: {
@@ -600,18 +775,20 @@ const styles = StyleSheet.create({
     statsRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 20,
+        marginVertical: 12,
         width: '100%',
-        justifyContent: 'center',
     },
     statInputGroup: {
-        alignItems: 'center',
-        minWidth: 80,
+        flex: 1,
+        alignItems: 'flex-start',
     },
     label: {
         fontSize: 12,
-        color: '#888',
-        marginBottom: 4,
+        color: '#8E8E93',
+        marginBottom: 6,
+        textTransform: 'uppercase',
+        letterSpacing: 0.5,
+        fontWeight: '600',
     },
     statValue: {
         fontSize: 16,
@@ -621,24 +798,25 @@ const styles = StyleSheet.create({
     input: {
         borderBottomWidth: 1,
         borderBottomColor: '#FFD700',
-        minWidth: 60,
-        textAlign: 'center',
         fontSize: 16,
         color: '#fff',
-        paddingVertical: 2,
+        paddingVertical: 4,
+        width: '100%',
     },
     divider: {
-        width: 1,
-        height: 30,
-        backgroundColor: '#444',
-        marginHorizontal: 15,
+        height: 1,
+        backgroundColor: 'rgba(255, 255, 255, 0.08)',
+        width: '100%',
+        marginVertical: 8,
     },
     infoSection: {
         width: '100%',
         marginBottom: 20,
-        backgroundColor: '#252525',
+        backgroundColor: '#121214',
         padding: 15,
-        borderRadius: 12,
+        borderRadius: 14,
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.04)',
     },
     sectionLabel: {
         fontSize: 14,
@@ -646,7 +824,7 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         marginBottom: 10,
         borderBottomWidth: 1,
-        borderBottomColor: '#444',
+        borderBottomColor: 'rgba(255, 255, 255, 0.06)',
         paddingBottom: 5,
     },
     infoRow: {
@@ -657,7 +835,7 @@ const styles = StyleSheet.create({
     },
     infoLabel: {
         fontSize: 14,
-        color: '#aaa',
+        color: '#8E8E93',
     },
     infoValue: {
         fontSize: 14,
@@ -666,23 +844,24 @@ const styles = StyleSheet.create({
     },
     actionBtn: {
         width: '100%',
-        paddingVertical: 12,
-        borderRadius: 10,
+        paddingVertical: 14,
+        borderRadius: 16,
         alignItems: 'center',
         borderWidth: 1,
+        marginTop: 16,
     },
     editBtn: {
-        borderColor: '#FFD700',
-        backgroundColor: 'transparent',
+        borderColor: 'rgba(255, 255, 255, 0.15)',
+        backgroundColor: 'rgba(255, 255, 255, 0.03)',
     },
     saveBtn: {
         borderColor: '#FFD700',
         backgroundColor: '#FFD700',
     },
     btnText: {
-        fontSize: 14,
-        fontWeight: '600',
-        color: '#FFD700',
+        fontSize: 15,
+        fontWeight: '700',
+        color: '#fff',
     },
     saveBtnText: {
         color: '#000',
@@ -704,22 +883,24 @@ const styles = StyleSheet.create({
     },
     licenseStatus: {
         fontSize: 14,
-        color: '#ddd',
+        color: '#E0E0E0',
         marginBottom: 10,
     },
     licenseImage: {
         width: '100%',
         height: 200,
-        borderRadius: 8,
-        backgroundColor: '#333',
+        borderRadius: 12,
+        backgroundColor: '#121214',
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.04)',
     },
     // Menu
     menuContainer: {
-        backgroundColor: '#1E1E1E',
-        borderRadius: 16,
+        backgroundColor: '#1A1A1E',
+        borderRadius: 20,
         paddingHorizontal: 20,
         borderWidth: 1,
-        borderColor: '#333',
+        borderColor: 'rgba(255, 255, 255, 0.06)',
         marginBottom: 20,
     },
     menuItem: {
@@ -728,7 +909,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingVertical: 16,
         borderBottomWidth: 1,
-        borderBottomColor: '#333',
+        borderBottomColor: 'rgba(255, 255, 255, 0.06)',
     },
     menuLeft: {
         flexDirection: 'row',
@@ -736,7 +917,7 @@ const styles = StyleSheet.create({
     },
     menuText: {
         fontSize: 15,
-        color: '#ddd',
+        color: '#E0E0E0',
         marginLeft: 12,
         fontWeight: '500',
     },

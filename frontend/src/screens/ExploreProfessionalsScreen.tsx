@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useContext } from 'react';
 import {
     View,
     Text,
@@ -22,6 +22,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import LinearGradient from 'react-native-linear-gradient';
 import { BlurView } from '@react-native-community/blur';
+import { ThemeContext } from '../context/ThemeContext';
 
 type NavigationProp = StackNavigationProp<HomeStackParamList, 'ExploreProfessionals'>;
 
@@ -34,15 +35,15 @@ const SCREEN_HEIGHT = Dimensions.get('window').height;
 const CARD_WIDTH = (SCREEN_WIDTH - 48) / 2;
 
 const THEME = {
-    bgPrimary: '#090909',
-    bgSecondary: '#121212',
-    card: '#1A1A1A',
+    bgPrimary: '#121214',
+    bgSecondary: '#1A1A1E',
+    card: '#1A1A1E',
     gold: '#FFD700',
-    goldDark: '#FFC107',
+    goldDark: '#CCAC00',
     textPrimary: '#FFFFFF',
-    textSecondary: '#B0B0B0',
-    border: 'rgba(255, 255, 255, 0.08)',
-    glass: 'rgba(255, 255, 255, 0.03)',
+    textSecondary: '#8E8E93',
+    border: 'rgba(255, 255, 255, 0.06)',
+    glass: 'rgba(255, 255, 255, 0.02)',
 };
 
 // --- COMPONENTS ---
@@ -56,10 +57,10 @@ const FilterPill = React.memo(({ item, isActive, onPress }: any) => {
         <TouchableOpacity activeOpacity={0.9} onPressIn={handlePressIn} onPressOut={handlePressOut} onPress={() => onPress(item)}>
             <Animated.View style={[
                 styles.filterPill,
-                isActive && styles.activePill,
+                isActive ? styles.filterPillActive : styles.filterPillInactive,
                 { transform: [{ scale: scaleAnim }] }
             ]}>
-                <Text style={[styles.filterText, isActive && styles.activeFilterText]}>{item}</Text>
+                <Text style={[styles.filterText, isActive ? styles.filterTextActive : styles.filterTextInactive]}>{item}</Text>
             </Animated.View>
         </TouchableOpacity>
     );
@@ -70,14 +71,33 @@ const GridCard = React.memo(({ item, onPress }: { item: Bouncer, onPress: () => 
     const handlePressIn = () => Animated.spring(scale, { toValue: 0.96, useNativeDriver: true }).start();
     const handlePressOut = () => Animated.spring(scale, { toValue: 1, friction: 3, tension: 40, useNativeDriver: true }).start();
 
-    const isAvailable = item.isAvailable;
-    const roleText = item.isGunman ? 'Gunman' : 'Bouncer';
+    const displayName = item.name || item.user?.name || 'Security Professional';
+    const displayPhoto = item.profilePhoto || (item as any).profileImageUrl || item.user?.profilePhoto;
+    const displayRating = item.rating && item.rating > 0 ? item.rating.toFixed(1) : '4.8';
+    const displayExp = item.experience ? `${item.experience} Yrs Exp` : '5+ Yrs Exp';
+    const isAvailable = item.isAvailable !== false;
+    const isGunman = item.isGunman || (item as any).hasGunLicense;
+    const roleText = isGunman ? 'Gunman' : 'Bouncer';
 
     return (
         <TouchableOpacity activeOpacity={1} onPressIn={handlePressIn} onPressOut={handlePressOut} onPress={onPress}>
             <Animated.View style={[styles.gridCard, { transform: [{ scale }] }]}>
                 <View style={styles.gridImageContainer}>
-                    <Image source={{ uri: item.profilePhoto || `https://i.pravatar.cc/300?u=${item.id}` }} style={styles.fullImage} />
+                    {displayPhoto ? (
+                        <Image source={{ uri: displayPhoto }} style={styles.fullImage} resizeMode="cover" />
+                    ) : (
+                        <View style={[styles.fullImage, styles.cardImagePlaceholder]}>
+                            <MaterialCommunityIcons name="account-shield" size={48} color="#444" />
+                        </View>
+                    )}
+                    <LinearGradient colors={['transparent', 'rgba(0,0,0,0.8)']} style={styles.cardGradientOverlay} />
+
+                    {/* Top Badges */}
+                    <View style={styles.gridRatingBadge}>
+                        <Ionicons name="star" size={11} color="#FFD700" />
+                        <Text style={styles.gridRatingText}>{displayRating}</Text>
+                    </View>
+
                     <View style={styles.statusBadgeWrapper}>
                         <View style={styles.blurBadge}>
                             <View style={[styles.statusDot, { backgroundColor: isAvailable ? '#4ade80' : '#f87171' }]} />
@@ -89,23 +109,19 @@ const GridCard = React.memo(({ item, onPress }: { item: Bouncer, onPress: () => 
                 <View style={styles.gridContent}>
                     <View style={styles.roleTag}>
                         <Text style={styles.roleText}>{roleText.toUpperCase()}</Text>
-                        {item.rating >= 4.9 && <MaterialCommunityIcons name="check-decagram" size={12} color={THEME.gold} style={{ marginLeft: 6 }} />}
+                        {item.rating >= 4.5 && <MaterialCommunityIcons name="check-decagram" size={12} color="#FFD700" style={{ marginLeft: 4 }} />}
                     </View>
-                    <Text style={styles.name} numberOfLines={1}>{item.name}</Text>
+                    <Text style={styles.name} numberOfLines={1}>{displayName}</Text>
                     <View style={styles.statsRow}>
-                        <View style={styles.ratingBox}>
-                            <Ionicons name="star" size={12} color={THEME.gold} />
-                            <Text style={styles.ratingText}>{item.rating.toFixed(1)}</Text>
-                        </View>
-                        <Text style={styles.expText}>• {item.experience || 0} Yrs Exp</Text>
+                        <Ionicons name="star" size={11} color="#FFD700" />
+                        <Text style={styles.ratingText}>{displayRating}</Text>
+                        <Text style={styles.expText}>• {displayExp}</Text>
                     </View>
                     <View style={styles.priceRow}>
-                        <View>
-                            <Text style={styles.price}>₹{item.isGunman ? 3500 : 2000}<Text style={styles.perHr}>/shift</Text></Text>
-                        </View>
-                        <View style={styles.bookBtnSmall}>
+                        <Text style={styles.price}>₹{isGunman ? 3500 : 2000}<Text style={styles.perHr}>/shift</Text></Text>
+                        <TouchableOpacity style={styles.bookBtnSmall} onPress={onPress}>
                             <Text style={styles.bookBtnTextSmall}>Book</Text>
-                        </View>
+                        </TouchableOpacity>
                     </View>
                 </View>
             </Animated.View>
@@ -118,29 +134,40 @@ const ListCard = React.memo(({ item, onPress }: { item: Bouncer, onPress: () => 
     const handlePressIn = () => Animated.spring(scale, { toValue: 0.98, useNativeDriver: true }).start();
     const handlePressOut = () => Animated.spring(scale, { toValue: 1, friction: 3, tension: 40, useNativeDriver: true }).start();
 
-    const roleText = item.isGunman ? 'Gunman' : 'Bouncer';
+    const displayName = item.name || item.user?.name || 'Security Professional';
+    const displayPhoto = item.profilePhoto || (item as any).profileImageUrl || item.user?.profilePhoto;
+    const displayRating = item.rating && item.rating > 0 ? item.rating.toFixed(1) : '4.8';
+    const displayExp = item.experience ? `${item.experience} Yrs Exp` : '5+ Yrs Exp';
+    const isGunman = item.isGunman || (item as any).hasGunLicense;
+    const roleText = isGunman ? 'Gunman' : 'Bouncer';
 
     return (
         <TouchableOpacity activeOpacity={1} onPressIn={handlePressIn} onPressOut={handlePressOut} onPress={onPress}>
             <Animated.View style={[styles.listRow, { transform: [{ scale }] }]}>
-                <Image source={{ uri: item.profilePhoto || `https://i.pravatar.cc/300?u=${item.id}` }} style={styles.listImage} />
+                {displayPhoto ? (
+                    <Image source={{ uri: displayPhoto }} style={styles.listImage} />
+                ) : (
+                    <View style={[styles.listImage, styles.cardImagePlaceholder]}>
+                        <MaterialCommunityIcons name="account-shield" size={32} color="#444" />
+                    </View>
+                )}
                 <View style={styles.listContent}>
                     <View style={styles.listHeaderRow}>
-                        <Text style={styles.listName} numberOfLines={1}>{item.name}</Text>
-                        {item.rating >= 4.9 && <MaterialCommunityIcons name="check-decagram" size={14} color={THEME.gold} style={{ marginLeft: 6 }} />}
+                        <Text style={styles.listName} numberOfLines={1}>{displayName}</Text>
+                        {item.rating >= 4.5 && <MaterialCommunityIcons name="check-decagram" size={14} color="#FFD700" style={{ marginLeft: 6 }} />}
                     </View>
                     <Text style={styles.listRole}>{roleText}</Text>
                     <View style={styles.listStatsRow}>
-                        <Ionicons name="star" size={12} color={THEME.gold} />
-                        <Text style={styles.listRating}>{item.rating.toFixed(1)}</Text>
+                        <Ionicons name="star" size={12} color="#FFD700" />
+                        <Text style={styles.listRating}>{displayRating}</Text>
                         <Text style={styles.listDot}>•</Text>
-                        <Text style={styles.listExp}>{item.experience || 0} Yrs Exp</Text>
+                        <Text style={styles.listExp}>{displayExp}</Text>
                     </View>
                     <View style={styles.listPriceRow}>
-                        <Text style={styles.listPrice}>₹{item.isGunman ? 3500 : 2000} <Text style={styles.listPerHr}>/shift</Text></Text>
-                        <View style={styles.listBookBtn}>
+                        <Text style={styles.listPrice}>₹{isGunman ? 3500 : 2000} <Text style={styles.listPerHr}>/shift</Text></Text>
+                        <TouchableOpacity style={styles.listBookBtn} onPress={onPress}>
                             <Text style={styles.listBookBtnText}>Book Now</Text>
-                        </View>
+                        </TouchableOpacity>
                     </View>
                 </View>
             </Animated.View>
@@ -196,23 +223,33 @@ const SkeletonListCard = () => {
 
 const FeaturedCard = React.memo(({ item, onPress }: { item: Bouncer, onPress: () => void }) => {
     if (!item) return null;
+    const displayName = item.name || item.user?.name || 'Security Professional';
+    const displayPhoto = item.profilePhoto || (item as any).profileImageUrl || item.user?.profilePhoto;
+    const isGunman = item.isGunman || (item as any).hasGunLicense;
+
     return (
         <View style={styles.featuredContainer}>
             <Text style={styles.featuredSectionTitle}>Featured Professional</Text>
             <View style={styles.featuredCard}>
-                <Image source={{ uri: item.profilePhoto || `https://i.pravatar.cc/300?u=${item.id}` }} style={styles.featuredImage} />
-                <LinearGradient colors={['transparent', 'rgba(0,0,0,0.8)', '#000']} style={styles.fullOverlay} />
+                {displayPhoto ? (
+                    <Image source={{ uri: displayPhoto }} style={styles.featuredImage} />
+                ) : (
+                    <View style={[styles.featuredImage, styles.cardImagePlaceholder]}>
+                        <MaterialCommunityIcons name="account-shield" size={64} color="#444" />
+                    </View>
+                )}
+                <LinearGradient colors={['transparent', 'rgba(0,0,0,0.85)', '#000']} style={styles.fullOverlay} />
                 <View style={styles.featuredTopBadges}>
-                    <BlurView blurType="dark" blurAmount={10} style={styles.featuredBadge}>
-                        <MaterialCommunityIcons name="star-shooting" size={16} color={THEME.gold} />
+                    <View style={styles.featuredBadge}>
+                        <MaterialCommunityIcons name="shield-crown" size={16} color="#FFD700" />
                         <Text style={styles.featuredBadgeText}>Top Choice</Text>
-                    </BlurView>
+                    </View>
                 </View>
                 <View style={styles.featuredContent}>
-                    <Text style={styles.featuredName}>{item.name}</Text>
-                    <Text style={styles.featuredRole}>{item.isGunman ? 'Elite Gunman' : 'Premium Bouncer'} • {item.experience} Yrs Exp</Text>
+                    <Text style={styles.featuredName}>{displayName}</Text>
+                    <Text style={styles.featuredRole}>{isGunman ? 'Elite Gunman' : 'Premium Bouncer'} • {item.experience || 5} Yrs Exp</Text>
                     <TouchableOpacity style={styles.featuredBtn} onPress={onPress}>
-                        <Text style={styles.featuredBtnText}>Book</Text>
+                        <Text style={styles.featuredBtnText}>Book Now</Text>
                     </TouchableOpacity>
                 </View>
             </View>
@@ -220,7 +257,9 @@ const FeaturedCard = React.memo(({ item, onPress }: { item: Bouncer, onPress: ()
     );
 });
 
+
 export default function ExploreProfessionalsScreen({ navigation }: Props) {
+    const { colors, theme } = useContext(ThemeContext);
     const [bouncers, setBouncers] = useState<Bouncer[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
@@ -285,20 +324,21 @@ export default function ExploreProfessionalsScreen({ navigation }: Props) {
 
     const onSearchFocus = () => Animated.timing(searchFocus, { toValue: 1, duration: 250, useNativeDriver: false }).start();
     const onSearchBlur = () => Animated.timing(searchFocus, { toValue: 0, duration: 250, useNativeDriver: false }).start();
-    const searchBorderColor = searchFocus.interpolate({ inputRange: [0, 1], outputRange: [THEME.border, THEME.gold] });
+    const searchBorderColor = searchFocus.interpolate({ inputRange: [0, 1], outputRange: [colors.border, colors.gold] });
 
     const filteredBouncers = React.useMemo(() => {
         return bouncers.filter(t => {
             if (activeFilter === 'All') return true;
+            if (activeFilter === 'Nearby') return t.isAvailable !== false;
             if (activeFilter === 'Available') return t.isAvailable;
             if (activeFilter === 'Bouncer') return !t.isGunman;
             if (activeFilter === 'Gunman') return t.isGunman;
-            if (activeFilter === 'VIP') return t.rating >= 4.9;
-            if (activeFilter === 'Top Rated') return t.rating >= 4.8;
-            if (activeFilter === 'Verified') return true;
+            if (activeFilter === 'VIP') return t.rating >= 4.8;
+            if (activeFilter === 'Top Rated') return t.rating >= 4.5;
             return true;
         });
     }, [bouncers, activeFilter]);
+
 
     const featuredBouncer = React.useMemo(() => {
         return filteredBouncers.length > 0 ? filteredBouncers[0] : null;
@@ -314,72 +354,73 @@ export default function ExploreProfessionalsScreen({ navigation }: Props) {
 
     const headerComponent = React.useMemo(() => (
         <View style={{ paddingBottom: 15 }}>
-            <LinearGradient colors={['#1a1a1a', THEME.bgPrimary]} style={styles.heroSection}>
+            <LinearGradient colors={colors.background === '#1A1A1D' ? ['#1a1a1a', colors.background] : ['#ffffff', colors.background]} style={styles.heroSection}>
                 <View style={styles.topRow}>
                     <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-                        <Ionicons name="chevron-back" size={24} color="#fff" />
+                        <Ionicons name="chevron-back" size={24} color={colors.textPrimary} />
                     </TouchableOpacity>
                     <View style={styles.headerTitleBox}>
-                        <Text style={styles.headerTitle}>Explore Professionals</Text>
-                        <Text style={styles.headerSubtitle}>Find trusted security experts</Text>
+                        <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Explore Professionals</Text>
+                        <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>Find trusted security experts</Text>
                     </View>
-                    <View style={styles.viewToggleBox}>
-                        <TouchableOpacity onPress={() => setViewMode('grid')} style={[styles.viewIconBtn, viewMode === 'grid' && styles.viewIconActive]}>
-                            <Ionicons name="grid" size={18} color={viewMode === 'grid' ? THEME.gold : THEME.textSecondary} />
+                    <View style={[styles.viewToggleBox, { borderColor: colors.border, backgroundColor: colors.card }]}>
+                        <TouchableOpacity onPress={() => setViewMode('grid')} style={[styles.viewIconBtn, viewMode === 'grid' && { backgroundColor: colors.background }]}>
+                            <Ionicons name="grid" size={18} color={viewMode === 'grid' ? colors.gold : colors.textSecondary} />
                         </TouchableOpacity>
-                        <TouchableOpacity onPress={() => setViewMode('list')} style={[styles.viewIconBtn, viewMode === 'list' && styles.viewIconActive]}>
-                            <Ionicons name="list" size={18} color={viewMode === 'list' ? THEME.gold : THEME.textSecondary} />
+                        <TouchableOpacity onPress={() => setViewMode('list')} style={[styles.viewIconBtn, viewMode === 'list' && { backgroundColor: colors.background }]}>
+                            <Ionicons name="list" size={18} color={viewMode === 'list' ? colors.gold : colors.textSecondary} />
                         </TouchableOpacity>
                     </View>
                 </View>
             </LinearGradient>
 
-            <Animated.View style={[styles.searchContainer, { borderColor: searchBorderColor }]}>
-                <Ionicons name="search" size={20} color={THEME.textSecondary} style={styles.searchIcon} />
+            <Animated.View style={[styles.searchContainer, { backgroundColor: colors.card, borderColor: searchBorderColor }]}>
+                <Ionicons name="search" size={20} color={colors.textSecondary} style={styles.searchIcon} />
                 <TextInput
-                    style={styles.searchInput}
+                    style={[styles.searchInput, { color: colors.textPrimary }]}
                     placeholder="Search by name, role or experience"
                     value={search}
                     onChangeText={setSearch}
                     onFocus={onSearchFocus}
                     onBlur={onSearchBlur}
-                    placeholderTextColor={THEME.textSecondary}
+                    placeholderTextColor={colors.textSecondary}
                 />
-                <TouchableOpacity>
-                    <Ionicons name="mic-outline" size={22} color={THEME.textSecondary} />
+                <TouchableOpacity onPress={() => navigation.navigate('MapScreen', { mode: 'explore' })}>
+                    <Ionicons name="map-outline" size={22} color="#FFD700" style={{ paddingHorizontal: 4 }} />
                 </TouchableOpacity>
             </Animated.View>
 
             <View style={styles.filterRow}>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20 }}>
-                    {['All', 'Available', 'Bouncer', 'Gunman', 'VIP', 'Top Rated', 'Verified'].map((item) => (
+                    {['All', 'Nearby', 'Available', 'Bouncer', 'Gunman', 'VIP', 'Top Rated'].map((item) => (
                         <FilterPill key={item} item={item} isActive={activeFilter === item} onPress={setActiveFilter} />
                     ))}
                 </ScrollView>
             </View>
 
             <View style={styles.resultsRow}>
-                <Text style={styles.resultCount}>{loading ? '...' : filteredBouncers.length} Professionals Found</Text>
-                <TouchableOpacity style={styles.sortBtn} onPress={() => toggleSort(true)}>
-                    <MaterialCommunityIcons name="sort-variant" size={16} color={THEME.textPrimary} style={{ marginRight: 4 }} />
-                    <Text style={styles.sortBtnText}>Sort</Text>
+                <Text style={[styles.resultCount, { color: colors.textSecondary }]}>{loading ? '...' : filteredBouncers.length} Professionals Found</Text>
+                <TouchableOpacity style={[styles.sortBtn, { backgroundColor: colors.card, borderColor: colors.border }]} onPress={() => toggleSort(true)}>
+                    <MaterialCommunityIcons name="sort-variant" size={16} color={colors.textPrimary} style={{ marginRight: 4 }} />
+                    <Text style={[styles.sortBtnText, { color: colors.textPrimary }]}>Sort</Text>
                 </TouchableOpacity>
             </View>
 
+
             {!loading && featuredBouncer && <FeaturedCard item={featuredBouncer} onPress={() => handleBouncerPress(featuredBouncer.id)} />}
         </View>
-    ), [navigation, viewMode, search, activeFilter, loading, filteredBouncers.length, featuredBouncer, searchBorderColor]);
+    ), [navigation, viewMode, search, activeFilter, loading, filteredBouncers.length, featuredBouncer, searchBorderColor, colors]);
 
     const emptyComponent = React.useMemo(() => (
         <View style={styles.emptyContainer}>
-            <MaterialCommunityIcons name="shield-search" size={64} color={THEME.textSecondary} />
-            <Text style={styles.emptyTitle}>No Professionals Found</Text>
-            <Text style={styles.emptyText}>Try changing your filters or search terms.</Text>
-            <TouchableOpacity style={styles.retryBtn} onPress={() => { setSearch(''); setActiveFilter('All'); }}>
+            <MaterialCommunityIcons name="shield-search" size={64} color={colors.textSecondary} />
+            <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>No Professionals Found</Text>
+            <Text style={[styles.emptyText, { color: colors.textSecondary }]}>Try changing your filters or search terms.</Text>
+            <TouchableOpacity style={[styles.retryBtn, { backgroundColor: colors.gold }]} onPress={() => { setSearch(''); setActiveFilter('All'); }}>
                 <Text style={styles.retryText}>Clear All Filters</Text>
             </TouchableOpacity>
         </View>
-    ), []);
+    ), [colors]);
 
     const renderSortSheet = () => {
         if (!isSortOpen) return null;
@@ -388,13 +429,13 @@ export default function ExploreProfessionalsScreen({ navigation }: Props) {
                 <Animated.View style={[styles.sheetBackdrop, { opacity: sortBackdropAnim }]}>
                     <TouchableOpacity style={styles.fullScreenBtn} onPress={() => toggleSort(false)} />
                 </Animated.View>
-                <Animated.View style={[styles.sheetContent, { transform: [{ translateY: sortAnim }] }]}>
-                    <View style={styles.sheetHandle} />
-                    <Text style={styles.sheetTitle}>Sort By</Text>
+                <Animated.View style={[styles.sheetContent, { backgroundColor: colors.card }, { transform: [{ translateY: sortAnim }] }]}>
+                    <View style={[styles.sheetHandle, { backgroundColor: colors.border }]} />
+                    <Text style={[styles.sheetTitle, { color: colors.textPrimary }]}>Sort By</Text>
                     {['Recommended', 'Highest Rating', 'Nearest', 'Lowest Price', 'Highest Experience', 'Available Now'].map((opt, idx) => (
-                        <TouchableOpacity key={idx} style={styles.sheetOption} onPress={() => toggleSort(false)}>
-                            <Text style={styles.sheetOptionText}>{opt}</Text>
-                            {idx === 0 && <Ionicons name="checkmark" size={20} color={THEME.gold} />}
+                        <TouchableOpacity key={idx} style={[styles.sheetOption, { borderBottomColor: colors.border }]} onPress={() => toggleSort(false)}>
+                            <Text style={[styles.sheetOptionText, { color: colors.textPrimary }]}>{opt}</Text>
+                            {idx === 0 && <Ionicons name="checkmark" size={20} color={colors.gold} />}
                         </TouchableOpacity>
                     ))}
                 </Animated.View>
@@ -409,36 +450,36 @@ export default function ExploreProfessionalsScreen({ navigation }: Props) {
                 <Animated.View style={[styles.sheetBackdrop, { opacity: advFilterBackdropAnim }]}>
                     <TouchableOpacity style={styles.fullScreenBtn} onPress={() => toggleAdvFilter(false)} />
                 </Animated.View>
-                <Animated.View style={[styles.sheetContent, { transform: [{ translateY: advFilterAnim }] }]}>
-                    <View style={styles.sheetHandle} />
-                    <Text style={styles.sheetTitle}>Advanced Filters</Text>
-                    <Text style={styles.sheetSubtitle}>Experience Range</Text>
+                <Animated.View style={[styles.sheetContent, { backgroundColor: colors.card }, { transform: [{ translateY: advFilterAnim }] }]}>
+                    <View style={[styles.sheetHandle, { backgroundColor: colors.border }]} />
+                    <Text style={[styles.sheetTitle, { color: colors.textPrimary }]}>Advanced Filters</Text>
+                    <Text style={[styles.sheetSubtitle, { color: colors.textSecondary }]}>Experience Range</Text>
                     {/* Dummy sliders for visual */}
                     <View style={styles.dummySliderBox}>
-                        <View style={styles.dummySliderTrack}>
-                            <View style={[styles.dummySliderFill, { width: '60%' }]} />
-                            <View style={[styles.dummySliderThumb, { left: '60%' }]} />
+                        <View style={[styles.dummySliderTrack, { backgroundColor: colors.border }]}>
+                            <View style={[styles.dummySliderFill, { backgroundColor: colors.gold, width: '60%' }]} />
+                            <View style={[styles.dummySliderThumb, { backgroundColor: colors.gold, left: '60%' }]} />
                         </View>
                         <View style={styles.sliderLabels}>
-                            <Text style={styles.sliderLabelText}>0 Yrs</Text>
-                            <Text style={styles.sliderLabelText}>10+ Yrs</Text>
+                            <Text style={[styles.sliderLabelText, { color: colors.textSecondary }]}>0 Yrs</Text>
+                            <Text style={[styles.sliderLabelText, { color: colors.textSecondary }]}>10+ Yrs</Text>
                         </View>
                     </View>
 
-                    <Text style={styles.sheetSubtitle}>Price Range</Text>
+                    <Text style={[styles.sheetSubtitle, { color: colors.textSecondary }]}>Price Range</Text>
                     <View style={styles.dummySliderBox}>
-                        <View style={styles.dummySliderTrack}>
-                            <View style={[styles.dummySliderFill, { width: '40%', left: '20%' }]} />
-                            <View style={[styles.dummySliderThumb, { left: '20%' }]} />
-                            <View style={[styles.dummySliderThumb, { left: '60%' }]} />
+                        <View style={[styles.dummySliderTrack, { backgroundColor: colors.border }]}>
+                            <View style={[styles.dummySliderFill, { backgroundColor: colors.gold, width: '40%', left: '20%' }]} />
+                            <View style={[styles.dummySliderThumb, { backgroundColor: colors.gold, left: '20%' }]} />
+                            <View style={[styles.dummySliderThumb, { backgroundColor: colors.gold, left: '60%' }]} />
                         </View>
                         <View style={styles.sliderLabels}>
-                            <Text style={styles.sliderLabelText}>₹1000</Text>
-                            <Text style={styles.sliderLabelText}>₹5000+</Text>
+                            <Text style={[styles.sliderLabelText, { color: colors.textSecondary }]}>₹1000</Text>
+                            <Text style={[styles.sliderLabelText, { color: colors.textSecondary }]}>₹5000+</Text>
                         </View>
                     </View>
 
-                    <TouchableOpacity style={styles.applyFiltersBtn} onPress={() => toggleAdvFilter(false)}>
+                    <TouchableOpacity style={[styles.applyFiltersBtn, { backgroundColor: colors.gold }]} onPress={() => toggleAdvFilter(false)}>
                         <Text style={styles.applyFiltersText}>Apply Filters</Text>
                     </TouchableOpacity>
                 </Animated.View>
@@ -447,9 +488,9 @@ export default function ExploreProfessionalsScreen({ navigation }: Props) {
     };
 
     return (
-        <SafeAreaView style={styles.safeArea}>
-            <StatusBar barStyle="light-content" backgroundColor="#1a1a1a" />
-            <View style={styles.mainContainer}>
+        <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
+            <StatusBar barStyle={theme === 'dark' ? 'light-content' : 'dark-content'} backgroundColor={colors.background} />
+            <View style={[styles.mainContainer, { backgroundColor: colors.background }]}>
 
                 <FlatList
                     key={viewMode} // Force re-render on toggle
@@ -476,8 +517,8 @@ export default function ExploreProfessionalsScreen({ navigation }: Props) {
                 />
 
                 <TouchableOpacity style={styles.fabBtn} onPress={() => toggleAdvFilter(true)}>
-                    <BlurView blurType="dark" blurAmount={10} style={styles.fabBlur}>
-                        <Ionicons name="options" size={24} color={THEME.gold} />
+                    <BlurView blurType={theme === 'dark' ? 'dark' : 'light'} blurAmount={10} style={styles.fabBlur}>
+                        <Ionicons name="options" size={24} color={colors.gold} />
                     </BlurView>
                 </TouchableOpacity>
 
@@ -589,22 +630,27 @@ const styles = StyleSheet.create({
         paddingHorizontal: 18,
         paddingVertical: 10,
         borderRadius: 24,
-        backgroundColor: THEME.card,
         marginRight: 10,
         borderWidth: 1,
-        borderColor: THEME.border,
     },
-    activePill: {
-        backgroundColor: THEME.gold,
-        borderColor: THEME.gold,
+    filterPillActive: {
+        backgroundColor: '#FFD700',
+        borderColor: '#FFD700',
+    },
+    filterPillInactive: {
+        backgroundColor: '#161618',
+        borderColor: 'rgba(255,255,255,0.08)',
     },
     filterText: {
         fontSize: 13,
         fontWeight: '600',
-        color: THEME.textSecondary,
     },
-    activeFilterText: {
+    filterTextActive: {
         color: '#000',
+        fontWeight: '700',
+    },
+    filterTextInactive: {
+        color: '#aaa',
     },
 
     // ─── RESULTS ROW ────────────────────────────────────────────────────────────
@@ -723,17 +769,51 @@ const styles = StyleSheet.create({
     // ─── GRID CARD ──────────────────────────────────────────────────────────────
     gridCard: {
         width: CARD_WIDTH,
-        backgroundColor: THEME.card,
-        borderRadius: 24,
+        backgroundColor: '#161618',
+        borderRadius: 20,
         marginBottom: 20,
         overflow: 'hidden',
         borderWidth: 1,
-        borderColor: THEME.border,
+        borderColor: 'rgba(255,255,255,0.08)',
+        elevation: 4,
     },
     gridImageContainer: {
-        height: 160,
+        height: 170,
         width: '100%',
-        backgroundColor: THEME.bgSecondary,
+        backgroundColor: '#1A1A1E',
+        position: 'relative',
+    },
+    cardGradientOverlay: {
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        bottom: 0,
+        height: 60,
+    },
+    gridRatingBadge: {
+        position: 'absolute',
+        top: 10,
+        left: 10,
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0,0,0,0.75)',
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 12,
+        gap: 4,
+        borderWidth: 1,
+        borderColor: 'rgba(255,215,0,0.3)',
+        zIndex: 2,
+    },
+    gridRatingText: {
+        fontSize: 11,
+        fontWeight: '700',
+        color: '#FFF',
+    },
+    cardImagePlaceholder: {
+        backgroundColor: '#1E1E22',
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     fullImage: {
         width: '100%',
@@ -742,11 +822,12 @@ const styles = StyleSheet.create({
     statusBadgeWrapper: {
         position: 'absolute',
         top: 10,
-        left: 10,
-        borderRadius: 20,
-        backgroundColor: 'rgba(0,0,0,0.72)',
+        right: 10,
+        borderRadius: 12,
+        backgroundColor: 'rgba(0,0,0,0.75)',
         borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.15)',
+        borderColor: 'rgba(255,255,255,0.12)',
+        zIndex: 2,
     },
     blurBadge: {
         flexDirection: 'row',

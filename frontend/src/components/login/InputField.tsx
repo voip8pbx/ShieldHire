@@ -26,7 +26,7 @@ export default function InputField({ iconName, label, isPassword, value, ...prop
         left: 45,
         top: animatedIsFocused.interpolate({
             inputRange: [0, 1],
-            outputRange: [18, 6],
+            outputRange: [18, 5],
         }),
         fontSize: animatedIsFocused.interpolate({
             inputRange: [0, 1],
@@ -34,14 +34,14 @@ export default function InputField({ iconName, label, isPassword, value, ...prop
         }),
         color: animatedIsFocused.interpolate({
             inputRange: [0, 1],
-            outputRange: ['#888', '#FFD700'],
+            outputRange: ['#8E8E93', '#FFD700'],
         }),
         zIndex: 1,
     };
 
     const borderColor = animatedIsFocused.interpolate({
         inputRange: [0, 1],
-        outputRange: ['#333', '#FFD700'],
+        outputRange: ['rgba(255, 255, 255, 0.04)', '#FFD700'],
     });
 
     return (
@@ -86,8 +86,8 @@ const styles = StyleSheet.create({
     container: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#161616',
-        height: 50,
+        backgroundColor: '#121214',
+        height: 54,
         borderRadius: 14,
         marginBottom: 12,
         paddingHorizontal: 15,
@@ -103,10 +103,10 @@ const styles = StyleSheet.create({
     },
     input: {
         flex: 1,
-        fontSize: 16,
+        fontSize: 15,
         color: '#fff',
-        paddingTop: 18, 
-        paddingBottom: 2,
+        paddingTop: 16, 
+        paddingBottom: 0,
     },
     inputActive: {
         // Adjust padding if needed when focused

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, ScrollView, StatusBar, Linking, Platform, Alert, Image } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, ScrollView, StatusBar, Linking, Platform, Alert, Image, Modal, TextInput } from 'react-native';
+
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
@@ -28,6 +29,9 @@ interface BookingDetail {
     status: string;
     package?: string;
     notes?: string;
+    userNotes?: string;
+    transactionId?: string;
+    paymentStatus?: string;
     clientName?: string;
     clientContactNo?: string;
     bouncer?: {
@@ -49,6 +53,24 @@ export default function BookingDetailsScreen({ navigation, route }: Props) {
     const { bookingId } = route.params;
     const [booking, setBooking] = useState<BookingDetail | null>(null);
     const [loading, setLoading] = useState(true);
+    const [rateModalVisible, setRateModalVisible] = useState(false);
+    const [selectedRating, setSelectedRating] = useState(5);
+    const [reviewText, setReviewText] = useState('');
+    const [submittingRating, setSubmittingRating] = useState(false);
+
+    const handleRateSubmit = async () => {
+        try {
+            setSubmittingRating(true);
+            const res = await api.post(`/bookings/${bookingId}/rate`, { rating: selectedRating, reviewText });
+            Alert.alert('Rating Submitted! ⭐', `Thank you! Guard rating updated to ${res.data?.newRating || selectedRating}.`);
+            setRateModalVisible(false);
+        } catch (e: any) {
+            Alert.alert('Notice', e.response?.data?.error || 'Failed to submit rating');
+        } finally {
+            setSubmittingRating(false);
+        }
+    };
+
 
     const fetchBookingDetail = async () => {
         try {
@@ -79,6 +101,32 @@ export default function BookingDetailsScreen({ navigation, route }: Props) {
         });
 
         if (url) Linking.openURL(url);
+    };
+
+    const handleCancel = async () => {
+        Alert.alert(
+            'Cancel Booking',
+            'Are you sure you want to cancel this booking request?',
+            [
+                { text: 'No', style: 'cancel' },
+                {
+                    text: 'Yes, Cancel',
+                    style: 'destructive',
+                    onPress: async () => {
+                        try {
+                            setLoading(true);
+                            await api.patch(`/bookings/${bookingId}/status`, { status: 'CANCELLED' });
+                            Alert.alert('Success', 'Booking has been cancelled.');
+                            fetchBookingDetail();
+                        } catch (error) {
+                            console.error('Failed to cancel booking:', error);
+                            Alert.alert('Error', 'Failed to cancel booking.');
+                            setLoading(false);
+                        }
+                    }
+                }
+            ]
+        );
     };
 
     if (loading) {
@@ -112,27 +160,44 @@ export default function BookingDetailsScreen({ navigation, route }: Props) {
                 <View style={[
                     styles.statusBadgeContainer,
                     booking.status === 'CONFIRMED' ? styles.statusConfirmedBg :
+                    booking.status === 'ACTIVE' ? styles.statusActiveBg :
+                    booking.status === 'COMPLETED' ? styles.statusConfirmedBg :
                     booking.status === 'PENDING' ? styles.statusPendingBg : styles.statusCancelledBg
                 ]}>
                     <Ionicons 
                         name={
                             booking.status === 'CONFIRMED' ? "checkmark-circle" :
+                            booking.status === 'ACTIVE' ? "flash" :
+                            booking.status === 'COMPLETED' ? "checkmark-done-circle" :
                             booking.status === 'PENDING' ? "time" : "close-circle"
                         } 
                         size={20} 
                         color={
                             booking.status === 'CONFIRMED' ? "#4ade80" :
+                            booking.status === 'ACTIVE' ? "#38bdf8" :
+                            booking.status === 'COMPLETED' ? "#4ade80" :
                             booking.status === 'PENDING' ? "#fbbf24" : "#ef4444"
                         } 
                     />
                     <Text style={[
                         styles.statusBadgeText,
                         booking.status === 'CONFIRMED' ? styles.statusConfirmedText :
+                        booking.status === 'ACTIVE' ? styles.statusActiveText :
+                        booking.status === 'COMPLETED' ? styles.statusConfirmedText :
                         booking.status === 'PENDING' ? styles.statusPendingText : styles.statusCancelledText
                     ]}>
                         {booking.status}
                     </Text>
                 </View>
+
+                {/* Chat Button */}
+                <TouchableOpacity
+                    style={styles.chatButtonContainer}
+                    onPress={() => (navigation as any).navigate('Chat', { bookingId: booking.id })}
+                >
+                    <Ionicons name="chatbubbles-outline" size={22} color="#000" />
+                    <Text style={styles.chatButtonText}>CHAT & DISCUSS DETAILS</Text>
+                </TouchableOpacity>
 
                 {/* Bouncer Info */}
                 {booking.bouncer && (
@@ -252,15 +317,46 @@ export default function BookingDetailsScreen({ navigation, route }: Props) {
                 </View>
                 
                 {/* Notes / Special Instructions */}
-                {booking.notes && (
+                {(booking.userNotes || booking.notes) && (
                     <View style={styles.card}>
                         <View style={styles.cardHeader}>
                             <Ionicons name="document-text" size={20} color="#FFD700" />
                             <Text style={styles.cardTitle}>Special Instructions</Text>
                         </View>
-                        <Text style={styles.notesText}>{booking.notes}</Text>
+                        <Text style={styles.notesText}>{booking.userNotes || booking.notes}</Text>
                     </View>
                 )}
+
+                {/* Payment Details */}
+                <View style={styles.card}>
+                    <View style={styles.cardHeader}>
+                        <Ionicons name="card" size={20} color="#FFD700" />
+                        <Text style={styles.cardTitle}>Payment Details</Text>
+                    </View>
+                    <View style={styles.detailRow}>
+                        <Text style={styles.detailLabel}>Total Amount Paid</Text>
+                        <Text style={[styles.detailValue, { color: '#FFD700', fontWeight: 'bold' }]}>₹{booking.totalPrice}</Text>
+                    </View>
+                    {booking.transactionId ? (
+                        <View style={styles.detailRow}>
+                            <Text style={styles.detailLabel}>UPI Transaction ID</Text>
+                            <Text style={[styles.detailValue, { fontFamily: 'monospace' }]}>{booking.transactionId}</Text>
+                        </View>
+                    ) : null}
+                    <View style={styles.detailRow}>
+                        <Text style={styles.detailLabel}>Payment Verification</Text>
+                        <Text style={[
+                            styles.detailValue, 
+                            { 
+                                color: booking.paymentStatus === 'PAID' ? '#4ade80' : 
+                                       booking.paymentStatus === 'FAILED' ? '#ef4444' : '#fbbf24',
+                                fontWeight: 'bold'
+                            }
+                        ]}>
+                            {booking.paymentStatus || 'PENDING'}
+                        </Text>
+                    </View>
+                </View>
                 
                 {/* Booking Reference */}
                 <View style={styles.referenceContainer}>
@@ -268,11 +364,91 @@ export default function BookingDetailsScreen({ navigation, route }: Props) {
                     <Text style={styles.referenceText}>{booking.id}</Text>
                 </View>
 
-                <View style={{ height: 40 }} />
+                {/* Rate Security Guard Action */}
+                {(booking.status === 'CONFIRMED' || booking.status === 'COMPLETED') && (
+                    <TouchableOpacity
+                        style={styles.rateGuardBtn}
+                        onPress={() => setRateModalVisible(true)}
+                        activeOpacity={0.88}
+                    >
+                        <Ionicons name="star" size={20} color="#000" style={{ marginRight: 8 }} />
+                        <Text style={styles.rateGuardBtnText}>RATE SECURITY GUARD</Text>
+                    </TouchableOpacity>
+                )}
+
+                {/* Cancel Booking Action */}
+                {(booking.status === 'PENDING' || booking.status === 'CONFIRMED') && (
+                    <TouchableOpacity 
+                        style={[styles.cancelButton, { marginTop: 12 }]} 
+                        onPress={handleCancel}
+                    >
+                        <Ionicons name="trash-outline" size={20} color="#fff" />
+                        <Text style={styles.cancelButtonText}>CANCEL BOOKING</Text>
+                    </TouchableOpacity>
+                )}
             </ScrollView>
+
+            {/* Interactive Rating Modal */}
+            <Modal
+                visible={rateModalVisible}
+                transparent={true}
+                animationType="slide"
+                onRequestClose={() => setRateModalVisible(false)}
+            >
+                <View style={styles.rateModalOverlay}>
+                    <View style={styles.rateModalContent}>
+                        <TouchableOpacity style={styles.rateModalCloseBtn} onPress={() => setRateModalVisible(false)}>
+                            <Ionicons name="close" size={24} color="#aaa" />
+                        </TouchableOpacity>
+
+                        <MaterialCommunityIcons name="star-circle" size={54} color="#FFD700" style={{ alignSelf: 'center', marginBottom: 8 }} />
+                        <Text style={styles.rateModalTitle}>Rate Security Guard</Text>
+                        <Text style={styles.rateModalSub}>How was your security service experience with {booking.bouncer?.name || 'your guard'}?</Text>
+
+                        {/* Interactive Stars */}
+                        <View style={styles.starsRow}>
+                            {[1, 2, 3, 4, 5].map((s) => (
+                                <TouchableOpacity key={s} onPress={() => setSelectedRating(s)} style={{ padding: 4 }}>
+                                    <Ionicons
+                                        name={s <= selectedRating ? "star" : "star-outline"}
+                                        size={36}
+                                        color={s <= selectedRating ? "#FFD700" : "#555"}
+                                    />
+                                </TouchableOpacity>
+                            ))}
+                        </View>
+
+                        {/* Review Comment Input */}
+                        <TextInput
+                            style={styles.reviewInput}
+                            placeholder="Add a feedback review (optional)..."
+                            placeholderTextColor="#666"
+                            multiline
+                            numberOfLines={3}
+                            value={reviewText}
+                            onChangeText={setReviewText}
+                        />
+
+                        {/* Submit Button */}
+                        <TouchableOpacity
+                            style={styles.submitRateBtn}
+                            onPress={handleRateSubmit}
+                            disabled={submittingRating}
+                            activeOpacity={0.88}
+                        >
+                            {submittingRating ? (
+                                <ActivityIndicator size="small" color="#000" />
+                            ) : (
+                                <Text style={styles.submitRateBtnText}>SUBMIT RATING & NOTIFY GUARD</Text>
+                            )}
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
         </View>
     );
 }
+
 
 const styles = StyleSheet.create({
     container: {
@@ -281,12 +457,12 @@ const styles = StyleSheet.create({
     },
     loadingContainer: {
         flex: 1,
-        backgroundColor: '#0F0F0F',
+        backgroundColor: '#070708',
         justifyContent: 'center',
         alignItems: 'center',
     },
     loadingText: {
-        color: '#888',
+        color: '#8E8E93',
         marginTop: 15,
         fontSize: 14,
     },
@@ -297,7 +473,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 15,
         paddingTop: Platform.OS === 'ios' ? 50 : 20,
         paddingBottom: 20,
-        backgroundColor: '#1E1E1E',
+        backgroundColor: '#121214',
     },
     backBtn: {
         padding: 5,
@@ -321,16 +497,16 @@ const styles = StyleSheet.create({
         borderWidth: 1,
     },
     statusConfirmedBg: {
-        backgroundColor: 'rgba(74, 222, 128, 0.15)',
-        borderColor: 'rgba(74, 222, 128, 0.4)',
+        backgroundColor: 'rgba(52, 199, 89, 0.1)',
+        borderColor: 'rgba(52, 199, 89, 0.2)',
     },
     statusPendingBg: {
-        backgroundColor: 'rgba(251, 191, 36, 0.15)',
-        borderColor: 'rgba(251, 191, 36, 0.4)',
+        backgroundColor: 'rgba(255, 149, 0, 0.1)',
+        borderColor: 'rgba(255, 149, 0, 0.2)',
     },
     statusCancelledBg: {
-        backgroundColor: 'rgba(239, 68, 68, 0.15)',
-        borderColor: 'rgba(239, 68, 68, 0.4)',
+        backgroundColor: 'rgba(255, 59, 48, 0.1)',
+        borderColor: 'rgba(255, 59, 48, 0.2)',
     },
     statusBadgeText: {
         fontWeight: 'bold',
@@ -339,22 +515,22 @@ const styles = StyleSheet.create({
         letterSpacing: 1,
     },
     statusConfirmedText: {
-        color: '#4ade80',
+        color: '#34C759',
     },
     statusPendingText: {
-        color: '#fbbf24',
+        color: '#FF9500',
     },
     statusCancelledText: {
-        color: '#ef4444',
+        color: '#FF3B30',
     },
     // Cards
     card: {
-        backgroundColor: '#1E1E1E',
+        backgroundColor: '#121214',
         borderRadius: 20,
         padding: 15,
         marginBottom: 20,
         borderWidth: 1,
-        borderColor: '#2A2A2A',
+        borderColor: 'rgba(255, 255, 255, 0.04)',
     },
     cardHeader: {
         flexDirection: 'row',
@@ -362,7 +538,7 @@ const styles = StyleSheet.create({
         marginBottom: 15,
         paddingBottom: 10,
         borderBottomWidth: 1,
-        borderBottomColor: '#2A2A2A',
+        borderBottomColor: 'rgba(255, 255, 255, 0.04)',
     },
     cardTitle: {
         color: '#fff',
@@ -422,7 +598,7 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     scheduleLabel: {
-        color: '#666',
+        color: '#8E8E93',
         fontSize: 10,
         fontWeight: 'bold',
         marginBottom: 5,
@@ -441,7 +617,7 @@ const styles = StyleSheet.create({
         height: 180,
         borderRadius: 15,
         borderWidth: 1,
-        borderColor: '#333',
+        borderColor: 'rgba(255, 255, 255, 0.04)',
     },
     map: {
         ...StyleSheet.absoluteFillObject,
@@ -504,5 +680,151 @@ const styles = StyleSheet.create({
         fontSize: 12,
         fontWeight: '700',
         marginLeft: 6,
+    },
+    statusActiveBg: {
+        backgroundColor: 'rgba(90, 200, 250, 0.1)',
+        borderColor: 'rgba(90, 200, 250, 0.2)',
+    },
+    statusActiveText: {
+        color: '#5AC8FA',
+    },
+    chatButtonContainer: {
+        backgroundColor: '#FFD700',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 14,
+        paddingHorizontal: 20,
+        borderRadius: 14,
+        marginHorizontal: 16,
+        marginVertical: 12,
+        shadowColor: '#FFD700',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 5,
+        elevation: 5,
+    },
+    chatButtonText: {
+        color: '#000',
+        fontSize: 14,
+        fontWeight: 'bold',
+        marginLeft: 8,
+    },
+    cancelButton: {
+        backgroundColor: '#FF3B30',
+        borderRadius: 14,
+        height: 54,
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+        shadowColor: '#FF3B30',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 10,
+        elevation: 5,
+    },
+    cancelButtonText: {
+        color: '#fff',
+        fontSize: 15,
+        fontWeight: '700',
+        marginLeft: 10,
+        letterSpacing: 1,
+    },
+    rateGuardBtn: {
+        backgroundColor: '#FFD700',
+        borderRadius: 14,
+        height: 54,
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginTop: 15,
+        elevation: 4,
+    },
+    rateGuardBtnText: {
+        color: '#000',
+        fontSize: 15,
+        fontWeight: '800',
+        letterSpacing: 0.5,
+    },
+    rateModalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.85)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 20,
+    },
+    rateModalContent: {
+        width: '100%',
+        backgroundColor: '#161618',
+        borderRadius: 22,
+        padding: 22,
+        borderWidth: 1,
+        borderColor: 'rgba(255,215,0,0.3)',
+        position: 'relative',
+    },
+    rateModalCloseBtn: {
+        position: 'absolute',
+        top: 14,
+        right: 14,
+        zIndex: 10,
+    },
+    rateModalTitle: {
+        fontSize: 20,
+        fontWeight: '800',
+        color: '#fff',
+        textAlign: 'center',
+    },
+    rateModalSub: {
+        fontSize: 13,
+        color: '#aaa',
+        textAlign: 'center',
+        marginTop: 4,
+        marginBottom: 16,
+    },
+    starsRow: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+        gap: 8,
+        marginBottom: 20,
+    },
+    reviewInput: {
+        backgroundColor: '#222226',
+        borderRadius: 14,
+        padding: 14,
+        color: '#fff',
+        fontSize: 14,
+        height: 80,
+        textAlignVertical: 'top',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.08)',
+        marginBottom: 18,
+    },
+    submitRateBtn: {
+        backgroundColor: '#FFD700',
+        paddingVertical: 14,
+        borderRadius: 14,
+        alignItems: 'center',
+    },
+    submitRateBtnText: {
+        color: '#000',
+        fontSize: 14,
+        fontWeight: '800',
+        letterSpacing: 0.5,
+    },
+    detailRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 12,
+    },
+    detailLabel: {
+        color: '#888',
+        fontSize: 14,
+    },
+    detailValue: {
+        color: '#fff',
+        fontSize: 14,
+        fontWeight: '600',
     },
 });

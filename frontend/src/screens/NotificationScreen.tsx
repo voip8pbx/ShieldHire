@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useContext } from 'react';
 import {
     View,
     Text,
@@ -15,6 +15,8 @@ import { useNavigation } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { Swipeable } from 'react-native-gesture-handler';
+import api from '../services/api';
+import { AuthContext } from '../context/AuthContext';
 
 // Types
 type Category = 'All' | 'Unread' | 'Messages' | 'Updates';
@@ -29,14 +31,25 @@ interface Notification {
     type: NotificationType;
 }
 
-// Dummy Data
-const DUMMY_NOTIFICATIONS: Notification[] = [
-    { id: '1', title: 'New VIP Assignment', message: 'You have been requested for an event in Downtown. Review details ASAP.', time: '2 mins ago', read: false, type: 'message' },
-    { id: '2', title: 'System Alert', message: 'Please update your background verification documents to maintain Pro status.', time: '1 hour ago', read: false, type: 'system' },
-    { id: '3', title: 'Payment Received', message: 'Earnings for your last assignment have been securely deposited.', time: 'Yesterday', read: true, type: 'payment' },
-    { id: '4', title: 'Schedule Update', message: 'Your shift tomorrow has been modified by the client.', time: '2 days ago', read: true, type: 'update' },
-    { id: '5', title: 'Upcoming Shift Reminder', message: 'You have an upcoming shift in 4 hours.', time: '3 days ago', read: true, type: 'reminder' }
-];
+const mapApiTypeToLocal = (apiType?: string): NotificationType => {
+    if (!apiType) return 'system';
+    const t = apiType.toUpperCase();
+    if (t.includes('CHAT') || t === 'CHAT_MESSAGE') return 'message';
+    if (t.includes('PAYMENT')) return 'payment';
+    if (t.includes('BOOKING') || t.includes('HIRE')) return 'update';
+    if (t.includes('SOS') || t.includes('ALERT')) return 'system';
+    return 'reminder';
+};
+
+const formatRelativeTime = (dateStr: string): string => {
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return 'Just now';
+    if (mins < 60) return `${mins}m ago`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs}h ago`;
+    return `${Math.floor(hrs / 24)}d ago`;
+};
 
 const CATEGORIES: Category[] = ['All', 'Unread', 'Messages', 'Updates'];
 
@@ -148,19 +161,40 @@ const AnimatedNotificationItem = React.memo(({
 
 export default function NotificationScreen() {
     const navigation = useNavigation();
-    const [notifications, setNotifications] = useState<Notification[]>(DUMMY_NOTIFICATIONS);
+    const { user } = useContext(AuthContext);
+    const [notifications, setNotifications] = useState<Notification[]>([]);
     const [refreshing, setRefreshing] = useState(false);
     const [activeFilter, setActiveFilter] = useState<Category>('All');
     const [loading, setLoading] = useState(true);
 
+    const fetchNotifications = async () => {
+        try {
+            const res = await api.get('/user/notifications');
+            const data: any[] = res.data || [];
+            const mapped: Notification[] = data.map((n: any) => ({
+                id: n.id,
+                title: n.title,
+                message: n.body,
+                time: formatRelativeTime(n.createdAt),
+                read: n.isRead,
+                type: mapApiTypeToLocal(n.type),
+            }));
+            setNotifications(mapped);
+        } catch (e) {
+            console.error('[Notifications] Fetch error:', e);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
-        // Simulate initial loading for skeleton
-        setTimeout(() => setLoading(false), 1000);
+        fetchNotifications();
     }, []);
 
-    const onRefresh = () => {
+    const onRefresh = async () => {
         setRefreshing(true);
-        setTimeout(() => setRefreshing(false), 1500);
+        await fetchNotifications();
+        setRefreshing(false);
     };
 
     const handleDelete = React.useCallback((id: string) => {
@@ -276,7 +310,7 @@ export default function NotificationScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#0A0A0A',
+        backgroundColor: '#121214',
     },
     header: {
         flexDirection: 'row',
@@ -303,14 +337,14 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingVertical: 8,
         borderRadius: 20,
-        backgroundColor: '#161616',
+        backgroundColor: '#1A1A1E',
         borderWidth: 1,
-        borderColor: '#262626',
+        borderColor: 'rgba(255, 255, 255, 0.06)',
         marginRight: 10,
     },
     filterPillActive: {
-        backgroundColor: 'rgba(212, 175, 55, 0.15)',
-        borderColor: '#D4AF37',
+        backgroundColor: 'rgba(255, 215, 0, 0.12)',
+        borderColor: '#FFD700',
     },
     filterText: {
         color: '#A0A0A0',
@@ -327,12 +361,12 @@ const styles = StyleSheet.create({
     },
     notificationCard: {
         flexDirection: 'row',
-        backgroundColor: 'rgba(22, 22, 22, 0.8)',
+        backgroundColor: '#1A1A1E',
         borderRadius: 16,
         padding: 16,
         marginBottom: 12,
         borderWidth: 1,
-        borderColor: 'rgba(255, 255, 255, 0.05)',
+        borderColor: 'rgba(255, 255, 255, 0.06)',
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
@@ -341,8 +375,8 @@ const styles = StyleSheet.create({
         overflow: 'hidden',
     },
     notificationCardUnread: {
-        backgroundColor: 'rgba(28, 28, 28, 0.95)',
-        borderColor: 'rgba(212, 175, 55, 0.2)',
+        backgroundColor: '#24242A',
+        borderColor: 'rgba(255, 215, 0, 0.2)',
     },
     unreadAccent: {
         position: 'absolute',
@@ -441,7 +475,7 @@ const styles = StyleSheet.create({
     },
     skeletonCard: {
         flexDirection: 'row',
-        backgroundColor: '#161616',
+        backgroundColor: '#1A1A1E',
         borderRadius: 16,
         padding: 16,
         marginBottom: 12,
@@ -451,7 +485,7 @@ const styles = StyleSheet.create({
         width: 44,
         height: 44,
         borderRadius: 22,
-        backgroundColor: '#262626',
+        backgroundColor: '#2C2C35',
         marginRight: 14,
     },
     skeletonContent: {
@@ -461,21 +495,21 @@ const styles = StyleSheet.create({
     skeletonTitle: {
         width: '60%',
         height: 14,
-        backgroundColor: '#262626',
+        backgroundColor: '#2C2C35',
         borderRadius: 4,
         marginBottom: 8,
     },
     skeletonMessage1: {
         width: '100%',
         height: 10,
-        backgroundColor: '#262626',
+        backgroundColor: '#2C2C35',
         borderRadius: 4,
         marginBottom: 6,
     },
     skeletonMessage2: {
         width: '80%',
         height: 10,
-        backgroundColor: '#262626',
+        backgroundColor: '#2C2C35',
         borderRadius: 4,
     },
     emptyState: {

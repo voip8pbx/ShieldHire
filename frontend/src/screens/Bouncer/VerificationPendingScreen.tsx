@@ -35,7 +35,8 @@ export default function VerificationPendingScreen({ navigation, route }: Props) 
     const [loading, setLoading] = useState(true);
     const [rejectionReason, setRejectionReason] = useState<string | null>(null);
     const { logout, updateUser, user: contextUser } = useContext(AuthContext);
-    const userId = route.params?.userId || contextUser?.id;
+    const params = route.params as any;
+    const userId = params?.userId || contextUser?.id;
 
     // Animation
     const spinValue = useRef(new Animated.Value(0)).current;
@@ -286,7 +287,7 @@ export default function VerificationPendingScreen({ navigation, route }: Props) 
 
     return (
         <View style={styles.container}>
-            <StatusBar barStyle="light-content" backgroundColor="#0F0F0F" />
+            <StatusBar barStyle="light-content" backgroundColor="#121214" />
             {renderContent()}
         </View>
     );
@@ -295,7 +296,7 @@ export default function VerificationPendingScreen({ navigation, route }: Props) 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#0F0F0F',
+        backgroundColor: '#121214',
     },
     contentContainer: {
         flex: 1,
@@ -354,12 +355,12 @@ const styles = StyleSheet.create({
     },
     statusBox: {
         width: '100%',
-        backgroundColor: '#1E1E1E',
-        borderRadius: 15,
+        backgroundColor: '#1A1A1E',
+        borderRadius: 20,
         padding: 20,
         marginBottom: 30,
         borderWidth: 1,
-        borderColor: '#333',
+        borderColor: 'rgba(255, 255, 255, 0.06)',
     },
     statusRow: {
         flexDirection: 'row',
@@ -385,14 +386,14 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         backgroundColor: '#FFD700',
         paddingHorizontal: 30,
-        paddingVertical: 15,
-        borderRadius: 12,
+        paddingVertical: 14,
+        borderRadius: 14,
         marginBottom: 15,
     },
     refreshButtonText: {
         color: '#000',
-        fontSize: 16,
-        fontWeight: 'bold',
+        fontSize: 15,
+        fontWeight: '700',
         marginLeft: 10,
     },
     backButton: {
@@ -400,7 +401,7 @@ const styles = StyleSheet.create({
         paddingVertical: 15,
     },
     backButtonText: {
-        color: '#888',
+        color: '#8E8E93',
         fontSize: 15,
         textDecorationLine: 'underline',
     },
@@ -432,14 +433,14 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         backgroundColor: '#FFD700',
         paddingHorizontal: 40,
-        paddingVertical: 18,
-        borderRadius: 12,
+        paddingVertical: 16,
+        borderRadius: 14,
         marginTop: 20,
     },
     loginButtonText: {
         color: '#000',
-        fontSize: 18,
-        fontWeight: 'bold',
+        fontSize: 16,
+        fontWeight: '700',
         marginRight: 10,
     },
     // Error styles
@@ -462,16 +463,16 @@ const styles = StyleSheet.create({
     },
     reasonBox: {
         width: '100%',
-        backgroundColor: 'rgba(244, 67, 54, 0.1)',
+        backgroundColor: 'rgba(255, 59, 48, 0.05)',
         borderRadius: 12,
         padding: 20,
         marginBottom: 20,
         borderWidth: 1,
-        borderColor: 'rgba(244, 67, 54, 0.3)',
+        borderColor: 'rgba(255, 59, 48, 0.2)',
     },
     reasonLabel: {
         fontSize: 14,
-        color: '#F44336',
+        color: '#FF3B30',
         fontWeight: 'bold',
         marginBottom: 8,
     },

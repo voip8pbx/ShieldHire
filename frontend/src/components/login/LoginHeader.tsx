@@ -57,7 +57,7 @@ const styles = StyleSheet.create({
     },
     tagline: {
         fontSize: 12,
-        color: '#888',
+        color: '#8E8E93',
         letterSpacing: 0.5,
         marginBottom: 10,
     },
@@ -73,7 +73,7 @@ const styles = StyleSheet.create({
     },
     welcomeSubtitle: {
         fontSize: 13,
-        color: '#aaa',
+        color: '#8E8E93',
         letterSpacing: 0.3,
     }
 });

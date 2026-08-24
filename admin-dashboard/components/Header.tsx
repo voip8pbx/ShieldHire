@@ -109,10 +109,29 @@ export default function Header({ onMenuClick }: HeaderProps) {
                         <div className="text-sm font-semibold text-text-primary">Admin User</div>
                         <div className="text-xs text-text-dim">Super Admin</div>
                     </div>
-                    <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-full bg-primary-yellow flex items-center justify-center text-black font-bold text-xs sm:text-sm ring-2 ring-bg-secondary cursor-pointer">
+                    <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-full bg-primary-yellow flex items-center justify-center text-black font-bold text-xs sm:text-sm ring-2 ring-bg-secondary">
                         AD
                     </div>
                 </div>
+
+                {/* Logout Button */}
+                <button
+                    onClick={async () => {
+                        try {
+                            await fetch('/api/auth/logout', { method: 'POST' });
+                            window.location.href = '/login';
+                        } catch (err) {
+                            console.error('Logout error:', err);
+                        }
+                    }}
+                    className="btn-icon btn-ghost text-red-500 hover:text-red-400 ml-2"
+                    aria-label="Logout"
+                    title="Sign Out"
+                >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                </button>
             </div>
         </header>
     );

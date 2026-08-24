@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import {
     View,
     Text,
@@ -10,20 +10,23 @@ import {
     Alert,
     Platform,
     PermissionsAndroid,
-    ActivityIndicator
+    ActivityIndicator,
+    Linking
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AuthContext } from '../context/AuthContext';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { launchImageLibrary, ImagePickerResponse } from 'react-native-image-picker';
 import api from '../services/api';
 import Geolocation from 'react-native-geolocation-service';
 import { useNavigation } from '@react-navigation/native';
+import { ThemeContext } from '../context/ThemeContext';
+import LinearGradient from 'react-native-linear-gradient';
 
 export default function ProfileScreen() {
     const { user, token, logout, updateUser, pendingRoute, consumePendingRoute, requireAuth } = useContext(AuthContext);
+    const { theme, toggleTheme, colors } = useContext(ThemeContext);
     const navigation = useNavigation<any>();
 
     // State
@@ -31,21 +34,68 @@ export default function ProfileScreen() {
     const [isEditing, setIsEditing] = useState(false);
     const [name, setName] = useState(user?.name || '');
     const [contact, setContact] = useState(user?.contactNo || '');
+    const [upiId, setUpiId] = useState(user?.bouncerProfile?.upiId || '');
     const [locationName, setLocationName] = useState('Fetching...');
+    const [locationPermissionStatus, setLocationPermissionStatus] = useState<'Granted' | 'Denied' | 'Not Determined'>('Not Determined');
     const [saving, setSaving] = useState(false);
 
-    // Update name, contact and image if user context changes
-    React.useEffect(() => {
+    // Update state if user context changes
+    useEffect(() => {
         if (user) {
             setName(user.name || '');
             setContact(user.contactNo || '');
             setImage(user.profilePhoto || null);
+            setUpiId(user.bouncerProfile?.upiId || '');
         }
     }, [user]);
 
-    React.useEffect(() => {
+    useEffect(() => {
         getCurrentLocation();
+        checkLocationPermission();
     }, []);
+
+    const checkLocationPermission = async () => {
+        if (Platform.OS === 'android') {
+            const hasPermission = await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION);
+            setLocationPermissionStatus(hasPermission ? 'Granted' : 'Denied');
+        } else {
+            setLocationPermissionStatus('Granted');
+        }
+    };
+
+    const handleLocationPermissionPress = async () => {
+        if (Platform.OS === 'android') {
+            try {
+                const granted = await PermissionsAndroid.request(
+                    PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+                    {
+                        title: "Location Permission Required",
+                        message: "ShieldHire needs access to your location for emergency SOS and security coverage.",
+                        buttonNeutral: "Ask Me Later",
+                        buttonNegative: "Cancel",
+                        buttonPositive: "OK"
+                    }
+                );
+                if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+                    setLocationPermissionStatus('Granted');
+                    Alert.alert("Permission Granted", "Location access is active.");
+                    getCurrentLocation();
+                } else {
+                    setLocationPermissionStatus('Denied');
+                    Alert.alert(
+                        'Permission Required',
+                        'Location permission is denied. Please enable it in app settings.',
+                        [
+                            { text: 'Cancel', style: 'cancel' },
+                            { text: 'Open Settings', onPress: () => Linking.openSettings() }
+                        ]
+                    );
+                }
+            } catch (err) {
+                console.warn(err);
+            }
+        }
+    };
 
     const getCurrentLocation = () => {
         if (Platform.OS === 'android') {
@@ -55,12 +105,9 @@ export default function ProfileScreen() {
                     Geolocation.getCurrentPosition(
                         async (position) => {
                             const { latitude, longitude } = position.coords;
-
                             try {
                                 const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`, {
-                                    headers: {
-                                        'User-Agent': 'ShieldOfSecurityApp/1.0'
-                                    }
+                                    headers: { 'User-Agent': 'ShieldOfSecurityApp/1.0' }
                                 });
                                 const data = await response.json();
                                 if (data && data.address) {
@@ -68,17 +115,13 @@ export default function ProfileScreen() {
                                     const country = data.address.country || '';
                                     setLocationName(`${city}, ${country}`);
                                 } else {
-                                    setLocationName(`Lat: ${latitude.toFixed(2)}, Long: ${longitude.toFixed(2)}`);
+                                    setLocationName(`${latitude.toFixed(2)}, ${longitude.toFixed(2)}`);
                                 }
                             } catch (err) {
-                                console.log('Reverse geocoding error:', err);
                                 setLocationName(`Location Unavailable`);
                             }
                         },
-                        (error) => {
-                            console.log(error.code, error.message);
-                            setLocationName('Location Unavailable');
-                        },
+                        () => setLocationName('Location Unavailable'),
                         { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
                     );
                 } else {
@@ -86,15 +129,13 @@ export default function ProfileScreen() {
                 }
             });
         } else {
-            // Assume iOS doesn't need this explicit permission check here, or handle separately if requested later
-            setLocationName('Location Unavailable');
+            setLocationName('Location Active');
         }
     };
 
-    // Mock Data for display
     const membership = {
         name: 'Corporate Security Plan',
-        renews: '2026-01-01',
+        renews: '2026-12-31',
         status: 'Active'
     };
 
@@ -114,27 +155,28 @@ export default function ProfileScreen() {
                 includeBase64: true,
                 maxHeight: 500,
                 maxWidth: 500,
-                quality: 1,
+                quality: 0.8,
             },
             (response: ImagePickerResponse) => {
                 if (response.didCancel) {
                     return;
                 } else if (response.errorCode) {
                     Alert.alert("Error", response.errorMessage || "Failed to pick image");
+                } else if (response.assets && response.assets[0].base64) {
+                    const dataUri = `data:${response.assets[0].type};base64,${response.assets[0].base64}`;
+                    setImage(dataUri);
                 } else if (response.assets && response.assets[0].uri) {
-                    const asset = response.assets[0];
-                    if (asset.base64 && asset.type) {
-                        const dataUri = `data:${asset.type};base64,${asset.base64}`;
-                        setImage(dataUri);
-                    } else {
-                        setImage(asset.uri);
-                    }
+                    setImage(response.assets[0].uri);
                 }
             }
         );
     };
 
     const toggleEdit = async () => {
+        if (!token || token === 'guest_token') {
+            requireAuth(navigation, 'Profile');
+            return;
+        }
         if (isEditing) {
             setSaving(true);
             try {
@@ -151,23 +193,37 @@ export default function ProfileScreen() {
                     }
                 }
 
-                const response = await api.put('/user/profile', {
+                const payload: any = {
                     name,
                     contactNo: contact,
                     profilePhoto: profilePhotoUrl
-                });
+                };
+
+                if (user?.role === 'BOUNCER' || user?.role === 'GUNMAN') {
+                    payload.bouncerProfile = { upiId };
+                }
+
+                const response = await api.put('/user/profile', payload);
 
                 if (response.data && response.data.user) {
                     updateUser(response.data.user);
                     if (pendingRoute) {
                         consumePendingRoute(navigation);
                     } else {
-                        Alert.alert("Profile Saved", "Client details updated.");
+                        Alert.alert("Profile Saved", "Your profile details have been updated.");
                     }
                 }
             } catch (error: any) {
                 console.error("Save profile error", error);
-                Alert.alert("Error", error.response?.data?.error || error.message || "Failed to save profile");
+                const errorMsg = error.response?.data?.error || error.message;
+                if (errorMsg === 'Invalid token.') {
+                    Alert.alert("Session Expired", "Your session has expired. Please log in again to save changes.", [
+                        { text: "Log In", onPress: () => requireAuth(navigation, 'Profile') },
+                        { text: "Cancel", style: "cancel" }
+                    ]);
+                } else {
+                    Alert.alert("Error", errorMsg || "Failed to save profile");
+                }
                 setSaving(false);
                 return;
             } finally {
@@ -177,79 +233,126 @@ export default function ProfileScreen() {
         setIsEditing(!isEditing);
     };
 
+    const BG = '#121214';
+    const CARD_BG = '#1A1A1E';
+    const GOLD = '#FFD700';
+    const BORDER = 'rgba(255,255,255,0.08)';
+
+    const cleanDisplayName = (name || user?.name || 'Client User').replace(/\s+\d{10,}$/, '');
+
     return (
-        <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
-            <View style={{ backgroundColor: '#1E1E1E' }}>
+        <SafeAreaView style={styles.container}>
+            <View style={{ backgroundColor: '#0A0A0A' }}>
                 <View style={styles.header}>
-                    <Text style={styles.headerTitle}>
-                        {user?.role === 'BOUNCER' || user?.role === 'GUNMAN' ? 'Security Profile' : 'Client Profile'}
-                    </Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        {navigation.canGoBack() && (
+                            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtnHeader}>
+                                <Ionicons name="chevron-back" size={22} color="#fff" />
+                            </TouchableOpacity>
+                        )}
+                        <Text style={styles.headerTitle}>
+                            {user?.role === 'BOUNCER' || user?.role === 'GUNMAN' ? 'Security Profile' : 'Client Profile'}
+                        </Text>
+                    </View>
+
+                    {isEditing ? (
+                        <TouchableOpacity style={styles.saveHeaderBtn} onPress={toggleEdit} disabled={saving}>
+                            {saving ? <ActivityIndicator size="small" color="#000" /> : <Text style={styles.saveHeaderBtnText}>Save</Text>}
+                        </TouchableOpacity>
+                    ) : (
+                        <TouchableOpacity style={styles.editHeaderBtn} onPress={toggleEdit}>
+                            <Ionicons name="create-outline" size={18} color="#FFD700" />
+                        </TouchableOpacity>
+                    )}
+
                 </View>
             </View>
 
             <ScrollView
-                style={{ flex: 1, backgroundColor: '#0F0F0F' }}
+                style={{ flex: 1, backgroundColor: BG }}
                 contentContainerStyle={styles.scrollContent}
                 showsVerticalScrollIndicator={false}
             >
 
-                {/* Profile Card */}
-                <View style={[styles.card, styles.profileCard]}>
-                    <TouchableOpacity onPress={pickImage} disabled={!isEditing} style={styles.avatarContainer}>
-                        {image ? (
-                            <Image source={{ uri: image }} style={styles.avatar} />
-                        ) : (
-                            <View style={[styles.avatar, styles.placeholderAvatar]}>
-                                <Text style={styles.avatarText}>
-                                    {name ? name.charAt(0).toUpperCase() : 'C'}
-                                </Text>
+                {/* Premium Profile Card */}
+                <View style={styles.premiumProfileCard}>
+                    <View style={styles.profileHeaderLayout}>
+                        <TouchableOpacity onPress={pickImage} disabled={!isEditing} style={styles.avatarContainer}>
+                            {image || user?.profilePhoto ? (
+                                <Image source={{ uri: image || user?.profilePhoto }} style={styles.avatar} />
+                            ) : (
+                                <View style={[styles.avatar, styles.placeholderAvatar]}>
+                                    <Text style={styles.avatarText}>
+                                        {cleanDisplayName ? cleanDisplayName.charAt(0).toUpperCase() : 'C'}
+                                    </Text>
+                                </View>
+                            )}
+                            {isEditing && (
+                                <View style={styles.editIconBadge}>
+                                    <Ionicons name="camera" size={14} color="#000" />
+                                </View>
+                            )}
+                        </TouchableOpacity>
+
+                        <View style={styles.profileInfoLayout}>
+                            {isEditing ? (
+                                <TextInput
+                                    style={styles.userNameInput}
+                                    value={name}
+                                    onChangeText={setName}
+                                    placeholder="Full Name"
+                                    placeholderTextColor="#666"
+                                />
+                            ) : (
+                                <Text style={styles.userName}>{cleanDisplayName}</Text>
+                            )}
+                            <Text style={styles.userEmail}>{user?.email || 'user@example.com'}</Text>
+
+
+                            {/* Verification Badge */}
+                            <View style={[styles.verificationBadge, styles.verificationApprovedBadge]}>
+                                <MaterialCommunityIcons name="check-decagram" size={14} color="#000" />
+                                <Text style={styles.verificationText}>Verified Client</Text>
                             </View>
-                        )}
-                        {isEditing && (
-                            <View style={styles.editIconBadge}>
-                                <Ionicons name="camera" size={14} color="#000" />
-                            </View>
-                        )}
-                    </TouchableOpacity>
-
-                    {isEditing ? (
-                        <TextInput
-                            style={[styles.userNameInput]}
-                            value={name}
-                            onChangeText={setName}
-                            placeholder="Client Name"
-                            placeholderTextColor="#666"
-                        />
-                    ) : (
-                        <Text style={styles.userName}>{name}</Text>
-                    )}
-
-                    <Text style={styles.userEmail}>{user?.email || 'client@company.com'}</Text>
-
-                    {/* Contact Number */}
-                    <View style={styles.contactContainer}>
-                        {isEditing ? (
-                            <TextInput
-                                style={styles.contactInput}
-                                value={contact}
-                                onChangeText={setContact}
-                                placeholder="Contact Number"
-                                placeholderTextColor="#666"
-                                keyboardType="phone-pad"
-                            />
-                        ) : (
-                            <Text style={styles.contactText}>{contact || 'Contact Unavailable'}</Text>
-                        )}
-                    </View>
-
-                    {/* Location Info */}
-                    <View style={styles.statsRow}>
-                        <View style={styles.statInputGroup}>
-                            <Text style={styles.label}>Location</Text>
-                            <Text style={styles.statValue}>{locationName}</Text>
                         </View>
                     </View>
 
+                    <View style={styles.dividerHorizontal} />
+
+                    {/* Contact Number & Stats Row */}
+                    <View style={styles.statsRow}>
+                        <View style={styles.statInputGroup}>
+                            <Text style={styles.label}>Contact Number</Text>
+                            {isEditing ? (
+                                <TextInput
+                                    style={styles.input}
+                                    value={contact}
+                                    onChangeText={setContact}
+                                    placeholder="Contact"
+                                    placeholderTextColor="#666"
+                                    keyboardType="phone-pad"
+                                />
+                            ) : (
+                                <Text style={styles.statValue}>{contact || 'Not Provided'}</Text>
+                            )}
+                        </View>
+
+                        <View style={styles.dividerVertical} />
+
+                        <View style={styles.statInputGroup}>
+                            <Text style={styles.label}>Location</Text>
+                            <Text style={styles.statValue} numberOfLines={1}>{locationName}</Text>
+                        </View>
+
+                        <View style={styles.dividerVertical} />
+
+                        <View style={styles.statInputGroup}>
+                            <Text style={styles.label}>Status</Text>
+                            <Text style={[styles.statValue, { color: GOLD }]}>VIP Active</Text>
+                        </View>
+                    </View>
+
+                    {/* Action Button */}
                     <TouchableOpacity
                         style={[styles.actionBtn, isEditing ? styles.saveBtn : styles.editBtn]}
                         onPress={() => {
@@ -262,24 +365,27 @@ export default function ProfileScreen() {
                         disabled={saving}
                     >
                         {saving ? (
-                            <ActivityIndicator color={isEditing ? "#000" : "#fff"} />
+                            <ActivityIndicator color={isEditing ? "#000" : GOLD} />
                         ) : (
-                            <Text style={[styles.btnText, isEditing && styles.saveBtnText]}>
-                                {isEditing ? 'Save Details' : 'Edit Profile'}
+                            <Text style={[styles.btnText, isEditing ? styles.saveBtnText : styles.editBtnText]}>
+                                {isEditing ? 'Save Profile Details' : 'Edit Profile'}
                             </Text>
                         )}
                     </TouchableOpacity>
                 </View>
 
-                {/* Membership */}
-                {/* Membership - Client Only */}
+                {/* Membership Plan Card */}
                 {user?.role !== 'BOUNCER' && user?.role !== 'GUNMAN' && (
                     <View style={styles.card}>
-                        <Text style={styles.cardTitle}>Membership Plan</Text>
+                        <View style={styles.cardHeaderRow}>
+                            <MaterialCommunityIcons name="shield-crown" size={20} color={GOLD} />
+                            <Text style={styles.cardTitle}>Membership Plan</Text>
+                        </View>
                         <Text style={styles.planName}>{membership.name}</Text>
-                        <Text style={styles.renewText}>Valid until: {membership.renews}</Text>
+                        <Text style={styles.renewText}>Valid through: {membership.renews}</Text>
 
                         <View style={styles.activeBadge}>
+                            <View style={styles.greenDot} />
                             <Text style={styles.activeText}>{membership.status}</Text>
                         </View>
 
@@ -287,19 +393,19 @@ export default function ProfileScreen() {
                             style={styles.manageBtn}
                             onPress={() => requireAuth(navigation, 'Profile')}
                         >
-                            <Text style={styles.manageBtnText}>Upgrade Plan</Text>
+                            <Text style={styles.manageBtnText}>Upgrade Security Plan</Text>
                         </TouchableOpacity>
                     </View>
                 )}
 
-                {/* Hiring Preferences - Client Only */}
+                {/* Hiring Preferences Card */}
                 {user?.role !== 'BOUNCER' && user?.role !== 'GUNMAN' && (
                     <View style={styles.card}>
                         <Text style={styles.cardTitle}>Hiring Preferences</Text>
                         <View style={styles.prefGrid}>
                             {preferences.map((pref, index) => (
                                 <View key={index} style={styles.prefPill}>
-                                    <MaterialCommunityIcons name={pref.icon as any} size={16} color="#ccc" />
+                                    <MaterialCommunityIcons name={pref.icon as any} size={15} color={GOLD} />
                                     <Text style={styles.prefText}>{pref.label}</Text>
                                 </View>
                             ))}
@@ -311,51 +417,58 @@ export default function ProfileScreen() {
                 <View style={styles.menuContainer}>
                     <TouchableOpacity
                         style={styles.menuItem}
-                        onPress={() => requireAuth(navigation, 'PaymentScreen', {
-                            bouncerId: 'setup-only',
-                            date: new Date().toISOString().split('T')[0],
-                            time: '00:00',
-                            location: 'Profile Setup',
-                            latitude: null,
-                            longitude: null,
-                            duration: 0,
-                            totalPrice: 0,
-                            package: 'SINGLE_SHIFT',
-                            notes: 'Payment Method Setup Only'
-                        })}
+                        onPress={() => {
+                            if (user?.role === 'BOUNCER' || user?.role === 'GUNMAN') {
+                                Alert.alert('Payment Profile', `Registered UPI ID: ${user?.bouncerProfile?.upiId || 'Not Configured'}`);
+                            } else {
+                                Alert.alert('Payment Methods', 'Manage your cards, UPI, and payment methods for instant guard bookings.');
+                            }
+                        }}
                     >
                         <View style={styles.menuLeft}>
-                            <Ionicons name="card-outline" size={22} color="#ccc" />
+                            <Ionicons name="card-outline" size={20} color="#ccc" />
                             <Text style={styles.menuText}>Payment Methods</Text>
                         </View>
-                        <Ionicons name="chevron-forward" size={20} color="#666" />
+                        <Ionicons name="chevron-forward" size={18} color="#666" />
                     </TouchableOpacity>
 
-                    <TouchableOpacity
-                        style={styles.menuItem}
-                        onPress={() => requireAuth(navigation, 'Profile')}
-                    >
+                    <TouchableOpacity style={styles.menuItem} onPress={handleLocationPermissionPress}>
                         <View style={styles.menuLeft}>
-                            <Ionicons name="shield-checkmark-outline" size={22} color="#ccc" />
-                            <Text style={styles.menuText}>Verification Status</Text>
+                            <Ionicons name="location-outline" size={20} color="#ccc" />
+                            <Text style={styles.menuText}>Location Permission</Text>
                         </View>
-                        <Ionicons name="chevron-forward" size={20} color="#666" />
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                            <Text style={{
+                                color: locationPermissionStatus === 'Granted' ? '#4CD964' : '#FF3B30',
+                                marginRight: 8,
+                                fontSize: 12,
+                                fontWeight: '600'
+                            }}>
+                                {locationPermissionStatus}
+                            </Text>
+                            <Ionicons name="chevron-forward" size={18} color="#666" />
+                        </View>
                     </TouchableOpacity>
 
-                    <TouchableOpacity
-                        style={styles.menuItem}
-                        onPress={() => navigation.navigate('ContactUs')}
-                    >
+                    <TouchableOpacity style={styles.menuItem} onPress={toggleTheme}>
                         <View style={styles.menuLeft}>
-                            <Ionicons name="chatbubbles-outline" size={22} color="#ccc" />
-                            <Text style={styles.menuText}>Contact Us</Text>
+                            <Ionicons name={theme === 'dark' ? "moon-outline" : "sunny-outline"} size={20} color="#ccc" />
+                            <Text style={styles.menuText}>{theme === 'dark' ? 'Dark Mode' : 'Light Mode'}</Text>
                         </View>
-                        <Ionicons name="chevron-forward" size={20} color="#666" />
+                        <Ionicons name="color-palette-outline" size={18} color="#666" />
+                    </TouchableOpacity>
+
+                    <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('ContactUs')}>
+                        <View style={styles.menuLeft}>
+                            <Ionicons name="chatbubbles-outline" size={20} color="#ccc" />
+                            <Text style={styles.menuText}>Contact Support</Text>
+                        </View>
+                        <Ionicons name="chevron-forward" size={18} color="#666" />
                     </TouchableOpacity>
 
                     <TouchableOpacity style={[styles.menuItem, { borderBottomWidth: 0 }]} onPress={logout}>
                         <View style={styles.menuLeft}>
-                            <Ionicons name="log-out-outline" size={22} color="#FF3B30" />
+                            <Ionicons name="log-out-outline" size={20} color="#FF3B30" />
                             <Text style={[styles.menuText, { color: '#FF3B30' }]}>Logout</Text>
                         </View>
                     </TouchableOpacity>
@@ -368,256 +481,322 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#1E1E1E', // Match header color for top safe area
+        backgroundColor: '#121214',
     },
     header: {
-        height: 50,
-        justifyContent: 'center',
+        flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#1E1E1E',
+        justifyContent: 'space-between',
+        paddingHorizontal: 20,
+        paddingVertical: 14,
+        backgroundColor: '#0A0A0A',
         borderBottomWidth: 1,
-        borderBottomColor: '#333',
+        borderBottomColor: 'rgba(255,255,255,0.06)',
     },
     headerTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
+        fontSize: 22,
+        fontWeight: '800',
         color: '#fff',
+        letterSpacing: -0.5,
     },
-    scrollContent: {
-        padding: 20,
-    },
-    card: {
-        backgroundColor: '#1E1E1E',
+    backBtnHeader: {
+        width: 32,
+        height: 32,
         borderRadius: 16,
-        padding: 20,
-        marginBottom: 20,
-        borderWidth: 1,
-        borderColor: '#333',
+        backgroundColor: 'rgba(255,255,255,0.06)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 10,
     },
-    profileCard: {
+    editHeaderBtn: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        backgroundColor: '#1A1A1E',
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: 'rgba(255,215,0,0.3)',
+    },
+    saveHeaderBtn: {
+        backgroundColor: '#FFD700',
+        paddingHorizontal: 16,
+        paddingVertical: 7,
+        borderRadius: 14,
+    },
+    saveHeaderBtnText: {
+        color: '#000',
+        fontSize: 13,
+        fontWeight: '800',
+    },
+
+    scrollContent: {
+        padding: 16,
+        paddingBottom: 140,
+    },
+    premiumProfileCard: {
+
+        backgroundColor: '#1A1A1E',
+        borderRadius: 20,
+        padding: 18,
+        marginBottom: 16,
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.09)',
+        elevation: 4,
+    },
+    profileHeaderLayout: {
+        flexDirection: 'row',
         alignItems: 'center',
     },
     avatarContainer: {
         position: 'relative',
-        marginBottom: 16,
+        marginRight: 16,
     },
     avatar: {
-        width: 100,
-        height: 100,
-        borderRadius: 50,
+        width: 76,
+        height: 76,
+        borderRadius: 38,
         borderWidth: 2,
-        borderColor: '#FFD700',
+        borderColor: '#D4AF37',
     },
     placeholderAvatar: {
-        backgroundColor: '#333',
+        backgroundColor: '#2A2A2E',
         justifyContent: 'center',
         alignItems: 'center',
     },
     avatarText: {
-        fontSize: 36,
+        fontSize: 28,
         fontWeight: 'bold',
-        color: '#FFD700',
+        color: '#D4AF37',
     },
     editIconBadge: {
         position: 'absolute',
         bottom: 0,
         right: 0,
-        backgroundColor: '#FFD700',
-        width: 28,
-        height: 28,
-        borderRadius: 14,
+        backgroundColor: '#D4AF37',
+        width: 24,
+        height: 24,
+        borderRadius: 12,
         justifyContent: 'center',
         alignItems: 'center',
     },
-    userName: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: '#fff',
-        marginBottom: 4,
+    profileInfoLayout: {
+        flex: 1,
     },
-    userEmail: {
-        fontSize: 14,
-        color: '#888',
-        marginBottom: 20,
+    userName: {
+        fontSize: 18,
+        fontWeight: '700',
+        color: '#fff',
+        marginBottom: 2,
     },
     userNameInput: {
-        fontSize: 20,
-        fontWeight: 'bold',
+        fontSize: 18,
+        fontWeight: '700',
         color: '#fff',
         marginBottom: 4,
         borderBottomWidth: 1,
-        borderBottomColor: '#FFD700',
+        borderBottomColor: '#D4AF37',
         paddingVertical: 2,
-        minWidth: 150,
-        textAlign: 'center',
     },
-    contactContainer: {
-        marginBottom: 20,
+    userEmail: {
+        fontSize: 13,
+        color: '#888',
+        marginBottom: 8,
+    },
+    verificationBadge: {
+        flexDirection: 'row',
         alignItems: 'center',
+        paddingHorizontal: 10,
+        paddingVertical: 4,
+        borderRadius: 12,
+        alignSelf: 'flex-start',
+        gap: 4,
     },
-    contactText: {
-        fontSize: 16,
-        color: '#ddd',
-        fontWeight: '500',
+    verificationApprovedBadge: {
+        backgroundColor: '#D4AF37',
     },
-    contactInput: {
-        fontSize: 16,
-        color: '#fff',
-        borderBottomWidth: 1,
-        borderBottomColor: '#FFD700',
-        paddingVertical: 2,
-        minWidth: 120,
-        textAlign: 'center',
+    verificationText: {
+        fontSize: 11,
+        fontWeight: '700',
+        color: '#000',
+    },
+    dividerHorizontal: {
+        height: 1,
+        backgroundColor: 'rgba(255,255,255,0.07)',
+        marginVertical: 16,
     },
     statsRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 20,
-        width: '100%',
-        justifyContent: 'center',
+        justifyContent: 'space-between',
+        marginBottom: 16,
     },
     statInputGroup: {
+        flex: 1,
         alignItems: 'center',
-        minWidth: 100,
     },
     label: {
-        fontSize: 12,
-        color: '#888',
+        fontSize: 11,
+        color: '#777',
         marginBottom: 4,
     },
     statValue: {
-        fontSize: 16,
+        fontSize: 13,
         fontWeight: '600',
         color: '#fff',
+        textAlign: 'center',
     },
     input: {
         borderBottomWidth: 1,
-        borderBottomColor: '#FFD700',
-        minWidth: 80,
+        borderBottomColor: '#D4AF37',
+        width: '100%',
         textAlign: 'center',
-        fontSize: 16,
+        fontSize: 13,
         color: '#fff',
         paddingVertical: 2,
     },
-    divider: {
+    dividerVertical: {
         width: 1,
-        height: 30,
-        backgroundColor: '#444',
-        marginHorizontal: 20,
+        height: 24,
+        backgroundColor: 'rgba(255,255,255,0.08)',
     },
     actionBtn: {
         width: '100%',
         paddingVertical: 12,
-        borderRadius: 10,
+        borderRadius: 12,
         alignItems: 'center',
+        justifyContent: 'center',
         borderWidth: 1,
     },
     editBtn: {
-        borderColor: '#FFD700',
-        backgroundColor: 'transparent',
+        borderColor: '#D4AF37',
+        backgroundColor: 'rgba(212, 175, 55, 0.08)',
     },
     saveBtn: {
-        borderColor: '#FFD700',
-        backgroundColor: '#FFD700',
+        borderColor: '#D4AF37',
+        backgroundColor: '#D4AF37',
     },
     btnText: {
         fontSize: 14,
-        fontWeight: '600',
-        color: '#FFD700',
+        fontWeight: '700',
+    },
+    editBtnText: {
+        color: '#D4AF37',
     },
     saveBtnText: {
         color: '#000',
     },
-    // Subscription
+    card: {
+        backgroundColor: '#1A1A1E',
+        borderRadius: 18,
+        padding: 16,
+        marginBottom: 16,
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.08)',
+    },
+    cardHeaderRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+        marginBottom: 8,
+    },
     cardTitle: {
-        fontSize: 16,
-        fontWeight: 'bold',
+        fontSize: 15,
+        fontWeight: '700',
         color: '#fff',
-        marginBottom: 12,
+        marginBottom: 10,
     },
     planName: {
         fontSize: 16,
-        fontWeight: '600',
-        color: '#FFD700',
+        fontWeight: '700',
+        color: '#D4AF37',
         marginBottom: 4,
     },
     renewText: {
-        fontSize: 13,
+        fontSize: 12,
         color: '#888',
         marginBottom: 12,
     },
     activeBadge: {
-        backgroundColor: 'rgba(255, 215, 0, 0.1)',
-        paddingHorizontal: 12,
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: 'rgba(212, 175, 55, 0.12)',
+        paddingHorizontal: 10,
         paddingVertical: 4,
-        borderRadius: 12,
+        borderRadius: 10,
         alignSelf: 'flex-start',
-        marginBottom: 16,
+        marginBottom: 14,
+        gap: 6,
         borderWidth: 1,
-        borderColor: '#FFD700',
+        borderColor: 'rgba(212, 175, 55, 0.3)',
+    },
+    greenDot: {
+        width: 6,
+        height: 6,
+        borderRadius: 3,
+        backgroundColor: '#4ade80',
     },
     activeText: {
-        fontSize: 12,
-        color: '#FFD700',
-        fontWeight: '600',
+        fontSize: 11,
+        color: '#D4AF37',
+        fontWeight: '700',
     },
     manageBtn: {
-        backgroundColor: '#333',
-        paddingVertical: 12,
+        backgroundColor: '#25252A',
+        paddingVertical: 10,
         borderRadius: 10,
         alignItems: 'center',
     },
     manageBtnText: {
         color: '#fff',
-        fontSize: 14,
+        fontSize: 13,
         fontWeight: '600',
     },
-    // Preferences
     prefGrid: {
         flexDirection: 'row',
         flexWrap: 'wrap',
+        gap: 8,
     },
     prefPill: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#2A2A2A',
+        backgroundColor: '#25252A',
         paddingHorizontal: 12,
         paddingVertical: 8,
-        borderRadius: 20,
-        marginRight: 10,
-        marginBottom: 10,
+        borderRadius: 16,
+        gap: 6,
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.05)',
     },
     prefText: {
         fontSize: 12,
-        color: '#ddd',
-        marginLeft: 6,
+        color: '#ccc',
         fontWeight: '500',
     },
-    // Menu
     menuContainer: {
-        backgroundColor: '#1E1E1E',
-        borderRadius: 16,
-        paddingHorizontal: 20,
+        backgroundColor: '#1A1A1E',
+        borderRadius: 18,
+        paddingHorizontal: 16,
         borderWidth: 1,
-        borderColor: '#333',
-        marginBottom: 20,
+        borderColor: 'rgba(255,255,255,0.08)',
+        marginBottom: 16,
     },
     menuItem: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        paddingVertical: 16,
+        paddingVertical: 15,
         borderBottomWidth: 1,
-        borderBottomColor: '#333',
+        borderBottomColor: 'rgba(255,255,255,0.06)',
     },
     menuLeft: {
         flexDirection: 'row',
         alignItems: 'center',
+        gap: 12,
     },
     menuText: {
-        fontSize: 15,
+        fontSize: 14,
         color: '#ddd',
-        marginLeft: 12,
         fontWeight: '500',
     },
 });

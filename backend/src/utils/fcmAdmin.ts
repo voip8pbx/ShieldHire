@@ -7,12 +7,36 @@ import { fileURLToPath } from 'url';
 // firebase-admin auto-detects it has already been initialised on subsequent imports.
 
 if (!admin.apps.length) {
-  const serviceAccount = require(path.join(__dirname, '../../fcm/serviceAccountKey.json'));
+  const projectId = process.env.FIREBASE_PROJECT_ID;
+  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+  const privateKey = process.env.FIREBASE_PRIVATE_KEY;
 
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-    databaseURL: `https://${serviceAccount.project_id}-default-rtdb.firebaseio.com`,
-  });
+  if (projectId && clientEmail && privateKey) {
+    console.log('[FCM] Initializing Firebase Admin SDK via Environment Variables');
+    admin.initializeApp({
+      credential: admin.credential.cert({
+        projectId,
+        clientEmail,
+        privateKey: privateKey.replace(/\\n/g, '\n'),
+      }),
+      databaseURL: `https://${projectId}-default-rtdb.firebaseio.com`,
+    });
+  } else {
+    try {
+      console.log('[FCM] Attempting to load Firebase credentials from serviceAccountKey.json');
+      const serviceAccount = require(path.join(__dirname, '../../fcm/serviceAccountKey.json'));
+      admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount),
+        databaseURL: `https://${serviceAccount.project_id}-default-rtdb.firebaseio.com`,
+      });
+    } catch (e: any) {
+      console.warn('[FCM WARNING] Firebase service account credentials could not be loaded (env vars or local JSON missing). FCM notifications will fail to send at runtime.', e.message);
+      // Initialize with project ID only to avoid crashing startup
+      admin.initializeApp({
+        projectId: projectId || 'sheildhire',
+      });
+    }
+  }
 }
 
 /**

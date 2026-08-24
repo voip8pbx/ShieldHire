@@ -94,10 +94,8 @@ export default function BookingFlowScreen({ navigation, route }: Props) {
         const calculatedPrice = price * (hours / 4) * (hours > 6 ? 1.2 : 1); // Dynamic calculation
 
         setLoading(true);
-        // Simulate a brief loading state before navigating
-        setTimeout(() => {
-            setLoading(false);
-            navigation.navigate('PaymentScreen', {
+        try {
+            const response = await api.post('/bookings', {
                 bouncerId,
                 date: selectedDate,
                 time: selectedTime,
@@ -109,7 +107,19 @@ export default function BookingFlowScreen({ navigation, route }: Props) {
                 package: bookingPackage,
                 notes: notes.trim() || null,
             });
-        }, 500);
+
+            // Redirect client directly to the Chat screen for this booking request
+            if (response.data && response.data.id) {
+                (navigation as any).navigate('Chat', { bookingId: response.data.id });
+            } else {
+                throw new Error('Invalid response from booking service');
+            }
+        } catch (error: any) {
+            console.error('Booking request failed:', error);
+            Alert.alert('Hiring Request Failed', error.response?.data?.error || 'Failed to submit booking request. Please try again.');
+        } finally {
+            setLoading(false);
+        }
     };
 
     const incrementHours = () => setHours(h => Math.min(h + 1, 24));
@@ -405,13 +415,13 @@ const styles = StyleSheet.create({
         paddingVertical: 5,
     },
     timeSlot: {
-        backgroundColor: '#1E1E1E',
+        backgroundColor: '#121214',
         paddingHorizontal: 16,
         paddingVertical: 12,
         borderRadius: 10,
         marginRight: 10,
         borderWidth: 1,
-        borderColor: '#333',
+        borderColor: 'rgba(255, 255, 255, 0.04)',
     },
     activeTimeSlot: {
         backgroundColor: '#FFD700',
@@ -419,7 +429,7 @@ const styles = StyleSheet.create({
     },
     timeText: {
         fontSize: 14,
-        color: '#ccc',
+        color: '#8E8E93',
         fontWeight: '500',
     },
     activeTimeText: {
@@ -431,17 +441,17 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        backgroundColor: '#1E1E1E',
+        backgroundColor: '#121214',
         borderRadius: 16,
         padding: 6,
         borderWidth: 1,
-        borderColor: '#333',
+        borderColor: 'rgba(255, 255, 255, 0.04)',
     },
     counterBtn: {
         width: 50,
         height: 50,
         borderRadius: 12,
-        backgroundColor: '#2A2A2A',
+        backgroundColor: '#1E1E22',
         justifyContent: 'center',
         alignItems: 'center',
     },
@@ -462,19 +472,19 @@ const styles = StyleSheet.create({
         bottom: 0,
         left: 0,
         right: 0,
-        backgroundColor: '#1E1E1E',
+        backgroundColor: '#121214',
         paddingHorizontal: 20,
         paddingTop: 15,
-        paddingBottom: Platform.OS === 'ios' ? 24 : 20,
+        paddingBottom: Platform.OS === 'ios' ? 28 : 20,
         borderTopWidth: 1,
-        borderTopColor: '#333',
+        borderTopColor: 'rgba(255, 255, 255, 0.04)',
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
     },
     totalLabel: {
         fontSize: 12,
-        color: '#888',
+        color: '#8E8E93',
         marginBottom: 2,
     },
     totalValue: {
@@ -486,7 +496,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#FFD700',
         paddingVertical: 14,
         paddingHorizontal: 30,
-        borderRadius: 12,
+        borderRadius: 14,
         alignItems: 'center',
         minWidth: 150,
     },
@@ -496,25 +506,25 @@ const styles = StyleSheet.create({
     },
     confirmButtonText: {
         color: '#000',
-        fontSize: 16,
-        fontWeight: 'bold',
+        fontSize: 15,
+        fontWeight: '700',
     },
     input: {
-        backgroundColor: '#1E1E1E',
+        backgroundColor: '#121214',
         borderRadius: 12,
         padding: 15,
         color: '#fff',
         fontSize: 15,
         borderWidth: 1,
-        borderColor: '#333',
+        borderColor: 'rgba(255, 255, 255, 0.04)',
         marginTop: 5,
     },
     predictionsContainer: {
-        backgroundColor: '#1E1E1E',
+        backgroundColor: '#121214',
         borderRadius: 12,
         marginTop: 5,
         borderWidth: 1,
-        borderColor: '#333',
+        borderColor: 'rgba(255, 255, 255, 0.04)',
         maxHeight: 200,
         overflow: 'hidden',
     },
@@ -523,7 +533,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         padding: 15,
         borderBottomWidth: 1,
-        borderBottomColor: '#333',
+        borderBottomColor: 'rgba(255, 255, 255, 0.04)',
     },
     predictionText: {
         color: '#fff',

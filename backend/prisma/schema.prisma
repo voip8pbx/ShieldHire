@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model User {
@@ -33,18 +34,22 @@ model User {
 }
 
 model Client {
-  id           String   @id @default(uuid())
-  userId       String   @unique
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  name         String?
-  contactNo    String?
-  age          Int?
-  gender       String?
-  profilePhoto String?
-  location     String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id                 String    @id @default(uuid())
+  userId             String    @unique
+  user               User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name               String?
+  contactNo          String?
+  age                Int?
+  gender             String?
+  profilePhoto       String?
+  location           String?
+  verificationStatus String    @default("PENDING")
+  rejectionReason    String?
+  verifiedAt         DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
+  @@index([verificationStatus])
   @@map("clients")
 }
 

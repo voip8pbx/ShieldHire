@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import admin from 'firebase-admin';
 import { firebaseAuth } from '../config/firebase';
 import { supabaseAdmin } from '../config/supabase';
 
@@ -19,15 +20,12 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
         return res.status(401).json({ error: 'Access denied. No token provided.' });
     }
 
-    // Allow guest mode bypass
-    if (token === 'guest_token') {
-        req.user = { id: 'guest_123', email: 'client@company.com', name: 'Guest Client', role: 'USER' };
-        return next();
-    }
+
 
     try {
         // ── 1. Try Firebase ID Token first ──────────────────────────────────
         try {
+            if (!admin.apps.length) throw new Error('Firebase not initialized');
             const decoded = await firebaseAuth.verifyIdToken(token);
             const firebaseUid = decoded.uid;
             const email = decoded.email;
@@ -123,7 +121,11 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
         }
 
         // ── 3. Last resort: Legacy custom JWT ──────────────────────────────
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'default_secret');
+        const jwtSecret = process.env.JWT_SECRET;
+        if (!jwtSecret || (process.env.NODE_ENV === 'production' && jwtSecret === 'default_secret')) {
+            throw new Error('FATAL: JWT_SECRET is not configured securely on the server.');
+        }
+        const decoded = jwt.verify(token, jwtSecret);
         req.user = decoded;
         next();
 

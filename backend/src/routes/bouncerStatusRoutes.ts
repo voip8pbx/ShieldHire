@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { supabaseAdmin } from '../config/supabase';
+import { authenticate } from '../middleware/authMiddleware';
 
 const router = Router();
 
@@ -14,10 +15,16 @@ const camelCaseKeys = (obj: any): any => {
     return newObj;
 };
 
-// Get bouncer verification status by userId
-router.get('/status/:userId', async (req: Request, res: Response) => {
+// Get bouncer verification status by userId (Authenticated - Owner or Admin)
+router.get('/status/:userId', authenticate, async (req: Request, res: Response) => {
     try {
         const { userId } = req.params;
+        const requestingUser = (req as any).user;
+
+        // Verify that the user is requesting their own status or is an admin
+        if (requestingUser.id !== userId && requestingUser.role !== 'ADMIN') {
+            return res.status(403).json({ error: 'Access denied. You can only view your own status.' });
+        }
 
         const { data: bouncer, error } = await supabaseAdmin
             .from('bouncers')

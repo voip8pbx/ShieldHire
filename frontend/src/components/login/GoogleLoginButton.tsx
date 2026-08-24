@@ -44,15 +44,15 @@ const styles = StyleSheet.create({
     button: {
         flexDirection: 'row',
         backgroundColor: '#FFFFFF',
-        height: 50,
+        height: 54,
         borderRadius: 14,
         justifyContent: 'center',
         alignItems: 'center',
         shadowColor: '#FFFFFF',
         shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.15,
+        shadowOpacity: 0.1,
         shadowRadius: 12,
-        elevation: 6,
+        elevation: 4,
         marginBottom: 15,
     },
     text: {

@@ -106,10 +106,18 @@ const AnimatedSplashScreen: React.FC<AnimatedSplashScreenProps> = ({ onAnimation
         ).start();
     }, []);
 
-    // When both conditions are met, trigger completion
+    // When both conditions are met, trigger completion (with a 3.5s safety max timeout)
     useEffect(() => {
+        let safetyTimer: NodeJS.Timeout;
+        if (animationsDone) {
+            safetyTimer = setTimeout(() => {
+                console.log('[AnimatedSplashScreen] Max safety timeout reached, dismissing splash screen');
+                onAnimationComplete();
+            }, 3500);
+        }
+
         if (animationsDone && isAppLoaded) {
-            // Optional: Add a slight fade out of the entire splash screen before calling onAnimationComplete
+            if (safetyTimer) clearTimeout(safetyTimer);
             Animated.timing(fadeAnim, {
                 toValue: 0,
                 duration: 300,
@@ -118,7 +126,12 @@ const AnimatedSplashScreen: React.FC<AnimatedSplashScreenProps> = ({ onAnimation
                 onAnimationComplete();
             });
         }
+
+        return () => {
+            if (safetyTimer) clearTimeout(safetyTimer);
+        };
     }, [animationsDone, isAppLoaded, onAnimationComplete, fadeAnim]);
+
 
     return (
         <LinearGradient

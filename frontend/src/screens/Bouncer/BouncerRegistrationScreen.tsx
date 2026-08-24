@@ -10,6 +10,7 @@ import {
     Alert,
     ActivityIndicator,
     StatusBar,
+    Platform,
 } from 'react-native';
 import { AuthContext } from '../../context/AuthContext';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -30,12 +31,13 @@ type Props = {
 
 export default function BouncerRegistrationScreen({ navigation, route }: Props) {
     const { name: initialName, email: initialEmail, photo: initialPhoto } = route.params || {};
-    const { logout, updateUser } = React.useContext(AuthContext);
+    const { logout, updateUser, login } = React.useContext(AuthContext);
 
     const [email, setEmail] = useState(initialEmail || '');
 
     const [name, setName] = useState(initialName || '');
     const [contactNo, setContactNo] = useState('');
+    const [upiId, setUpiId] = useState('');
     const [age, setAge] = useState('');
     const [gender, setGender] = useState<'Male' | 'Female' | 'Other'>('Male');
     const [profilePhoto, setProfilePhoto] = useState<string | null>(initialPhoto || null);
@@ -89,6 +91,10 @@ export default function BouncerRegistrationScreen({ navigation, route }: Props) 
             Alert.alert('Error', 'Please enter a valid contact number');
             return;
         }
+        if (!upiId.trim() || !upiId.includes('@')) {
+            Alert.alert('Error', 'Please enter a valid UPI ID (e.g. name@bank)');
+            return;
+        }
         if (!age || parseInt(age) < 18 || parseInt(age) > 65) {
             Alert.alert('Error', 'Age must be between 18 and 65');
             return;
@@ -131,6 +137,7 @@ export default function BouncerRegistrationScreen({ navigation, route }: Props) 
                 email,
                 name,
                 contactNo,
+                upiId,
                 age: parseInt(age),
                 gender,
                 profilePhoto: finalProfilePhoto,
@@ -147,7 +154,7 @@ export default function BouncerRegistrationScreen({ navigation, route }: Props) 
 
             // Update local user context so navigation updates correctly
             if (response.data && response.data.user) {
-                updateUser(response.data.user);
+                login(response.data.token, response.data.user);
             }
 
             // DO NOT explicitly navigate!
@@ -164,7 +171,7 @@ export default function BouncerRegistrationScreen({ navigation, route }: Props) 
 
     return (
         <View style={styles.container}>
-            <StatusBar barStyle="light-content" backgroundColor="#0F0F0F" />
+            <StatusBar barStyle="light-content" backgroundColor="#121214" />
 
             <ScrollView
                 style={styles.scrollView}
@@ -329,6 +336,23 @@ export default function BouncerRegistrationScreen({ navigation, route }: Props) 
                                 onChangeText={setContactNo}
                                 keyboardType="phone-pad"
                                 maxLength={15}
+                            />
+                        </View>
+                    </View>
+
+                    {/* UPI ID */}
+                    <View style={styles.inputGroup}>
+                        <Text style={styles.label}>UPI ID (for receiving booking payments) *</Text>
+                        <View style={styles.inputContainer}>
+                            <MaterialCommunityIcons name="credit-card-outline" size={20} color="#888" />
+                            <TextInput
+                                style={styles.input}
+                                placeholder="e.g. yourname@upi"
+                                placeholderTextColor="#666"
+                                value={upiId}
+                                onChangeText={setUpiId}
+                                autoCapitalize="none"
+                                autoCorrect={false}
                             />
                         </View>
                     </View>
@@ -503,32 +527,34 @@ export default function BouncerRegistrationScreen({ navigation, route }: Props) 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#0F0F0F',
+        backgroundColor: '#121214',
     },
     scrollView: {
         flex: 1,
     },
     scrollContent: {
-        paddingBottom: 30,
+        paddingBottom: 40,
     },
     header: {
         flexDirection: 'row',
         alignItems: 'center',
         paddingHorizontal: 20,
-        paddingTop: 50,
+        paddingTop: Platform.OS === 'ios' ? 50 : 20,
         paddingBottom: 20,
     },
     backButton: {
         width: 40,
         height: 40,
         borderRadius: 20,
-        backgroundColor: '#1E1E1E',
+        backgroundColor: '#1A1A1E',
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: 15,
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.06)',
     },
     headerTitle: {
-        fontSize: 24,
+        fontSize: 22,
         fontWeight: 'bold',
         color: '#fff',
     },
@@ -552,15 +578,15 @@ const styles = StyleSheet.create({
     photoPlaceholder: {
         width: '100%',
         height: '100%',
-        backgroundColor: '#1E1E1E',
+        backgroundColor: '#1A1A1E',
         borderWidth: 2,
-        borderColor: '#333',
+        borderColor: 'rgba(255, 255, 255, 0.06)',
         borderStyle: 'dashed',
         justifyContent: 'center',
         alignItems: 'center',
     },
     photoPlaceholderText: {
-        color: '#666',
+        color: '#8E8E93',
         fontSize: 12,
         marginTop: 5,
     },
@@ -577,12 +603,12 @@ const styles = StyleSheet.create({
     inputContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#1E1E1E',
+        backgroundColor: '#1A1A1E',
         height: 55,
-        borderRadius: 12,
-        paddingHorizontal: 15,
+        borderRadius: 14,
+        paddingHorizontal: 16,
         borderWidth: 1,
-        borderColor: '#333',
+        borderColor: 'rgba(255, 255, 255, 0.06)',
     },
     input: {
         flex: 1,
@@ -597,20 +623,20 @@ const styles = StyleSheet.create({
     genderButton: {
         flex: 1,
         height: 50,
-        backgroundColor: '#1E1E1E',
-        borderRadius: 12,
+        backgroundColor: '#1A1A1E',
+        borderRadius: 14,
         justifyContent: 'center',
         alignItems: 'center',
         marginHorizontal: 5,
         borderWidth: 1,
-        borderColor: '#333',
+        borderColor: 'rgba(255, 255, 255, 0.06)',
     },
     genderButtonActive: {
         backgroundColor: '#FFD700',
         borderColor: '#FFD700',
     },
     genderButtonText: {
-        color: '#888',
+        color: '#8E8E93',
         fontSize: 16,
         fontWeight: '600',
     },
@@ -619,10 +645,10 @@ const styles = StyleSheet.create({
     },
     uploadButton: {
         height: 150,
-        backgroundColor: '#1E1E1E',
-        borderRadius: 12,
+        backgroundColor: '#1A1A1E',
+        borderRadius: 14,
         borderWidth: 2,
-        borderColor: '#333',
+        borderColor: 'rgba(255, 255, 255, 0.06)',
         borderStyle: 'dashed',
         overflow: 'hidden',
     },
@@ -638,7 +664,7 @@ const styles = StyleSheet.create({
         marginTop: 10,
     },
     uploadSubtext: {
-        color: '#666',
+        color: '#8E8E93',
         fontSize: 12,
         marginTop: 5,
     },
@@ -661,7 +687,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     uploadedText: {
-        color: '#4CAF50',
+        color: '#34C759',
         fontSize: 14,
         fontWeight: '600',
         marginTop: 5,
@@ -678,20 +704,20 @@ const styles = StyleSheet.create({
     toggleButton: {
         flex: 1,
         height: 50,
-        backgroundColor: '#1E1E1E',
-        borderRadius: 12,
+        backgroundColor: '#1A1A1E',
+        borderRadius: 14,
         justifyContent: 'center',
         alignItems: 'center',
         marginHorizontal: 5,
         borderWidth: 1,
-        borderColor: '#333',
+        borderColor: 'rgba(255, 255, 255, 0.06)',
     },
     toggleButtonActive: {
         backgroundColor: '#FFD700',
         borderColor: '#FFD700',
     },
     toggleButtonText: {
-        color: '#888',
+        color: '#8E8E93',
         fontSize: 16,
         fontWeight: '600',
     },
@@ -703,35 +729,35 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         backgroundColor: 'rgba(255, 215, 0, 0.1)',
         padding: 12,
-        borderRadius: 8,
+        borderRadius: 12,
         marginTop: 10,
         borderWidth: 1,
         borderColor: 'rgba(255, 215, 0, 0.3)',
     },
     infoText: {
-        color: '#ccc',
+        color: '#E0E0E0',
         fontSize: 13,
         marginLeft: 8,
         flex: 1,
     },
     submitButton: {
         backgroundColor: '#FFD700',
-        height: 60,
-        borderRadius: 12,
+        height: 55,
+        borderRadius: 14,
         flexDirection: 'row',
         justifyContent: 'center',
         alignItems: 'center',
         marginTop: 20,
         shadowColor: '#FFD700',
         shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
+        shadowOpacity: 0.25,
         shadowRadius: 10,
         elevation: 5,
     },
     submitButtonText: {
         color: '#000',
-        fontSize: 16,
-        fontWeight: '900',
+        fontSize: 15,
+        fontWeight: '700',
         letterSpacing: 1,
         marginRight: 10,
     },

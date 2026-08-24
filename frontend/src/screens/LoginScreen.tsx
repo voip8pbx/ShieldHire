@@ -105,15 +105,6 @@ export default function LoginScreen({ navigation }: Props) {
         }
     };
 
-    const handleBypass = () => {
-        login('guest_token', {
-            id: 'guest_123',
-            email: 'client@company.com',
-            name: 'Guest Client',
-            role: 'USER'
-        });
-    };
-
     const handleBouncerRegistration = async () => {
         setLoading(true);
         suppressAutoLogin();
@@ -122,11 +113,16 @@ export default function LoginScreen({ navigation }: Props) {
             const { firebaseUser, firebaseToken } = await signInWithGoogle(true);
             setAuthToken(firebaseToken);
 
-            const meResponse = await api.get('/auth/me');
-            const existingUser = meResponse.data.user;
+            const response = await api.post('/auth/google', {
+                email: firebaseUser.email,
+                name: firebaseUser.displayName || firebaseUser.email?.split('@')[0],
+                googleId: firebaseUser.uid,
+            });
+            const existingUser = response.data.user;
+            const customToken = response.data.token;
 
             if (!existingUser.bouncerProfile && existingUser.role === 'USER') {
-                startBouncerRegistration(firebaseToken, existingUser, {
+                startBouncerRegistration(customToken, existingUser, {
                     name: firebaseUser.displayName || existingUser.name || '',
                     email: firebaseUser.email || '',
                     photo: firebaseUser.photoURL || '',
@@ -134,7 +130,7 @@ export default function LoginScreen({ navigation }: Props) {
                 return;
             }
 
-            login(firebaseToken, existingUser);
+            login(customToken, existingUser);
         } catch (error: any) {
             resumeAutoLogin();
             if (error.code === statusCodes.SIGN_IN_CANCELLED || error.code === '12501') {
@@ -159,7 +155,7 @@ export default function LoginScreen({ navigation }: Props) {
                 googleId: firebaseUser.uid,
             });
 
-            login(firebaseToken, response.data.user);
+            login(response.data.token, response.data.user);
         } catch (error: any) {
             if (error.code === statusCodes.SIGN_IN_CANCELLED || error.code === '12501') {
                 return; 
@@ -235,10 +231,6 @@ export default function LoginScreen({ navigation }: Props) {
                                                     New to ShieldHire? <Text style={styles.linkTextBold}>Create an account</Text>
                                                 </Text>
                                             </TouchableOpacity>
-
-                                            <TouchableOpacity onPress={handleBypass} style={styles.guestLinkContainer}>
-                                                <Text style={styles.guestText}>Continue as Guest</Text>
-                                            </TouchableOpacity>
                                         </>
                                     ) : (
                                         <>
@@ -285,10 +277,10 @@ const styles = StyleSheet.create({
     dividerLine: {
         flex: 1,
         height: 1,
-        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+        backgroundColor: 'rgba(255, 255, 255, 0.04)',
     },
     dividerText: {
-        color: '#666',
+        color: '#8E8E93',
         paddingHorizontal: 10,
         fontSize: 10,
         fontWeight: '600',
@@ -296,21 +288,21 @@ const styles = StyleSheet.create({
     },
     primaryButton: {
         backgroundColor: '#FFD700',
-        height: 50,
+        height: 54,
         borderRadius: 14,
         justifyContent: 'center',
         alignItems: 'center',
         marginTop: 10,
         shadowColor: '#FFD700',
         shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 10,
-        elevation: 5,
+        shadowOpacity: 0.2,
+        shadowRadius: 8,
+        elevation: 4,
     },
     primaryButtonText: {
         color: '#000',
         fontSize: 15,
-        fontWeight: '900',
+        fontWeight: '700',
         letterSpacing: 1.5,
     },
     footerLinkContainer: {
@@ -318,20 +310,11 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     linkText: {
-        color: '#888',
+        color: '#8E8E93',
         fontSize: 13,
     },
     linkTextBold: {
         color: '#FFD700',
         fontWeight: 'bold',
-    },
-    guestLinkContainer: {
-        marginTop: 15,
-        alignItems: 'center',
-    },
-    guestText: {
-        color: '#555',
-        fontSize: 13,
-        textDecorationLine: 'underline',
     }
 });

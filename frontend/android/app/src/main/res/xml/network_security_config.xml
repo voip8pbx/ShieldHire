@@ -18,8 +18,8 @@
         <domain includeSubdomains="true">192.168.0.0</domain>
     </domain-config>
 
-    <!-- Base config: allow cleartext for dev flexibility -->
-    <base-config cleartextTrafficPermitted="true">
+    <!-- Base config: enforce HTTPS (cleartextTrafficPermitted=false) for production security -->
+    <base-config cleartextTrafficPermitted="false">
         <trust-anchors>
             <certificates src="system" />
         </trust-anchors>

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 
 const BACKEND_API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
@@ -9,10 +10,18 @@ export async function PUT(
     try {
         const { id } = await context.params;
 
+        const cookieStore = await cookies();
+        const token = cookieStore.get('admin_token')?.value;
+
+        if (!token) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
         const response = await fetch(`${BACKEND_API_URL}/alerts/${id}/acknowledge`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
             },
         });
 

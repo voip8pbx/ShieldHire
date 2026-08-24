@@ -41,6 +41,7 @@ export default function BouncerSurveyScreen({ navigation }: Props) {
     const [editGender, setEditGender] = useState(user?.bouncerProfile?.gender || '');
 
     const [bio, setBio] = useState(user?.bouncerProfile?.bio || '');
+    const [upiId, setUpiId] = useState(user?.bouncerProfile?.upiId || '');
     const [skills, setSkills] = useState<string[]>(user?.bouncerProfile?.skills || []);
     const [experience, setExperience] = useState(user?.bouncerProfile?.experience?.toString() || '');
     const [galleryImages, setGalleryImages] = useState<string[]>(user?.bouncerProfile?.gallery || []);
@@ -71,6 +72,7 @@ export default function BouncerSurveyScreen({ navigation }: Props) {
                     if (freshUser.bouncerProfile) {
                         const bp = freshUser.bouncerProfile;
                         setBio(bp.bio || '');
+                        setUpiId(bp.upiId || '');
                         setSkills(bp.skills || []);
                         setExperience(bp.experience?.toString() || '');
                         setGalleryImages(bp.gallery || []);
@@ -98,6 +100,7 @@ export default function BouncerSurveyScreen({ navigation }: Props) {
                 const bp = user.bouncerProfile;
                 // Only update if current state is empty to avoid overwriting user edits
                 if (!bio && bp.bio) setBio(bp.bio);
+                if (!upiId && bp.upiId) setUpiId(bp.upiId);
                 if (skills.length === 0 && bp.skills) setSkills(bp.skills);
                 if (!experience && bp.experience) setExperience(bp.experience.toString());
                 if (galleryImages.length === 0 && bp.gallery) setGalleryImages(bp.gallery);
@@ -220,6 +223,7 @@ export default function BouncerSurveyScreen({ navigation }: Props) {
                     registrationType: registrationType,
                     isGunman: isGunman,
                     bio,
+                    upiId,
                     skills,
                     experience: parseInt(experience) || 0,
                     gallery: finalGallery,
@@ -360,6 +364,20 @@ export default function BouncerSurveyScreen({ navigation }: Props) {
                             numberOfLines={6}
                             value={bio}
                             onChangeText={setBio}
+                        />
+
+                        <Text style={[styles.sectionTitle, { marginTop: 24 }]}>UPI ID for Payments</Text>
+                        <Text style={[styles.subText, { marginBottom: 12, color: '#888', fontSize: 12 }]}>
+                            Enter your personal UPI ID (e.g. name@bank) to receive payments directly.
+                        </Text>
+                        <TextInput
+                            style={styles.input}
+                            placeholder="e.g. username@upi"
+                            placeholderTextColor="#666"
+                            value={upiId}
+                            onChangeText={setUpiId}
+                            autoCapitalize="none"
+                            autoCorrect={false}
                         />
                     </View>
                 );
@@ -579,17 +597,17 @@ export default function BouncerSurveyScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#0F0F0F',
+        backgroundColor: '#121214',
     },
     header: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
         paddingHorizontal: 16,
-        height: 50,
-        backgroundColor: '#1E1E1E',
+        height: 56,
+        backgroundColor: '#121214',
         borderBottomWidth: 1,
-        borderBottomColor: '#2A2A2A',
+        borderBottomColor: 'rgba(255, 255, 255, 0.06)',
     },
     backButton: {
         padding: 5,
@@ -602,9 +620,9 @@ const styles = StyleSheet.create({
     profileHeader: {
         alignItems: 'center',
         paddingVertical: 20,
-        backgroundColor: '#1E1E1E',
+        backgroundColor: '#121214',
         borderBottomWidth: 1,
-        borderBottomColor: '#333',
+        borderBottomColor: 'rgba(255, 255, 255, 0.06)',
     },
     avatarProgressWrapper: {
         width: 80,
@@ -619,7 +637,7 @@ const styles = StyleSheet.create({
         height: 70,
         borderRadius: 35,
         borderWidth: 2,
-        borderColor: '#222',
+        borderColor: '#121214',
     },
     progressBorder: {
         position: 'absolute',
@@ -652,9 +670,9 @@ const styles = StyleSheet.create({
     },
     stepsBar: {
         flexDirection: 'row',
-        backgroundColor: '#1E1E1E',
+        backgroundColor: '#121214',
         borderBottomWidth: 1,
-        borderBottomColor: '#333',
+        borderBottomColor: 'rgba(255, 255, 255, 0.06)',
     },
     stepTab: {
         flex: 1,
@@ -667,7 +685,7 @@ const styles = StyleSheet.create({
         borderBottomColor: '#FFD700',
     },
     stepText: {
-        color: '#666',
+        color: '#8E8E93',
         fontSize: 13,
         fontWeight: '500',
     },
@@ -689,18 +707,18 @@ const styles = StyleSheet.create({
         marginBottom: 16,
     },
     infoCard: {
-        backgroundColor: '#1E1E1E',
-        borderRadius: 12,
+        backgroundColor: '#1A1A1E',
+        borderRadius: 14,
         padding: 16,
         borderWidth: 1,
-        borderColor: '#333',
+        borderColor: 'rgba(255, 255, 255, 0.06)',
     },
     infoRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         marginBottom: 12,
         borderBottomWidth: 1,
-        borderBottomColor: '#2A2A2A',
+        borderBottomColor: 'rgba(255, 255, 255, 0.04)',
         paddingBottom: 8,
     },
     editRow: {
@@ -718,13 +736,13 @@ const styles = StyleSheet.create({
     editInput: {
         flex: 1,
         marginLeft: 15,
-        backgroundColor: '#2A2A2A',
+        backgroundColor: '#121214',
         borderRadius: 8,
         paddingHorizontal: 12,
         paddingVertical: 6,
         color: '#FFF',
         borderWidth: 1,
-        borderColor: '#555',
+        borderColor: 'rgba(255, 255, 255, 0.06)',
         fontSize: 14,
         textAlign: 'right',
     },
@@ -774,7 +792,7 @@ const styles = StyleSheet.create({
     checkbox: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#2A2A2A',
+        backgroundColor: '#121214',
         paddingHorizontal: 12,
         paddingVertical: 6,
         borderRadius: 8,
@@ -791,11 +809,11 @@ const styles = StyleSheet.create({
         marginLeft: 8,
     },
     verifyCard: {
-        backgroundColor: '#1E1E1E',
-        borderRadius: 12,
+        backgroundColor: '#1A1A1E',
+        borderRadius: 14,
         padding: 20,
         borderWidth: 1,
-        borderColor: '#333',
+        borderColor: 'rgba(255, 255, 255, 0.06)',
         marginTop: 10,
     },
     verifyHeaderRow: {
@@ -854,23 +872,23 @@ const styles = StyleSheet.create({
         color: '#000',
     },
     textArea: {
-        backgroundColor: '#1E1E1E',
-        borderRadius: 10,
+        backgroundColor: '#1A1A1E',
+        borderRadius: 12,
         padding: 15,
         color: '#FFF',
         borderWidth: 1,
-        borderColor: '#333',
+        borderColor: 'rgba(255, 255, 255, 0.06)',
         textAlignVertical: 'top',
         minHeight: 120,
         fontSize: 16,
     },
     input: {
-        backgroundColor: '#1E1E1E',
-        borderRadius: 10,
+        backgroundColor: '#1A1A1E',
+        borderRadius: 12,
         padding: 12,
         color: '#FFF',
         borderWidth: 1,
-        borderColor: '#333',
+        borderColor: 'rgba(255, 255, 255, 0.06)',
         fontSize: 16,
     },
     inputRow: {
@@ -893,7 +911,7 @@ const styles = StyleSheet.create({
     },
     skillChip: {
         flexDirection: 'row',
-        backgroundColor: '#333',
+        backgroundColor: '#2A2A2E',
         paddingHorizontal: 12,
         paddingVertical: 8,
         borderRadius: 20,
@@ -949,10 +967,10 @@ const styles = StyleSheet.create({
         borderStyle: 'dashed',
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#1a1a1a',
+        backgroundColor: '#1A1A1E',
     },
     uploadText: {
-        color: '#888',
+        color: '#8E8E93',
         marginTop: 8,
         fontSize: 12,
     },
@@ -962,9 +980,9 @@ const styles = StyleSheet.create({
         left: 0,
         right: 0,
         padding: 20,
-        backgroundColor: 'rgba(15,15,15,0.95)',
+        backgroundColor: 'rgba(18,18,20,0.95)',
         borderTopWidth: 1,
-        borderTopColor: '#333',
+        borderTopColor: 'rgba(255, 255, 255, 0.06)',
         flexDirection: 'row',
         justifyContent: 'flex-end', // Align Next button to right
     },
@@ -973,7 +991,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#FFD700',
         paddingVertical: 12,
         paddingHorizontal: 24,
-        borderRadius: 25,
+        borderRadius: 14,
         alignItems: 'center',
     },
     nextText: {
@@ -985,12 +1003,12 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#FFD700',
         paddingVertical: 14,
-        borderRadius: 12,
+        borderRadius: 14,
         alignItems: 'center',
         justifyContent: 'center',
         shadowColor: '#FFD700',
         shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
+        shadowOpacity: 0.25,
         shadowRadius: 8,
         elevation: 5,
     },

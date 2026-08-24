@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 
 // DB uses a mix of camelCase (legacy) and snake_case (new fields).
@@ -69,6 +70,13 @@ export async function PATCH(
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
+        const cookieStore = await cookies();
+        const token = cookieStore.get('admin_token')?.value;
+
+        if (!token) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
         const body = await request.json();
         const { id } = await params;
 
@@ -122,6 +130,13 @@ export async function GET(
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
+        const cookieStore = await cookies();
+        const token = cookieStore.get('admin_token')?.value;
+
+        if (!token) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
         const { id } = await params;
 
         const { data: bouncer, error } = await supabaseAdmin

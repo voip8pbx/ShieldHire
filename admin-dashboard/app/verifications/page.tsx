@@ -62,9 +62,24 @@ interface Bouncer {
 
 
 
+interface Client {
+    id: string;
+    userId: string;
+    verificationStatus: string;
+    createdAt: string;
+    user: {
+        email: string;
+        name: string;
+    };
+    rejectionReason?: string;
+}
+
 export default function VerificationsPage() {
 
     const [bouncers, setBouncers] = useState<Bouncer[]>([]);
+    const [clients, setClients] = useState<Client[]>([]);
+    const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+    const [verificationType, setVerificationType] = useState<'bouncer' | 'client'>('bouncer');
 
     const [loading, setLoading] = useState(true);
 
@@ -84,7 +99,7 @@ export default function VerificationsPage() {
 
         fetchBouncers();
 
-    }, [filter]);
+    }, [filter, verificationType]);
 
 
 
@@ -94,11 +109,12 @@ export default function VerificationsPage() {
 
             setLoading(true);
 
+            const baseEndpoint = verificationType === 'bouncer' ? '/api/verifications' : '/api/verifications/clients';
             const endpoint = filter === 'all'
 
-                ? '/api/verifications'
+                ? baseEndpoint
 
-                : `/api/verifications?status=${filter}`;
+                : `${baseEndpoint}?status=${filter}`;
 
 
 
@@ -120,7 +136,13 @@ export default function VerificationsPage() {
 
             const data = await response.json();
 
-            setBouncers(data);
+            if (verificationType === 'bouncer') {
+                setBouncers(data);
+                setClients([]);
+            } else {
+                setClients(data);
+                setBouncers([]);
+            }
 
         } catch (error) {
 
@@ -138,7 +160,7 @@ export default function VerificationsPage() {
 
     const handleApprove = async (id: string) => {
 
-        if (!confirm('Are you sure you want to approve this bouncer?')) return;
+        if (!confirm(`Are you sure you want to approve this ${verificationType}?`)) return;
 
 
 
@@ -146,7 +168,11 @@ export default function VerificationsPage() {
 
         try {
 
-            const response = await fetch(`/api/verifications/${id}/approve`, {
+            const endpoint = verificationType === 'bouncer'
+                ? `/api/verifications/${id}/approve`
+                : `/api/verifications/clients/${id}/approve`;
+
+            const response = await fetch(endpoint, {
 
                 method: 'PATCH',
 
@@ -168,7 +194,7 @@ export default function VerificationsPage() {
 
             if (!response.ok) {
 
-                throw new Error(data.error || 'Failed to approve bouncer');
+                throw new Error(data.error || `Failed to approve ${verificationType}`);
 
             }
 
@@ -176,23 +202,24 @@ export default function VerificationsPage() {
 
             if (data.warning) {
 
-                alert(`Bouncer approved with warning: ${data.warning}`);
+                alert(`${verificationType === 'bouncer' ? 'Bouncer' : 'Client'} approved with warning: ${data.warning}`);
 
             } else {
 
-                alert('Bouncer approved successfully!');
+                alert(`${verificationType === 'bouncer' ? 'Bouncer' : 'Client'} approved successfully!`);
 
             }
 
 
 
             setSelectedBouncer(null);
+            setSelectedClient(null);
 
             fetchBouncers();
 
         } catch (error: any) {
 
-            console.error('Error approving bouncer:', error);
+            console.error(`Error approving ${verificationType}:`, error);
 
             alert(`Approval Failed: ${error.message}`);
 
@@ -218,7 +245,7 @@ export default function VerificationsPage() {
 
 
 
-        if (!confirm('Are you sure you want to reject this bouncer?')) return;
+        if (!confirm(`Are you sure you want to reject this ${verificationType}?`)) return;
 
 
 
@@ -226,7 +253,11 @@ export default function VerificationsPage() {
 
         try {
 
-            const response = await fetch(`/api/verifications/${id}/reject`, {
+            const endpoint = verificationType === 'bouncer'
+                ? `/api/verifications/${id}/reject`
+                : `/api/verifications/clients/${id}/reject`;
+
+            const response = await fetch(endpoint, {
 
                 method: 'PATCH',
 
@@ -250,15 +281,16 @@ export default function VerificationsPage() {
 
             if (!response.ok) {
 
-                throw new Error('Failed to reject bouncer');
+                throw new Error(`Failed to reject ${verificationType}`);
 
             }
 
 
 
-            alert('Bouncer rejected');
+            alert(`${verificationType === 'bouncer' ? 'Bouncer' : 'Client'} rejected`);
 
             setSelectedBouncer(null);
+            setSelectedClient(null);
 
             setRejectionReason('');
 
@@ -266,7 +298,7 @@ export default function VerificationsPage() {
 
         } catch (error) {
 
-            console.error('Error rejecting bouncer:', error);
+            console.error(`Error rejecting ${verificationType}:`, error);
 
             alert('Failed to reject bouncer');
 
@@ -302,19 +334,19 @@ export default function VerificationsPage() {
 
             {/* Header */}
 
-            <div className="page-header">
+            <div className="page-header flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
 
                 <div>
 
-                    <h1 className="page-title">
+                    <h1 className="page-title text-3xl font-black uppercase tracking-tight text-text-primary">
 
-                        Bouncer Verifications
+                        {verificationType === 'bouncer' ? 'Bouncer Verifications' : 'Client Verifications'}
 
                     </h1>
 
-                    <p className="page-subtitle">
+                    <p className="page-subtitle text-text-secondary text-sm">
 
-                        Review and manage bouncer registration requests
+                        {verificationType === 'bouncer' ? 'Review and manage bouncer registration requests' : 'Review and manage client account requests'}
 
                     </p>
 
@@ -322,7 +354,35 @@ export default function VerificationsPage() {
 
 
 
-                {/* Stats or Actions could go here */}
+                {/* Verification Type Toggle */}
+                <div className="flex gap-2 bg-surface-elevated p-1 rounded-xl border border-zinc-800">
+                    <button
+                        onClick={() => {
+                            setVerificationType('bouncer');
+                            setSelectedBouncer(null);
+                            setSelectedClient(null);
+                        }}
+                        className={`px-4 py-2 rounded-lg font-bold text-xs uppercase tracking-wider transition-all cursor-pointer ${verificationType === 'bouncer'
+                            ? 'bg-primary-yellow text-black shadow-md'
+                            : 'text-zinc-400 hover:text-white'
+                        }`}
+                    >
+                        Bouncers
+                    </button>
+                    <button
+                        onClick={() => {
+                            setVerificationType('client');
+                            setSelectedBouncer(null);
+                            setSelectedClient(null);
+                        }}
+                        className={`px-4 py-2 rounded-lg font-bold text-xs uppercase tracking-wider transition-all cursor-pointer ${verificationType === 'client'
+                            ? 'bg-primary-yellow text-black shadow-md'
+                            : 'text-zinc-400 hover:text-white'
+                        }`}
+                    >
+                        Clients
+                    </button>
+                </div>
 
             </div>
 
@@ -356,7 +416,7 @@ export default function VerificationsPage() {
 
                             <span className="px-1.5 py-0.5 min-w-[18px] flex items-center justify-center rounded-full bg-[#ff3333] text-white text-[11px] font-black">
 
-                                {bouncers.length}
+                                {verificationType === 'bouncer' ? bouncers.length : clients.length}
 
                             </span>
 
@@ -372,37 +432,39 @@ export default function VerificationsPage() {
 
             {/* Bouncers Table */}
 
-            <div className="card overflow-hidden shadow-xl border-border-light">
+            {verificationType === 'bouncer' ? (
 
-                <div className="overflow-x-visible">
+                <div className="card overflow-hidden shadow-xl border-border-light">
 
-                    <table className="professional-table">
+                    <div className="overflow-x-visible">
 
-                        <thead>
+                        <table className="professional-table">
 
-                            <tr>
+                            <thead>
 
-                                <th>Bouncer Profile</th>
+                                <tr>
 
-                                <th>Contact Info</th>
+                                    <th>Bouncer Profile</th>
 
-                                <th>Age / Gender</th>
+                                    <th>Contact Info</th>
 
-                                <th>Registration</th>
+                                    <th>Age / Gender</th>
 
-                                <th>Gun License</th>
+                                    <th>Registration</th>
 
-                                <th>Status</th>
+                                    <th>Gun License</th>
 
-                                <th>Applied Date</th>
+                                    <th>Status</th>
 
-                                <th className="text-right">Actions</th>
+                                    <th>Applied Date</th>
 
-                            </tr>
+                                    <th className="text-right">Actions</th>
 
-                        </thead>
+                                </tr>
 
-                        <tbody>
+                            </thead>
+
+                            <tbody>
 
                             {loading ? (
 
@@ -639,6 +701,182 @@ export default function VerificationsPage() {
                 </div>
 
             </div>
+
+            ) : (
+
+                <div className="card overflow-hidden shadow-xl border-border-light">
+
+                    <div className="overflow-x-visible">
+
+                        <table className="professional-table">
+
+                            <thead>
+
+                                <tr>
+
+                                    <th>Client Profile</th>
+
+                                    <th>Contact Info</th>
+
+                                    <th>Status</th>
+
+                                    <th>Applied Date</th>
+
+                                    <th className="text-right">Actions</th>
+
+                                </tr>
+
+                            </thead>
+
+                            <tbody>
+
+                                {loading ? (
+
+                                    Array(5).fill(0).map((_, i) => (
+
+                                        <tr key={i}>
+
+                                            <td colSpan={5} className="p-0">
+
+                                                <div className="skeleton h-16 w-full opacity-20 my-1"></div>
+
+                                            </td>
+
+                                        </tr>
+
+                                    ))
+
+                                ) : clients.length === 0 ? (
+
+                                    <tr>
+
+                                        <td colSpan={5} className="text-center py-16">
+
+                                            <div className="text-text-tertiary text-lg mb-2">No records found</div>
+
+                                            <div className="text-sm text-text-tertiary opacity-70">
+
+                                                There are no {filter !== 'all' ? filter : ''} verifications at the moment.
+
+                                            </div>
+
+                                        </td>
+
+                                    </tr>
+
+                                ) : (
+
+                                    clients.map((client) => (
+
+                                        <tr key={client.id} className="group">
+
+                                            <td>
+
+                                                <div className="flex items-center gap-2">
+
+                                                    <div className="avatar-placeholder w-10 h-10 rounded-full bg-zinc-800 text-zinc-400 font-bold flex items-center justify-center">
+
+                                                        {client.user?.name?.charAt(0).toUpperCase() || 'C'}
+
+                                                    </div>
+
+                                                    <div>
+
+                                                        <div className="font-bold text-text-primary group-hover:text-primary-yellow transition-colors">
+
+                                                            {client.user?.name || 'Client'}
+
+                                                        </div>
+
+                                                        <div className="text-xs text-text-tertiary font-mono">
+
+                                                            ID: {client.id.split('-')[0]}
+
+                                                        </div>
+
+                                                    </div>
+
+                                                </div>
+
+                                            </td>
+
+                                            <td>
+
+                                                <div className="text-sm text-text-primary font-mono">{client.user?.email}</div>
+
+                                            </td>
+
+                                            <td>
+
+                                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase border ${
+
+                                                    client.verificationStatus === 'APPROVED' ? 'bg-green-500/10 text-green-400 border-green-500/20' :
+
+                                                    client.verificationStatus === 'REJECTED' ? 'bg-red-500/10 text-red-400 border-red-500/20' :
+
+                                                    'bg-yellow-500/10 text-yellow-400 border-yellow-500/20'
+
+                                                }`}>
+
+                                                    {client.verificationStatus}
+
+                                                </span>
+
+                                            </td>
+
+                                            <td>
+
+                                                <div className="text-xs text-text-secondary font-mono">
+
+                                                    {new Date(client.createdAt).toLocaleDateString('en-IN', {
+
+                                                        day: 'numeric',
+
+                                                        month: 'short',
+
+                                                        year: 'numeric'
+
+                                                    })}
+
+                                                </div>
+
+                                            </td>
+
+                                            <td className="text-right">
+
+                                                <div className="flex items-center justify-end gap-2">
+
+                                                    <button
+
+                                                        onClick={() => setSelectedClient(client)}
+
+                                                        className="btn-primary py-2 px-4 text-xs font-black uppercase tracking-widest bg-[var(--primary)] text-zinc-950 rounded hover:bg-[var(--primary-light)] transition-all"
+
+                                                    >
+
+                                                        Review
+
+                                                    </button>
+
+                                                </div>
+
+                                            </td>
+
+                                        </tr>
+
+                                    ))
+
+                                )}
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            )}
 
 
 
@@ -1294,100 +1532,141 @@ export default function VerificationsPage() {
 
                     </div>
 
-
-
-                    {/* Rejection Reason Popup (Centered) */}
-
-                    {showRejectModal && (
-
-                        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-
-                            <div className="absolute inset-0 bg-black/80 backdrop-blur-md animate-fade-in" onClick={() => setShowRejectModal(false)}></div>
-
-                            <div className="relative w-full max-w-lg bg-surface border border-border-brand rounded-2xl shadow-2xl p-8 animate-scale-up">
-
-                                <h3 className="text-xl font-bold text-text-primary mb-2">Reject Application</h3>
-
-                                <p className="text-text-secondary text-sm mb-6">Please provide a reason for rejecting this application. This will be sent to the applicant.</p>
-
-
-
-                                <textarea
-
-                                    value={rejectionReason}
-
-                                    onChange={(e) => setRejectionReason(e.target.value)}
-
-                                    placeholder="Enter rejection reason..."
-
-                                    className="w-full h-32 bg-surface-elevated border border-border-light rounded-xl p-4 text-text-primary focus:border-error focus:outline-none focus:ring-1 focus:ring-error transition-all resize-none mb-6"
-
-                                    autoFocus
-
-                                />
-
-
-
-                                <div className="flex gap-4 justify-end">
-
-                                    <button
-
-                                        onClick={() => {
-
-                                            setShowRejectModal(false);
-
-                                            setRejectionReason('');
-
-                                        }}
-
-                                        className="px-6 py-3 rounded-xl text-text-secondary hover:bg-surface-elevated transition-colors font-medium"
-
-                                    >
-
-                                        Cancel
-
-                                    </button>
-
-                                    <button
-
-                                        onClick={() => {
-
-                                            handleReject(selectedBouncer.id);
-
-                                            setShowRejectModal(false);
-
-                                        }}
-
-                                        disabled={!rejectionReason.trim() || actionLoading}
-
-                                        className="px-8 py-3 rounded-xl bg-gradient-to-r from-red-600 to-red-500 text-white font-bold shadow-lg hover:shadow-red-500/30 disabled:opacity-50 disabled:cursor-not-allowed transform hover:-translate-y-0.5 transition-all"
-
-                                    >
-
-                                        {actionLoading ? 'Rejecting...' : 'Confirm Reject'}
-
-                                    </button>
-
-                                </div>
-
-                            </div>
-
-                        </div>
-
-                    )}
-
                 </>
 
-            )
+            )}
 
-            }
 
-        </div >
 
+            {/* Client Detail Drawer (Right Side) */}
+            {selectedClient && (
+                <>
+                    <div 
+                        className="fixed inset-0 bg-black/45 backdrop-blur-sm z-40 transition-opacity animate-fade-in"
+                        onClick={() => setSelectedClient(null)}
+                    />
+                    <div className="fixed right-0 top-0 bottom-0 w-full max-w-[450px] bg-surface border-l border-border-brand z-50 flex flex-col shadow-2xl animate-slide-in p-6 overflow-y-auto">
+                        {/* Drawer Header */}
+                        <div className="flex-none pb-6 border-b border-border-brand flex items-center justify-between mb-6">
+                            <h2 className="text-xl font-bold uppercase tracking-wide text-text-primary">Client Details</h2>
+                            <button onClick={() => setSelectedClient(null)} className="text-zinc-400 hover:text-white text-2xl font-bold">&times;</button>
+                        </div>
+                        {/* Drawer Content */}
+                        <div className="flex-1 space-y-6">
+                            <div>
+                                <div className="text-xs text-text-tertiary uppercase tracking-wider mb-1">Full Name</div>
+                                <div className="text-lg font-bold text-text-primary">{selectedClient.user?.name || 'N/A'}</div>
+                            </div>
+                            <div>
+                                <div className="text-xs text-text-tertiary uppercase tracking-wider mb-1">Email Address</div>
+                                <div className="text-lg font-bold text-text-primary font-mono">{selectedClient.user?.email}</div>
+                            </div>
+                            <div>
+                                <div className="text-xs text-text-tertiary uppercase tracking-wider mb-1">Client ID</div>
+                                <div className="text-sm font-mono text-text-secondary">{selectedClient.id}</div>
+                            </div>
+                            <div>
+                                <div className="text-xs text-text-tertiary uppercase tracking-wider mb-1">Status</div>
+                                <div className="mt-1">
+                                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase border ${
+                                        selectedClient.verificationStatus === 'APPROVED' ? 'bg-green-500/10 text-green-400 border-green-500/20' :
+                                        selectedClient.verificationStatus === 'REJECTED' ? 'bg-red-500/10 text-red-400 border-red-500/20' :
+                                        'bg-yellow-500/10 text-yellow-400 border-yellow-500/20'
+                                    }`}>
+                                        {selectedClient.verificationStatus}
+                                    </span>
+                                </div>
+                            </div>
+                            {selectedClient.verificationStatus === 'REJECTED' && selectedClient.rejectionReason && (
+                                <div>
+                                    <div className="text-xs text-text-tertiary uppercase tracking-wider mb-1">Rejection Reason</div>
+                                    <div className="text-sm text-red-400 bg-red-950/20 border border-red-500/20 rounded p-3">
+                                        "{selectedClient.rejectionReason}"
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                        {/* Fixed Bottom Action Bar */}
+                        {selectedClient.verificationStatus === 'PENDING' ? (
+                            <div className="flex-none pt-6 border-t border-border-brand bg-surface flex items-center gap-4 mt-6">
+                                <button
+                                    onClick={() => setSelectedClient(null)}
+                                    className="flex-1 py-2.5 border border-border-brand rounded-xl font-bold text-xs uppercase tracking-wider text-text-secondary hover:text-white"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={() => setShowRejectModal(true)}
+                                    className="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold text-xs uppercase tracking-wider shadow"
+                                >
+                                    Deny
+                                </button>
+                                <button
+                                    onClick={() => handleApprove(selectedClient.id)}
+                                    disabled={actionLoading}
+                                    className="flex-1 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold text-xs uppercase tracking-wider shadow flex items-center justify-center gap-2"
+                                >
+                                    {actionLoading ? <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" /> : 'Approve'}
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="flex-none pt-6 border-t border-border-brand bg-surface flex justify-center mt-6">
+                                <button
+                                    onClick={() => setSelectedClient(null)}
+                                    className="w-full py-2.5 bg-zinc-800 hover:bg-zinc-700 text-text-secondary hover:text-white rounded-xl font-bold text-xs uppercase tracking-wider"
+                                >
+                                    Close Review
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </>
+            )}
+
+            {/* Rejection Reason Popup (Centered) */}
+            {showRejectModal && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-black/80 backdrop-blur-md animate-fade-in" onClick={() => setShowRejectModal(false)}></div>
+                    <div className="relative w-full max-w-lg bg-surface border border-border-brand rounded-2xl shadow-2xl p-8 animate-scale-up">
+                        <h3 className="text-xl font-bold text-text-primary mb-2">Reject Application</h3>
+                        <p className="text-text-secondary text-sm mb-6">Please provide a reason for rejecting this application. This will be sent to the applicant.</p>
+
+                        <textarea
+                            value={rejectionReason}
+                            onChange={(e) => setRejectionReason(e.target.value)}
+                            placeholder="Enter rejection reason..."
+                            className="w-full h-32 bg-surface-elevated border border-border-light rounded-xl p-4 text-text-primary focus:border-error focus:outline-none focus:ring-1 focus:ring-error transition-all resize-none mb-6"
+                            autoFocus
+                        />
+
+                        <div className="flex gap-4 justify-end">
+                            <button
+                                onClick={() => {
+                                    setShowRejectModal(false);
+                                    setRejectionReason('');
+                                }}
+                                className="px-6 py-3 rounded-xl text-text-secondary hover:bg-surface-elevated transition-colors font-medium"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={() => {
+                                    handleReject(verificationType === 'bouncer' ? selectedBouncer!.id : selectedClient!.id);
+                                    setShowRejectModal(false);
+                                }}
+                                disabled={!rejectionReason.trim() || actionLoading}
+                                className="px-8 py-3 rounded-xl bg-gradient-to-r from-red-600 to-red-500 text-white font-bold shadow-lg hover:shadow-red-500/30 disabled:opacity-50 disabled:cursor-not-allowed transform hover:-translate-y-0.5 transition-all"
+                            >
+                                {actionLoading ? 'Rejecting...' : 'Confirm Reject'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+        </div>
     );
-
 }
-
 
 
 

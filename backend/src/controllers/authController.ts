@@ -19,6 +19,20 @@ const formatUserResponse = (user: any) => {
         role = bouncerProfile.isGunman ? 'GUNMAN' : 'BOUNCER';
     }
 
+    // Map clients array or object (Supabase 1:1) to clientProfile
+    let clientProfile = null;
+    if (user.clients) {
+        if (Array.isArray(user.clients)) {
+            if (user.clients.length > 0) {
+                clientProfile = camelCaseKeys(user.clients[0]);
+            }
+        } else {
+            clientProfile = camelCaseKeys(user.clients);
+        }
+    } else if (user.clientProfile) {
+        clientProfile = user.clientProfile;
+    }
+
     const response: any = {
         id: user.id,
         email: user.email,
@@ -27,10 +41,31 @@ const formatUserResponse = (user: any) => {
         contactNo: user.contactNo,
         profilePhoto: user.profilePhoto, // camelCase
         bouncerProfile,
+        clientProfile,
     };
 
     console.log(`[AUTH] Formatted response for ${user.email}: role=${role}, hasBouncer=${!!bouncerProfile}`);
     return response;
+};
+
+const parseBioMetadata = (bioStr: string | null) => {
+    const defaultVal = { bio: bioStr || '', upiId: '' };
+    if (!bioStr) return defaultVal;
+    
+    const parts = bioStr.split(' | UPI ID: ');
+    if (parts.length > 1) {
+        return { bio: parts[0], upiId: parts[1] };
+    }
+    return defaultVal;
+};
+
+const formatBioMetadata = (bio: string, upiId: string) => {
+    const cleanBio = (bio || '').trim();
+    const cleanUpi = (upiId || '').trim();
+    if (cleanUpi) {
+        return `${cleanBio} | UPI ID: ${cleanUpi}`;
+    }
+    return cleanBio;
 };
 
 // Helper to convert snake_case DB columns to camelCase for frontend
@@ -40,6 +75,11 @@ const camelCaseKeys = (obj: any): any => {
     for (const key in obj) {
         const camelKey = key.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
         newObj[camelKey] = obj[key];
+    }
+    if (newObj.bio !== undefined) {
+        const { bio, upiId } = parseBioMetadata(newObj.bio);
+        newObj.bio = bio;
+        newObj.upiId = upiId;
     }
     return newObj;
 };
@@ -82,7 +122,7 @@ export const signup = async (req: Request, res: Response) => {
         // Generate Token
         const token = jwt.sign(
             { id: user.id, email: user.email, role: user.role },
-            process.env.JWT_SECRET || 'default_secret',
+            process.env.JWT_SECRET!,
             { expiresIn: '7d' }
         );
 
@@ -101,7 +141,7 @@ export const login = async (req: Request, res: Response) => {
         // Note: Supabase JS returns relations as arrays (1:M) even for 1:1 if not explicitly singular
         const { data: user, error } = await supabaseAdmin
             .from('users')
-            .select('*, bouncers(*)')
+            .select('*, bouncers(*), clients(*)')
             .eq('email', email)
             .single();
 
@@ -116,11 +156,13 @@ export const login = async (req: Request, res: Response) => {
 
         const token = jwt.sign(
             { id: user.id, email: user.email, role: user.role },
-            process.env.JWT_SECRET || 'default_secret',
+            process.env.JWT_SECRET!,
             { expiresIn: '7d' }
         );
 
-        res.json({ token, user: formatUserResponse(user) });
+        const userResponse = formatUserResponse(user);
+
+        res.json({ token, user: userResponse });
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Internal server error' });
@@ -132,7 +174,7 @@ export const registerBouncer = async (req: Request, res: Response) => {
         const {
             email, password, name, contactNo, age, gender,
             profilePhoto, govtIdPhoto, hasGunLicense, gunLicensePhoto,
-            isGunman, registrationType, agencyReferralCode, role
+            isGunman, registrationType, agencyReferralCode, role, upiId, bio
         } = req.body;
 
         // Check if user exists
@@ -197,6 +239,7 @@ export const registerBouncer = async (req: Request, res: Response) => {
             isGunman: isGunman,
             registrationType: registrationType,
             agencyReferralCode: agencyReferralCode,
+            bio: formatBioMetadata(bio || '', upiId || ''),
             updatedAt: new Date().toISOString()
         };
 
@@ -214,7 +257,7 @@ export const registerBouncer = async (req: Request, res: Response) => {
         // Generate Token
         const token = jwt.sign(
             { id: userId, email, role: userRole },
-            process.env.JWT_SECRET || 'default_secret',
+            process.env.JWT_SECRET!,
             { expiresIn: '7d' }
         );
 
@@ -243,7 +286,7 @@ export const googleAuth = async (req: Request, res: Response) => {
         console.log(`[AUTH] Google Auth for email: ${email}`);
         const { data: existingUser, error: findError } = await supabaseAdmin
             .from('users')
-            .select('*, bouncers(*)')
+            .select('*, bouncers(*), clients(*)')
             .eq('email', email)
             .single();
 
@@ -272,7 +315,7 @@ export const googleAuth = async (req: Request, res: Response) => {
 
         const token = jwt.sign(
             { id: user.id, email: user.email, role: user.role },
-            process.env.JWT_SECRET || 'default_secret',
+            process.env.JWT_SECRET!,
             { expiresIn: '7d' }
         );
 
@@ -315,7 +358,7 @@ export const getMe = async (req: Request, res: Response) => {
 
         const { data: user, error } = await supabaseAdmin
             .from('users')
-            .select('*, bouncers(*)')
+            .select('*, bouncers(*), clients(*)')
             .eq(identifierKey, identifierValue)
             .single();
 

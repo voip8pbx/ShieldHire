@@ -1,5 +1,5 @@
 import React, { useContext, useState, useEffect } from 'react';
-import { View, Text, StyleSheet, StatusBar, TouchableOpacity, Alert, ActivityIndicator, FlatList, PermissionsAndroid, Platform, Linking, ScrollView, ImageBackground, Dimensions, Modal, Animated, TouchableWithoutFeedback } from 'react-native';
+import { View, Text, StyleSheet, StatusBar, TouchableOpacity, Alert, ActivityIndicator, FlatList, PermissionsAndroid, Platform, Linking, ScrollView, ImageBackground, Dimensions, Modal, Animated, TouchableWithoutFeedback, Image } from 'react-native';
 import notifee, { EventType } from '@notifee/react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -32,109 +32,42 @@ interface BouncerBooking {
     };
 }
 
-const QUOTES = [
-    "Security is not a product, but a process.",
-    "Preparedness is the best protection.",
-    "Safety starts with awareness.",
-    "The best defense is early detection.",
-    "Vigilance today saves lives tomorrow."
-];
-
-const FACTS = [
-    "Professional bodyguards are trained to observe threats before they become visible.",
-    "Situational awareness is one of the most important protective skills.",
-    "VIP protection teams plan exit routes before arrival.",
-    "Effective security relies on 90% preparation and 10% reaction.",
-    "The finest security teams go unnoticed until they are needed."
-];
-
-const TESTIMONIALS = [
-    { id: '1', name: "Rahul Sharma", text: "Booked a bodyguard within minutes. Professional and reliable service.", rating: 5 },
-    { id: '2', name: "Priya Desai", text: "Felt incredibly safe during our corporate event. Highly recommended.", rating: 5 },
-    { id: '3', name: "Amit Patel", text: "Top-notch VIP protection. The team was discreet and highly skilled.", rating: 5 },
-];
-
-const SERVICES = [
-    { id: '1', title: "Personal Bodyguard", icon: "account-tie" },
-    { id: '2', title: "Event Security", icon: "party-popper" },
-    { id: '3', title: "Bouncer", icon: "shield-account" },
-    { id: '4', title: "VIP Protection", icon: "star-circle" },
-    { id: '5', title: "Female Officer", icon: "shield-half-full" },
-];
-
-const TRUST_INDICATORS = [
-    { id: '1', title: "Verified Pro", icon: "check-decagram" },
-    { id: '2', title: "Background Checked", icon: "text-box-check" },
-    { id: '3', title: "24/7 Support", icon: "clock-check" },
-    { id: '4', title: "Emergency Ready", icon: "car-emergency" },
-];
-
-const DUMMY_NOTIFICATIONS = [
-    { id: '1', title: 'New VIP Assignment', message: 'You have been requested for an event in Downtown. Review details ASAP.', time: '2 mins ago', read: false, icon: 'star-circle' },
-    { id: '2', title: 'System Alert', message: 'Please update your background verification documents to maintain Pro status.', time: '1 hour ago', read: false, icon: 'alert-decagram' },
-    { id: '3', title: 'Payment Received', message: 'Earnings for your last assignment have been securely deposited.', time: 'Yesterday', read: true, icon: 'currency-usd' },
-];
+// Mock arrays removed for production
 
 let hasShownHomeTooltipThisSession = false;
 
 const BookingCardBouncer = React.memo(({ item, navigation, onResponse }: { item: BouncerBooking, navigation: any, onResponse: (id: string, status: 'CONFIRMED' | 'REJECTED') => void }) => {
     return (
-        <TouchableOpacity
-            style={styles.bookingCard}
-            activeOpacity={0.8}
-            onPress={() => navigation.navigate('BouncerBookingDetail', { bookingId: item.id })}
-        >
-            <View style={styles.bookingHeader}>
-                <View style={styles.userInfo}>
+        <TouchableOpacity style={styles.bookingCard} activeOpacity={0.9} onPress={() => navigation.navigate('BouncerBookingDetail', { bookingId: item.id })}>
+            <View style={styles.bookingPillRow}>
+                {item.user.profilePhoto ? (
+                    <Image source={{ uri: item.user.profilePhoto }} style={styles.avatarImage} />
+                ) : (
                     <View style={styles.avatarPlaceholder}>
                         <Text style={styles.avatarText}>{item.user.name.substring(0, 1).toUpperCase()}</Text>
                     </View>
-                    <View>
-                        <Text style={styles.userName}>{item.user.name}</Text>
-                        <Text style={styles.userSubtext}>Priority Client</Text>
-                    </View>
-                </View>
-                <View style={styles.statusBadge}>
-                    <Text style={styles.statusText}>NEW REQUEST</Text>
-                </View>
-            </View>
+                )}
 
-            <View style={styles.bookingDetails}>
-                <View style={styles.detailRow}>
-                    <Ionicons name="calendar-outline" size={18} color="#D4AF37" />
-                    <Text style={styles.detailText}>{new Date(item.date).toLocaleDateString()}</Text>
-                    <Ionicons name="time-outline" size={18} color="#D4AF37" style={{ marginLeft: 20 }} />
-                    <Text style={styles.detailText}>{item.time || 'N/A'}</Text>
-                </View>
-                <View style={[styles.detailRow, { justifyContent: 'space-between' }]}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        <MaterialCommunityIcons name="timer-sand" size={18} color="#D4AF37" />
-                        <Text style={styles.detailText}>{item.duration || 0} Hours</Text>
+                <View style={styles.bookingContent}>
+                    <Text style={styles.userName}>{item.user.name}</Text>
+                    <View style={styles.detailPillRow}>
+                        <Ionicons name="location-outline" size={12} color="#FFD700" />
+                        <Text style={styles.detailText} numberOfLines={1}>{item.location || 'Pending'}</Text>
                     </View>
-                    <View style={styles.payoutBadge}>
-                        <Text style={styles.payoutLabel}>Est. Payout: </Text>
-                        <Text style={styles.payoutAmount}>₹{item.totalPrice || 0}</Text>
+                    <View style={styles.detailPillRow}>
+                        <Ionicons name="time-outline" size={12} color="#FFD700" />
+                        <Text style={styles.detailText}>{new Date(item.date).toLocaleDateString()} • {item.time}</Text>
                     </View>
                 </View>
-                <View style={[styles.detailRow, { marginBottom: 0 }]}>
-                    <Ionicons name="location-outline" size={18} color="#D4AF37" />
-                    <Text style={styles.detailText}>{item.location || 'Location Pending'}</Text>
-                </View>
-            </View>
 
-            <View style={styles.actionButtons}>
-                <TouchableOpacity
-                    style={[styles.actionBtn, styles.rejectBtn]}
-                    onPress={() => onResponse(item.id, 'REJECTED')}
-                >
-                    <Text style={[styles.btnText, { color: '#ef4444' }]}>Decline</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={[styles.actionBtn, styles.acceptBtn]}
-                    onPress={() => onResponse(item.id, 'CONFIRMED')}
-                >
-                    <Text style={[styles.btnText, { color: '#000' }]}>Accept Assignment</Text>
-                </TouchableOpacity>
+                <View style={styles.bookingRight}>
+                    <Text style={styles.payoutAmount}>₹{item.totalPrice || 0}</Text>
+                    <View style={styles.actionButtons}>
+                        <TouchableOpacity style={[styles.actionBtn, styles.acceptBtn]} onPress={() => onResponse(item.id, 'CONFIRMED')}>
+                            <Text style={[styles.btnText, { color: '#000' }]}>Accept</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
             </View>
         </TouchableOpacity>
     );
@@ -145,7 +78,7 @@ export default function BouncerHomeScreen() {
     const { user } = useContext(AuthContext);
     const [bookings, setBookings] = useState<BouncerBooking[]>([]);
     const [loading, setLoading] = useState(true);
-    
+
     // SOS Modal State
     const [sosModalVisible, setSosModalVisible] = useState(false);
     const [sosModalState, setSosModalState] = useState<SOSModalState>('INITIAL');
@@ -157,9 +90,7 @@ export default function BouncerHomeScreen() {
     const [showOnboarding, setShowOnboarding] = useState(false);
     const { width, height } = Dimensions.get('window');
 
-    // Dynamic Content State
-    const [quote] = useState(QUOTES[Math.floor(Math.random() * QUOTES.length)]);
-    const [fact] = useState(FACTS[Math.floor(Math.random() * FACTS.length)]);
+    // Dynamic Content State removed for production
 
     const openNotifications = () => {
         navigation.navigate('Notifications' as any);
@@ -169,7 +100,7 @@ export default function BouncerHomeScreen() {
         try {
             const isApproved = user?.bouncerProfile?.verificationStatus === 'APPROVED';
             const isProfileComplete = !!user?.bouncerProfile?.bio && (user?.bouncerProfile?.skills?.length || 0) > 0;
-            
+
             if (isApproved && !isProfileComplete && !hasShownHomeTooltipThisSession) {
                 hasShownHomeTooltipThisSession = true;
                 setTimeout(() => setShowOnboarding(true), 1000);
@@ -193,6 +124,23 @@ export default function BouncerHomeScreen() {
 
         socket.on('connect', () => {
             console.log('Connected to socket server');
+            // Register bouncer with current location so backend can geo-filter SOS
+            const bouncerId = user?.bouncerProfile?.id;
+            if (!bouncerId) return;
+            Geolocation.getCurrentPosition(
+                (pos) => {
+                    socket.emit('register-bouncer', {
+                        bouncerId,
+                        lat: pos.coords.latitude,
+                        lng: pos.coords.longitude,
+                    });
+                },
+                () => {
+                    // fallback: register without location — backend will still send FCM
+                    socket.emit('register-bouncer', { bouncerId, lat: 0, lng: 0 });
+                },
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
+            );
         });
 
         socket.on('new-alert', (newAlert: any) => {
@@ -200,10 +148,8 @@ export default function BouncerHomeScreen() {
 
             Alert.alert(
                 '🚨 EMERGENCY ALERT 🚨',
-                `${newAlert.user?.name || 'Someone'} needs help!\nLocation: ${newAlert.location || 'Unknown'}\n\nCoordinate: ${newAlert.latitude?.toFixed(4)}, ${newAlert.longitude?.toFixed(4)}`,
-                [
-                    { text: 'OK', onPress: () => console.log('Alert acknowledged') }
-                ],
+                `${newAlert.user?.name || 'Someone'} needs help!\nLocation: ${newAlert.location || 'Unknown'}\n\nCoordinates: ${newAlert.latitude?.toFixed(4)}, ${newAlert.longitude?.toFixed(4)}`,
+                [{ text: 'OK' }],
                 { cancelable: false }
             );
         });
@@ -281,14 +227,32 @@ export default function BouncerHomeScreen() {
     const fetchPendingBookings = React.useCallback(async () => {
         setLoading(true);
         try {
-            const response = await api.get('/bookings/pending');
-            setBookings(response.data);
+            const [pendingRes, historyRes] = await Promise.all([
+                api.get('/bookings/pending').catch(() => ({ data: [] })),
+                api.get('/bookings/bouncer/history').catch(() => ({ data: [] }))
+            ]);
+
+            const pendingList = pendingRes.data || [];
+            const historyList = historyRes.data || [];
+
+            const activeDuty = historyList.filter((b: any) =>
+                b.status === 'CONFIRMED' || b.status === 'ACTIVE' || b.status === 'PENDING'
+            );
+
+            const combinedMap = new Map();
+            [...pendingList, ...activeDuty].forEach((item: any) => {
+                if (item && item.id) combinedMap.set(item.id, item);
+            });
+
+            setBookings(Array.from(combinedMap.values()));
         } catch (error) {
             console.error('Failed to fetch bookings:', error);
+            setBookings([]);
         } finally {
             setLoading(false);
         }
     }, []);
+
 
     const handleBookingResponse = React.useCallback(async (id: string, status: 'CONFIRMED' | 'REJECTED') => {
         try {
@@ -367,68 +331,79 @@ export default function BouncerHomeScreen() {
     // UI Renderers
     const headerComponent = React.useMemo(() => (
         <View style={styles.headerWrapper}>
+            {/* Top Nav - Pill Style */}
             <View style={styles.topRow}>
-                <View style={styles.logoAndTitle}>
-                    <View style={styles.logoBox}>
-                        <MaterialCommunityIcons name="shield-crown" size={24} color="#D4AF37" />
-                    </View>
-                    <View>
-                        <Text style={styles.appName}>SHIELD<Text style={{ color: '#D4AF37' }}>HIRE</Text></Text>
-                        <Text style={styles.locationText}>{locationName}</Text>
-                    </View>
+                <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                    <TouchableOpacity style={styles.topPillBtn}>
+                        <Ionicons name="location" size={14} color="#FFD700" />
+                        <Text style={styles.locationText} numberOfLines={1}>{locationName}</Text>
+                    </TouchableOpacity>
                 </View>
-                <TouchableOpacity style={styles.notifBtn} onPress={openNotifications} activeOpacity={0.8}>
-                    <Ionicons name="notifications" size={22} color="#fff" />
-                    <View style={styles.redDot} />
-                </TouchableOpacity>
+
+
+                <View style={styles.headerRightControls}>
+                    <TouchableOpacity style={styles.iconPillBtn} onPress={openNotifications} activeOpacity={0.8}>
+                        <Ionicons name="notifications-outline" size={18} color="#fff" />
+                        <View style={styles.redDot} />
+                    </TouchableOpacity>
+                    <Image source={{ uri: user?.profilePhoto || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=100&auto=format&fit=crop' }} style={styles.avatarPill} />
+                </View>
+            </View>
+
+
+            {/* Title & Analytics Row */}
+            <View style={styles.titleRow}>
+                <Text style={styles.mainTitle}>Assignments</Text>
+                <View style={styles.analyticsBar}>
+                    <View style={styles.analyticsFill} />
+                </View>
             </View>
 
             <View style={styles.heroSection}>
-                <Text style={styles.heroGreeting}>Welcome Back,</Text>
-                <Text style={styles.heroTitle}>{user?.name || 'Officer'}</Text>
-                <Text style={styles.heroSubtitle}>Your Safety, Our Priority</Text>
-
-                <TouchableOpacity style={styles.heroCTA} activeOpacity={0.8}>
-                    <Text style={styles.heroCTAText}>Hire Trusted Security Professionals Instantly</Text>
-                    <View style={styles.ctaArrow}>
-                        <MaterialCommunityIcons name="chevron-right" size={20} color="#000" />
-                    </View>
-                </TouchableOpacity>
+                <View style={styles.heroTextContent}>
+                    <Text style={styles.heroGreeting}>Command Center</Text>
+                    <Text style={styles.heroTitle}>{user?.name || 'Officer'}</Text>
+                </View>
 
                 <View style={styles.statusRow}>
                     <View style={styles.rolePill}>
-                        <MaterialCommunityIcons name="shield-check" size={16} color="#000" />
-                        <Text style={styles.rolePillText}>{user?.role || 'PREMIUM PRO'}</Text>
+                        <MaterialCommunityIcons name="shield-account" size={16} color="#000" />
+                        <Text style={styles.rolePillText}>{user?.role || 'EXECUTIVE AGENT'}</Text>
                     </View>
                     <View style={styles.statusPill}>
                         <View style={[styles.statusDot, { backgroundColor: '#4ade80' }]} />
-                        <Text style={styles.statusPillText}>Online & Ready</Text>
+                        <Text style={styles.statusPillText}>On Duty</Text>
                     </View>
                 </View>
             </View>
 
-            <View style={styles.trustSection}>
-                {TRUST_INDICATORS.map(item => (
-                    <View key={item.id} style={styles.trustItem}>
-                        <View style={styles.trustIconWrap}>
-                            <MaterialCommunityIcons name={item.icon} size={24} color="#D4AF37" />
-                        </View>
-                        <Text style={styles.trustText}>{item.title}</Text>
+            {user?.bouncerProfile?.verificationStatus !== 'APPROVED' && (
+                <View style={[
+                    styles.verificationWarningBanner,
+                    user?.bouncerProfile?.verificationStatus === 'REJECTED' && styles.verificationRejectedBanner
+                ]}>
+                    <Ionicons
+                        name={user?.bouncerProfile?.verificationStatus === 'REJECTED' ? "alert-circle" : "time"}
+                        size={22}
+                        color={user?.bouncerProfile?.verificationStatus === 'REJECTED' ? "#ff4d4d" : "#ffd700"}
+                    />
+                    <View style={{ marginLeft: 10, flex: 1 }}>
+                        <Text style={[
+                            styles.verificationWarningTitle,
+                            user?.bouncerProfile?.verificationStatus === 'REJECTED' && { color: '#ff4d4d' }
+                        ]}>
+                            {user?.bouncerProfile?.verificationStatus === 'REJECTED' ? 'Verification Rejected' : 'Verification Pending'}
+                        </Text>
+                        <Text style={styles.verificationWarningMsg}>
+                            {user?.bouncerProfile?.verificationStatus === 'REJECTED'
+                                ? `Reason: ${user?.bouncerProfile?.rejectionReason || 'Documents mismatch. Please update profile details.'}`
+                                : 'Admin is currently reviewing your documents. You will start receiving bookings once approved.'}
+                        </Text>
                     </View>
-                ))}
-            </View>
+                </View>
+            )}
 
-            <View style={styles.servicesSection}>
-                <Text style={styles.sectionHeader}>Services we Provide</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.servicesScroll}>
-                    {SERVICES.map(item => (
-                        <TouchableOpacity key={item.id} style={styles.serviceCard} activeOpacity={0.8}>
-                            <MaterialCommunityIcons name={item.icon} size={28} color="#D4AF37" />
-                            <Text style={styles.serviceTitle}>{item.title}</Text>
-                        </TouchableOpacity>
-                    ))}
-                </ScrollView>
-            </View>
+            {/* Removed Trust and Services sections */}
 
             <Text style={[styles.sectionHeader, { paddingHorizontal: 20, marginTop: 10 }]}>Booking Requests</Text>
 
@@ -448,53 +423,9 @@ export default function BouncerHomeScreen() {
 
     const footerComponent = React.useMemo(() => (
         <View style={styles.footerWrapper}>
-            {/* Thought of the Day */}
-            <View style={styles.quoteCard}>
-                <MaterialCommunityIcons name="format-quote-open" size={50} color="rgba(212, 175, 55, 0.15)" style={styles.quoteIcon} />
-                <View style={styles.quoteHeader}>
-                    <MaterialCommunityIcons name="lightbulb-outline" size={18} color="#D4AF37" />
-                    <Text style={styles.quoteTitle}>Thought of the Day</Text>
-                </View>
-                <Text style={styles.quoteText}>"{quote}"</Text>
-            </View>
-
-            {/* Testimonials */}
-            <View style={styles.testimonialSection}>
-                <Text style={[styles.sectionHeader, { paddingHorizontal: 20 }]}>Client Experiences</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.testimonialScroll}>
-                    {TESTIMONIALS.map(item => (
-                        <View key={item.id} style={styles.testimonialCard}>
-                            <View style={styles.testimonialHeader}>
-                                <View style={styles.testimonialAvatar}>
-                                    <Text style={styles.testimonialAvatarText}>{item.name.charAt(0)}</Text>
-                                </View>
-                                <View>
-                                    <Text style={styles.testimonialName}>{item.name}</Text>
-                                    <View style={styles.starsRow}>
-                                        {[1, 2, 3, 4, 5].map(star => (
-                                            <MaterialCommunityIcons key={star} name="star" size={12} color="#D4AF37" />
-                                        ))}
-                                    </View>
-                                </View>
-                            </View>
-                            <Text style={styles.testimonialText}>"{item.text}"</Text>
-                        </View>
-                    ))}
-                </ScrollView>
-            </View>
-
-            {/* Amazing Facts */}
-            <View style={styles.factCard}>
-                <View style={styles.factHeader}>
-                    <MaterialCommunityIcons name="shield-search" size={20} color="#D4AF37" />
-                    <Text style={styles.factTitle}>Amazing Security Fact</Text>
-                </View>
-                <Text style={styles.factText}>{fact}</Text>
-            </View>
-
             <View style={{ height: 120 }} />
         </View>
-    ), [quote, fact]);
+    ), []);
 
     const renderBookingItem = React.useCallback(({ item }: { item: BouncerBooking }) => (
         <BookingCardBouncer item={item} navigation={navigation} onResponse={handleBookingResponse} />
@@ -567,49 +498,62 @@ const styles = StyleSheet.create({
     },
     headerWrapper: {
         paddingTop: Platform.OS === 'ios' ? 50 : 20,
+        paddingHorizontal: 20,
     },
     topRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        paddingHorizontal: 20,
         marginBottom: 20,
     },
-    logoAndTitle: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    logoBox: {
-        width: 44,
-        height: 44,
-        backgroundColor: '#161616',
-        borderRadius: 14,
+    backBtnHeader: {
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        backgroundColor: 'rgba(255,255,255,0.06)',
         justifyContent: 'center',
         alignItems: 'center',
-        marginRight: 12,
+        marginRight: 8,
+    },
+
+    topPillBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#161616',
+        paddingHorizontal: 16,
+        paddingVertical: 10,
+        borderRadius: 20,
         borderWidth: 1,
         borderColor: '#262626',
-    },
-    appName: {
-        fontSize: 18,
-        fontWeight: '900',
-        color: '#fff',
-        letterSpacing: 1,
     },
     locationText: {
         fontSize: 12,
-        color: '#A0A0A0',
-        fontWeight: '500',
+        color: '#fff',
+        marginLeft: 6,
+        maxWidth: 100,
+        fontWeight: '600',
     },
-    notifBtn: {
+    headerRightControls: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+    },
+    iconPillBtn: {
         width: 44,
         height: 44,
+        borderRadius: 22,
         backgroundColor: '#161616',
-        borderRadius: 14,
         justifyContent: 'center',
         alignItems: 'center',
         borderWidth: 1,
         borderColor: '#262626',
+    },
+    avatarPill: {
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        borderWidth: 2,
+        borderColor: '#FFD700',
     },
     redDot: {
         position: 'absolute',
@@ -619,56 +563,53 @@ const styles = StyleSheet.create({
         height: 8,
         borderRadius: 4,
         backgroundColor: '#ef4444',
-        borderWidth: 1,
-        borderColor: '#161616',
     },
-    heroSection: {
-        paddingHorizontal: 20,
-        marginBottom: 25,
+    titleRow: {
+        marginBottom: 20,
     },
-    heroGreeting: {
-        fontSize: 16,
-        color: '#A0A0A0',
-        fontWeight: '500',
-    },
-    heroTitle: {
+    mainTitle: {
         fontSize: 32,
         fontWeight: '800',
         color: '#fff',
-        marginBottom: 4,
+        marginBottom: 10,
     },
-    heroSubtitle: {
-        fontSize: 16,
-        color: '#D4AF37',
-        fontWeight: '600',
-        letterSpacing: 0.5,
-        marginBottom: 20,
-    },
-    heroCTA: {
+    analyticsBar: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'space-between',
-        backgroundColor: '#D4AF37',
-        borderRadius: 16,
-        padding: 16,
-        marginBottom: 20,
-        shadowColor: '#D4AF37',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 10,
-        elevation: 8,
+        height: 6,
+        backgroundColor: '#161616',
+        borderRadius: 3,
+        width: '80%',
     },
-    heroCTAText: {
-        color: '#000',
-        fontSize: 15,
+    analyticsFill: {
+        height: '100%',
+        width: '40%',
+        backgroundColor: '#FFD700',
+        borderRadius: 3,
+    },
+    heroSection: {
+        marginBottom: 25,
+        backgroundColor: '#161616',
+        borderRadius: 30,
+        padding: 20,
+        borderWidth: 1,
+        borderColor: '#262626',
+    },
+    heroTextContent: {
+        marginBottom: 15,
+    },
+    heroGreeting: {
+        fontSize: 14,
+        color: '#FFD700',
         fontWeight: '700',
-        flex: 1,
-        paddingRight: 10,
+        letterSpacing: 1,
+        textTransform: 'uppercase',
+        marginBottom: 4,
     },
-    ctaArrow: {
-        backgroundColor: 'rgba(0,0,0,0.1)',
-        padding: 6,
-        borderRadius: 10,
+    heroTitle: {
+        fontSize: 26,
+        fontWeight: '800',
+        color: '#fff',
     },
     statusRow: {
         flexDirection: 'row',
@@ -677,7 +618,7 @@ const styles = StyleSheet.create({
     rolePill: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#D4AF37',
+        backgroundColor: '#FFD700',
         paddingHorizontal: 12,
         paddingVertical: 6,
         borderRadius: 20,
@@ -772,125 +713,97 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         marginTop: 10,
     },
-    // Bookings
+    // Bookings - Pill Style
     bookingCard: {
         backgroundColor: '#161616',
-        borderRadius: 16,
-        padding: 15,
+        borderRadius: 24,
         marginHorizontal: 20,
-        marginBottom: 15,
+        marginBottom: 16,
         borderWidth: 1,
         borderColor: '#262626',
+        overflow: 'hidden',
     },
-    bookingHeader: {
+    bookingPillRow: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
+        padding: 14,
         alignItems: 'center',
-        marginBottom: 15,
     },
-    userInfo: {
-        flexDirection: 'row',
-        alignItems: 'center',
+    avatarImage: {
+        width: 48,
+        height: 48,
+        borderRadius: 24,
+        marginRight: 14,
     },
     avatarPlaceholder: {
-        width: 44,
-        height: 44,
-        borderRadius: 22,
-        backgroundColor: '#262626',
+        width: 48,
+        height: 48,
+        borderRadius: 24,
+        backgroundColor: '#111',
         justifyContent: 'center',
         alignItems: 'center',
-        marginRight: 12,
+        marginRight: 14,
         borderWidth: 1,
-        borderColor: '#D4AF37',
+        borderColor: '#FFD700',
     },
     avatarText: {
-        color: '#D4AF37',
+        color: '#FFD700',
         fontWeight: '800',
         fontSize: 18,
     },
+    bookingContent: {
+        flex: 1,
+        justifyContent: 'center',
+    },
     userName: {
         color: '#fff',
-        fontWeight: '700',
+        fontWeight: '800',
         fontSize: 16,
+        marginBottom: 4,
     },
-    userSubtext: {
+    detailPillRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 4,
+    },
+    detailText: {
         color: '#A0A0A0',
+        marginLeft: 6,
         fontSize: 12,
         fontWeight: '500',
     },
-    statusBadge: {
-        backgroundColor: 'rgba(212, 175, 55, 0.1)',
-        paddingHorizontal: 10,
-        paddingVertical: 4,
-        borderRadius: 6,
-        borderWidth: 1,
-        borderColor: 'rgba(212, 175, 55, 0.3)',
-    },
-    statusText: {
-        color: '#D4AF37',
-        fontSize: 10,
-        fontWeight: '800',
-        letterSpacing: 0.5,
-    },
-    bookingDetails: {
-        backgroundColor: '#0A0A0A',
-        borderRadius: 12,
-        padding: 12,
-        marginBottom: 15,
-    },
-    detailRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 10,
-    },
-    detailText: {
-        color: '#ccc',
-        marginLeft: 8,
-        fontSize: 13,
-        fontWeight: '500',
-    },
-    payoutBadge: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: 'rgba(74, 222, 128, 0.1)',
-        paddingHorizontal: 10,
-        paddingVertical: 4,
-        borderRadius: 8,
-    },
-    payoutLabel: {
-        fontSize: 11,
-        color: '#4ade80',
-        fontWeight: '600',
+    bookingRight: {
+        alignItems: 'flex-end',
+        justifyContent: 'space-between',
+        height: 55,
     },
     payoutAmount: {
         fontSize: 15,
         fontWeight: '800',
-        color: '#4ade80',
+        color: '#FFD700',
     },
     actionButtons: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
-        gap: 12,
+        alignItems: 'center',
     },
     actionBtn: {
-        flex: 1,
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        borderRadius: 14,
         justifyContent: 'center',
         alignItems: 'center',
-        paddingVertical: 12,
-        borderRadius: 12,
-        borderWidth: 1,
     },
     rejectBtn: {
-        backgroundColor: 'transparent',
+        backgroundColor: 'rgba(239, 68, 68, 0.05)',
         borderColor: 'rgba(239, 68, 68, 0.3)',
     },
     acceptBtn: {
-        backgroundColor: '#D4AF37',
-        borderColor: '#D4AF37',
+        backgroundColor: '#FFD700',
+        borderColor: '#FFD700',
     },
     btnText: {
         fontWeight: '800',
         fontSize: 13,
+        letterSpacing: 0.5,
     },
     emptyState: {
         alignItems: 'center',
@@ -913,7 +826,7 @@ const styles = StyleSheet.create({
         borderColor: '#262626',
     },
     refreshBtnText: {
-        color: '#D4AF37',
+        color: '#FFD700',
         fontWeight: '700',
     },
     // Footer Sections
@@ -1033,22 +946,24 @@ const styles = StyleSheet.create({
     },
     sosButton: {
         position: 'absolute',
-        bottom: 30,
-        right: 25,
-        width: 65,
-        height: 65,
-        borderRadius: 32.5,
+        bottom: 95,
+        right: 20,
+        width: 62,
+        height: 62,
+        borderRadius: 31,
         backgroundColor: '#ef4444',
         justifyContent: 'center',
         alignItems: 'center',
-        elevation: 10,
+        elevation: 12,
         shadowColor: '#ef4444',
         shadowOffset: { width: 0, height: 6 },
         shadowOpacity: 0.6,
         shadowRadius: 8,
-        borderWidth: 3,
-        borderColor: 'rgba(255,255,255,0.2)',
+        borderWidth: 2.5,
+        borderColor: 'rgba(255,255,255,0.3)',
+        zIndex: 999,
     },
+
     sosLoading: {
         opacity: 0.8,
     },
@@ -1148,5 +1063,31 @@ const styles = StyleSheet.create({
         borderRadius: 4,
         backgroundColor: '#D4AF37',
         marginTop: 4,
+    },
+    verificationWarningBanner: {
+        backgroundColor: 'rgba(197, 160, 89, 0.1)',
+        borderColor: '#C5A059',
+        borderWidth: 1,
+        borderRadius: 12,
+        padding: 14,
+        marginHorizontal: 20,
+        marginTop: 15,
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    verificationRejectedBanner: {
+        backgroundColor: 'rgba(255, 77, 77, 0.05)',
+        borderColor: 'rgba(239, 68, 68, 0.3)',
+    },
+    verificationWarningTitle: {
+        color: '#C5A059',
+        fontSize: 14,
+        fontWeight: 'bold',
+        marginBottom: 2,
+    },
+    verificationWarningMsg: {
+        color: '#ccc',
+        fontSize: 12,
+        lineHeight: 16,
     },
 });

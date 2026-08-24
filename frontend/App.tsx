@@ -4,8 +4,9 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { AuthProvider, AuthContext } from './src/context/AuthContext';
+import { ThemeProvider, ThemeContext } from './src/context/ThemeContext';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { StatusBar } from 'react-native';
+import { StatusBar, Platform } from 'react-native';
 import { setNavigationRef, checkInitialNotification } from './src/services/fcmService';
 import BootSplash from 'react-native-bootsplash';
 
@@ -25,10 +26,13 @@ import BookingsScreen from './src/screens/BookingsScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
 import BouncerDetailScreen from './src/screens/BouncerDetailScreen';
 import BookingDetailsScreen from './src/screens/BookingDetailsScreen';
+import ChatScreen from './src/screens/ChatScreen';
 
 import BookingFlowScreen from './src/screens/BookingFlowScreen';
 import MapScreen from './src/screens/MapScreen';
-import GuestAuthSheet from './src/components/GuestAuthSheet';
+import ClientVerificationPendingScreen from './src/screens/ClientVerificationPendingScreen';
+import ClientProfileSetupScreen from './src/screens/ClientProfileSetupScreen';
+import { notificationService } from './src/services/notificationService';
 
 import { RootStackParamList, AuthStackParamList, MainTabParamList, HomeStackParamList, BouncerTabParamList } from './src/types';
 
@@ -42,16 +46,16 @@ const DarkTheme = {
     ...DefaultTheme,
     colors: {
         ...DefaultTheme.colors,
-        background: '#0F0F0F',
-        card: '#1E1E1E',
+        background: '#070708',
+        card: '#121214',
         text: '#ffffff',
-        border: '#333333',
+        border: 'rgba(255, 255, 255, 0.04)',
         primary: '#FFD700',
     },
 };
 
 const AuthNavigator = () => (
-    <AuthStack.Navigator screenOptions={{ headerShown: false }}>
+    <AuthStack.Navigator screenOptions={{ headerShown: false, cardStyle: { backgroundColor: '#070708' } }}>
         <AuthStack.Screen name="Login" component={LoginScreen} />
         <AuthStack.Screen name="Signup" component={SignupScreen} />
     </AuthStack.Navigator>
@@ -61,7 +65,7 @@ import ContactUsScreen from './src/screens/ContactUsScreen';
 import PaymentScreen from './src/screens/PaymentScreen';
 
 const HomeNavigator = () => (
-    <HomeStack.Navigator screenOptions={{ headerShown: false, cardStyle: { backgroundColor: '#0F0F0F' } }}>
+    <HomeStack.Navigator screenOptions={{ headerShown: false, cardStyle: { backgroundColor: '#070708' } }}>
         <HomeStack.Screen name="BouncerList" component={HomeScreen} />
         <HomeStack.Screen name="ExploreProfessionals" component={ExploreProfessionalsScreen} />
         <HomeStack.Screen name="BouncerDetail" component={BouncerDetailScreen} />
@@ -73,80 +77,125 @@ const HomeNavigator = () => (
     </HomeStack.Navigator>
 );
 
-const MainNavigator = () => (
-    <MainTab.Navigator
-        screenOptions={({ route }) => ({
-            tabBarIcon: ({ focused, color, size }) => {
-                let iconName: any = 'shield';
+const MainNavigator = () => {
+    const { colors } = useContext(ThemeContext);
+    return (
+        <MainTab.Navigator
+            screenOptions={({ route }) => ({
+                tabBarIcon: ({ focused, color, size }) => {
+                    let iconName: any = 'shield';
 
-                if (route.name === 'HomeStack') {
-                    iconName = focused ? 'shield' : 'shield-outline';
-                } else if (route.name === 'Bookings') {
-                    iconName = focused ? 'file-tray-full' : 'file-tray-outline';
-                } else if (route.name === 'Profile') {
-                    iconName = focused ? 'person' : 'person-outline';
-                }
+                    if (route.name === 'HomeStack') {
+                        iconName = focused ? 'shield' : 'shield-outline';
+                    } else if (route.name === 'Bookings') {
+                        iconName = focused ? 'file-tray-full' : 'file-tray-outline';
+                    } else if (route.name === 'Profile') {
+                        iconName = focused ? 'person' : 'person-outline';
+                    }
 
-                return <Ionicons name={iconName} size={size} color={color} />;
-            },
-            headerShown: false,
-            tabBarStyle: {
-                backgroundColor: '#1E1E1E',
-                borderTopWidth: 1,
-                borderTopColor: '#333',
-                height: 60,
-                paddingBottom: 8,
-                paddingTop: 8,
-            },
-            tabBarActiveTintColor: '#FFD700',
-            tabBarInactiveTintColor: '#666',
-            tabBarHideOnKeyboard: true,
-        })}
-    >
-        <MainTab.Screen name="HomeStack" component={HomeNavigator} options={{ title: 'Hire Security' }} />
-        <MainTab.Screen name="Bookings" component={BookingsScreen} options={{ title: 'Assignments' }} />
-        <MainTab.Screen name="Profile" component={ProfileScreen} options={{ title: 'Account' }} />
-    </MainTab.Navigator>
-);
+                    return <Ionicons name={iconName} size={size} color={color} />;
+                },
+                headerShown: false,
+                tabBarStyle: {
+                    position: 'absolute',
+                    bottom: Platform.OS === 'ios' ? 28 : 20,
+                    left: 16,
+                    right: 16,
+                    backgroundColor: colors.card,
+                    borderWidth: 1,
+                    borderColor: colors.border,
+                    height: 68,
+                    borderRadius: 24,
+                    paddingBottom: Platform.OS === 'ios' ? 8 : 8,
+                    paddingTop: 8,
+                    shadowColor: '#000',
+                    shadowOpacity: 0.2,
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowRadius: 10,
+                    elevation: 5,
+                },
+                tabBarItemStyle: {
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                },
+                tabBarLabelStyle: {
+                    fontSize: 10,
+                    fontWeight: '600',
+                    marginBottom: Platform.OS === 'ios' ? 0 : 4,
+                },
+                tabBarActiveTintColor: colors.gold,
+                tabBarInactiveTintColor: colors.textSecondary,
+                tabBarHideOnKeyboard: true,
+            })}
+        >
+            <MainTab.Screen name="HomeStack" component={HomeNavigator} options={{ title: 'Hire' }} />
+            <MainTab.Screen name="Bookings" component={BookingsScreen} options={{ title: 'Bookings' }} />
+            <MainTab.Screen name="Profile" component={ProfileScreen} options={{ title: 'Profile' }} />
+        </MainTab.Navigator>
+    );
+};
 
-const BouncerNavigator = () => (
-    <BouncerTab.Navigator
-        screenOptions={({ route }) => ({
-            tabBarIcon: ({ focused, color, size }) => {
-                let iconName: any = 'shield';
+const BouncerNavigator = () => {
+    const { colors } = useContext(ThemeContext);
+    return (
+        <BouncerTab.Navigator
+            screenOptions={({ route }) => ({
+                tabBarIcon: ({ focused, color, size }) => {
+                    let iconName: any = 'shield';
 
-                if (route.name === 'BouncerHome') {
-                    iconName = focused ? 'home' : 'home-outline';
-                } else if (route.name === 'History') {
-                    iconName = focused ? 'file-tray-full' : 'file-tray-outline';
-                } else if (route.name === 'Profile') {
-                    iconName = focused ? 'person' : 'person-outline';
-                }
+                    if (route.name === 'BouncerHome') {
+                        iconName = focused ? 'home' : 'home-outline';
+                    } else if (route.name === 'History') {
+                        iconName = focused ? 'file-tray-full' : 'file-tray-outline';
+                    } else if (route.name === 'Profile') {
+                        iconName = focused ? 'person' : 'person-outline';
+                    }
 
-                return <Ionicons name={iconName} size={size} color={color} />;
-            },
-            headerShown: false,
-            tabBarStyle: {
-                backgroundColor: '#1E1E1E',
-                borderTopWidth: 1,
-                borderTopColor: '#333',
-                height: 60,
-                paddingBottom: 8,
-                paddingTop: 8,
-            },
-            tabBarActiveTintColor: '#FFD700',
-            tabBarInactiveTintColor: '#666',
-            tabBarHideOnKeyboard: true,
-        })}
-    >
-        <BouncerTab.Screen name="BouncerHome" component={BouncerHomeScreen} options={{ title: 'Home' }} />
-        <BouncerTab.Screen name="History" component={BouncerHistoryScreen} options={{ title: 'History' }} />
-        <BouncerTab.Screen name="Profile" component={BouncerProfileScreen} options={{ title: 'Profile' }} />
-    </BouncerTab.Navigator>
-);
+                    return <Ionicons name={iconName} size={size} color={color} />;
+                },
+                headerShown: false,
+                tabBarStyle: {
+                    position: 'absolute',
+                    bottom: Platform.OS === 'ios' ? 28 : 20,
+                    left: 16,
+                    right: 16,
+                    backgroundColor: colors.card,
+                    borderWidth: 1,
+                    borderColor: colors.border,
+                    height: 68,
+                    borderRadius: 24,
+                    paddingBottom: Platform.OS === 'ios' ? 8 : 8,
+                    paddingTop: 8,
+                    shadowColor: '#000',
+                    shadowOpacity: 0.2,
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowRadius: 10,
+                    elevation: 5,
+                },
+                tabBarItemStyle: {
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                },
+                tabBarLabelStyle: {
+                    fontSize: 10,
+                    fontWeight: '600',
+                    marginBottom: Platform.OS === 'ios' ? 0 : 4,
+                },
+                tabBarActiveTintColor: colors.gold,
+                tabBarInactiveTintColor: colors.textSecondary,
+                tabBarHideOnKeyboard: true,
+            })}
+        >
+            <BouncerTab.Screen name="BouncerHome" component={BouncerHomeScreen} options={{ title: 'Dashboard' }} />
+            <BouncerTab.Screen name="History" component={BouncerHistoryScreen} options={{ title: 'Assignments' }} />
+            <BouncerTab.Screen name="Profile" component={BouncerProfileScreen} options={{ title: 'Profile' }} />
+        </BouncerTab.Navigator>
+    );
+};
 
 const AppContent = () => {
     const { token, isLoading, user, pendingBouncerRegistration } = useContext(AuthContext);
+    const { theme } = useContext(ThemeContext);
     const navigationRef = useRef<NavigationContainerRef<any>>(null);
     const [isSplashAnimationComplete, setSplashAnimationComplete] = useState(false);
 
@@ -178,13 +227,29 @@ const AppContent = () => {
         (user?.bouncerProfile !== null && user?.bouncerProfile !== undefined);
 
     const isApproved = user?.bouncerProfile?.verificationStatus === 'APPROVED';
+    const isClientApproved =
+        user?.role === 'USER' ||
+        user?.role === 'ADMIN' ||
+        user?.clientProfile?.verificationStatus === 'APPROVED';
 
-    console.log(`[AppNavigation] User: ${user?.email}, Role: ${user?.role}, isBouncer: ${isBouncerFlow}, isApproved: ${isApproved}`);
+    console.log(`[AppNavigation] User: ${user?.email}, Role: ${user?.role}, isBouncer: ${isBouncerFlow}, bouncerApproved: ${isApproved}, clientApproved: ${isClientApproved}`);
+
+    const navigationTheme = theme === 'dark' ? DarkTheme : {
+        ...DefaultTheme,
+        colors: {
+            ...DefaultTheme.colors,
+            background: '#F5F5F7',
+            card: '#FFFFFF',
+            text: '#000000',
+            border: '#E5E5EA',
+            primary: '#D4AF37',
+        }
+    };
 
     return (
         <NavigationContainer 
             ref={navigationRef} 
-            theme={DarkTheme}
+            theme={navigationTheme}
             onReady={() => {
                 BootSplash.hide({ fade: true });
             }}
@@ -202,32 +267,47 @@ const AppContent = () => {
                                 initialParams={pendingBouncerRegistration}
                             />
                         ) : isBouncerFlow ? (
-                            // If they are a bouncer but not yet approved (PENDING or REJECTED)
-                            !isApproved ? (
-                                <Stack.Screen
-                                    name="VerificationPending"
-                                    component={VerificationPendingScreen}
-                                    initialParams={{ userId: user?.id }}
-                                />
-                            ) : (
-                                <Stack.Screen name="BouncerMain" component={BouncerNavigator} />
-                            )
+                            <>
+                                {!user?.bouncerProfile?.bio ? (
+                                    <Stack.Screen name="BouncerSurvey" component={BouncerSurveyScreen} options={{ headerShown: false }} />
+                                ) : !isApproved ? (
+                                    <Stack.Screen name="VerificationPending" component={VerificationPendingScreen} options={{ headerShown: false }} />
+                                ) : (
+                                    <Stack.Screen name="BouncerMain" component={BouncerNavigator} />
+                                )}
+                                {user?.bouncerProfile?.bio && isApproved && (
+                                    <Stack.Screen name="BouncerSurvey" component={BouncerSurveyScreen} options={{ headerShown: false }} />
+                                )}
+                            </>
                         ) : (
-                            <Stack.Screen name="ClientMain" component={MainNavigator} />
+                            !isClientApproved ? (
+                                <>
+                                    {!user?.clientProfile ? (
+                                        <Stack.Screen name="ClientProfileSetup" component={ClientProfileSetupScreen} options={{ headerShown: false }} />
+                                    ) : (
+                                        <>
+                                            <Stack.Screen name="ClientVerificationPending" component={ClientVerificationPendingScreen} options={{ headerShown: false }} />
+                                            <Stack.Screen name="ClientProfileSetup" component={ClientProfileSetupScreen} options={{ headerShown: false }} />
+                                        </>
+                                    )}
+                                </>
+                            ) : (
+                                <Stack.Screen name="ClientMain" component={MainNavigator} />
+                            )
                         )}
 
                         {/* Common screens that might be needed in either flow (like during registration) */}
                         {!pendingBouncerRegistration && !isBouncerFlow && (
                             <Stack.Screen name="BouncerRegistration" component={BouncerRegistrationScreen} />
                         )}
-                        <Stack.Screen name="BouncerSurvey" component={BouncerSurveyScreen} options={{ headerShown: false }} />
                         <Stack.Screen name="BouncerBookingDetail" component={BouncerBookingDetailScreen} />
                         <Stack.Screen name="BookingDetails" component={BookingDetailsScreen} />
+                        <Stack.Screen name="Chat" component={ChatScreen} />
                         <Stack.Screen name="Notifications" component={NotificationScreen} options={{ headerShown: false }} />
+
                     </>
                 )}
             </Stack.Navigator>
-            <GuestAuthSheet />
         </NavigationContainer>
     );
 };
@@ -235,9 +315,11 @@ const AppContent = () => {
 export default function App() {
     return (
         <SafeAreaProvider>
-            <AuthProvider>
-                <AppContent />
-            </AuthProvider>
+            <ThemeProvider>
+                <AuthProvider>
+                    <AppContent />
+                </AuthProvider>
+            </ThemeProvider>
         </SafeAreaProvider>
     );
 }

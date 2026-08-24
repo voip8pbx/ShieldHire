@@ -1,12 +1,13 @@
 import admin from 'firebase-admin';
 
-// Firebase Admin can verify ID tokens with just the projectId set
-// (token verification uses Google's public JWKS endpoint, no private key needed)
 if (!admin.apps.length) {
-    console.log('[FIREBASE] Initializing with Project ID:', process.env.FIREBASE_PROJECT_ID);
-    admin.initializeApp({
-        projectId: process.env.FIREBASE_PROJECT_ID,
-    });
+    const projectId = process.env.FIREBASE_PROJECT_ID;
+    if (!projectId) {
+        console.warn('[FIREBASE] FIREBASE_PROJECT_ID not set — Firebase token verification will be unavailable.');
+    } else {
+        console.log('[FIREBASE] Initializing with Project ID:', projectId);
+        admin.initializeApp({ projectId });
+    }
 }
 
 export const firebaseAdmin = admin;

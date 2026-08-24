@@ -1,7 +1,19 @@
 import express from 'express';
 import { supabaseAdmin } from '../config/supabase';
+import { authenticate, authorize } from '../middleware/authMiddleware';
 
 const router = express.Router();
+
+const parseBioMetadata = (bioStr: string | null) => {
+    const defaultVal = { bio: bioStr || '', upiId: '' };
+    if (!bioStr) return defaultVal;
+    
+    const parts = bioStr.split(' | UPI ID: ');
+    if (parts.length > 1) {
+        return { bio: parts[0], upiId: parts[1] };
+    }
+    return defaultVal;
+};
 
 // Helper to convert snake_case DB columns to camelCase for frontend
 const camelCaseKeys = (obj: any): any => {
@@ -10,6 +22,11 @@ const camelCaseKeys = (obj: any): any => {
     for (const key in obj) {
         const camelKey = key.replace(/_([a-z0-9])/g, (g) => g[1].toUpperCase());
         newObj[camelKey] = obj[key];
+    }
+    if (newObj.bio !== undefined) {
+        const { bio, upiId } = parseBioMetadata(newObj.bio);
+        newObj.bio = bio;
+        newObj.upiId = upiId;
     }
     return newObj;
 };
@@ -116,11 +133,46 @@ router.get('/:id', async (req, res) => {
     }
 });
 
-// Update bouncer
-router.patch('/:id', async (req, res) => {
+// Update bouncer (Authenticated - Bouncer themselves or Admin)
+router.patch('/:id', authenticate, async (req, res) => {
     try {
         const { id } = req.params;
         const updateData = req.body;
+        const requestingUser = (req as any).user;
+
+        // Fetch the bouncer profile to verify ownership
+        const { data: bouncerCheck, error: fetchError } = await supabaseAdmin
+            .from('bouncers')
+            .select('userId')
+            .eq('id', id)
+            .single();
+
+        if (fetchError || !bouncerCheck) {
+            return res.status(404).json({ error: 'Bouncer profile not found' });
+        }
+
+        // Authorize: user must be ADMIN or the bouncer themselves
+        const isSelf = requestingUser.id === bouncerCheck.userId;
+        const isAdmin = requestingUser.role === 'ADMIN';
+
+        if (!isAdmin && !isSelf) {
+            return res.status(403).json({ error: 'Access denied. You can only update your own profile.' });
+        }
+
+        // Sanitize update data if not admin (remove rating, verificationStatus, isGunman, etc.)
+        if (!isAdmin) {
+            const allowedBouncerFields = [
+                'age', 'gender', 'bio', 'skills', 'experience', 'gallery',
+                'profileImageUrl', 'galleryImage1', 'galleryImage2', 'galleryImage3', 'galleryImage4',
+                'gunLicenseUrl', 'professionalDescription', 'languages', 'height', 'weight',
+                'bloodGroup', 'emergencyContact', 'isAvailable'
+            ];
+            Object.keys(updateData).forEach(key => {
+                if (!allowedBouncerFields.includes(key)) {
+                    delete updateData[key];
+                }
+            });
+        }
 
         // Convert update data to snake_case
         const snakeUpdateData = snakeCaseKeys(updateData);
@@ -156,8 +208,8 @@ router.patch('/:id', async (req, res) => {
     }
 });
 
-// Delete bouncer
-router.delete('/:id', async (req, res) => {
+// Delete bouncer (Admin only)
+router.delete('/:id', authenticate, authorize(['ADMIN']), async (req, res) => {
     try {
         const { id } = req.params;
 

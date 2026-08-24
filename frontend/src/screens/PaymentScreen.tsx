@@ -13,15 +13,20 @@ import {
     KeyboardAvoidingView,
     Platform,
     StatusBar,
+    Clipboard,
+    Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
 import { HomeStackParamList } from '../types';
 import api from '../services/api';
+import { ENV } from '../config/env';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { BlurView } from '@react-native-community/blur';
+import { launchImageLibrary } from 'react-native-image-picker';
+import { uploadImageToBlob } from '../services/uploadService';
 
 type PaymentScreenNavigationProp = StackNavigationProp<HomeStackParamList, 'PaymentScreen'>;
 type PaymentScreenRouteProp = RouteProp<HomeStackParamList, 'PaymentScreen'>;
@@ -35,16 +40,16 @@ const { width } = Dimensions.get('window');
 
 // Premium Theme Constants
 const THEME = {
-    background: '#050505',
-    card: '#121212',
-    cardBorder: 'rgba(255, 255, 255, 0.05)',
+    background: '#121214',
+    card: '#1A1A1E',
+    cardBorder: 'rgba(255, 255, 255, 0.06)',
     gold: '#FFD700',
     goldLight: '#FFE34D',
     goldDark: '#CCAC00',
     textPrimary: '#FFFFFF',
-    textSecondary: '#A0A0A0',
+    textSecondary: '#8E8E93',
     textMuted: '#666666',
-    success: '#00C853',
+    success: '#34C759',
     error: '#FF3B30',
 };
 
@@ -60,6 +65,7 @@ export default function PaymentScreen({ navigation, route }: Props) {
         totalPrice,
         package: bookingPackage,
         notes,
+        bookingId,
     } = route.params;
 
     // Fees Calculation
@@ -68,10 +74,43 @@ export default function PaymentScreen({ navigation, route }: Props) {
     const convenienceFee = 29;
     const finalTotal = totalPrice + platformFee + gst + convenienceFee;
 
+    const [bouncer, setBouncer] = useState<any>(null);
     const [transactionId, setTransactionId] = useState('');
+    const [paymentProofUrl, setPaymentProofUrl] = useState<string | null>(null);
+    const [uploadingImage, setUploadingImage] = useState(false);
     const [loading, setLoading] = useState(false);
     const [copied, setCopied] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
+
+    const handlePickImage = () => {
+        launchImageLibrary(
+            {
+                mediaType: 'photo',
+                includeBase64: true,
+                maxHeight: 1200,
+                maxWidth: 1200,
+                quality: 0.8,
+            },
+            async (response) => {
+                if (response.didCancel || response.errorCode || !response.assets?.[0]) return;
+                const asset = response.assets[0];
+                if (!asset.uri || !asset.base64) return;
+
+                setUploadingImage(true);
+                try {
+                    const dataUri = `data:${asset.type};base64,${asset.base64}`;
+                    const uploadedUrl = await uploadImageToBlob(dataUri, `payment-${Date.now()}.jpg`, 'payments');
+                    if (uploadedUrl) {
+                        setPaymentProofUrl(uploadedUrl);
+                    }
+                } catch (e: any) {
+                    Alert.alert('Upload Failed', 'Could not upload payment proof.');
+                } finally {
+                    setUploadingImage(false);
+                }
+            }
+        );
+    };
 
     // Animations
     const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -92,22 +131,41 @@ export default function PaymentScreen({ navigation, route }: Props) {
                 useNativeDriver: true,
             })
         ]).start();
-    }, []);
+
+        const fetchBouncer = async () => {
+            if (bouncerId && bouncerId !== 'setup-only') {
+                try {
+                    const response = await api.get(`/bouncers/${bouncerId}`);
+                    setBouncer(response.data);
+                } catch (error) {
+                    console.error('Failed to fetch bouncer payment details:', error);
+                }
+            }
+        };
+        fetchBouncer();
+    }, [bouncerId]);
+
+    const bouncerUpiId = bouncer?.upiId || '';
+    const hasUpi = !!bouncerUpiId;
 
     const handleCopyUPI = () => {
-        // Visual bounce feedback
+        if (!hasUpi) return;
         Animated.sequence([
             Animated.timing(copyBounce, { toValue: 0.9, duration: 100, useNativeDriver: true }),
             Animated.timing(copyBounce, { toValue: 1, duration: 100, useNativeDriver: true })
         ]).start();
-        
+        try {
+            Clipboard.setString(bouncerUpiId);
+        } catch (e) {
+            console.log('Clipboard copy failed:', e);
+        }
         setCopied(true);
         setTimeout(() => setCopied(false), 3000);
     };
 
     const handleConfirmBooking = async () => {
-        if (!transactionId.trim() || transactionId.length < 6) {
-            Alert.alert('Verification Required', 'Please enter a valid UPI Transaction ID to proceed.');
+        if ((!transactionId.trim() || transactionId.length < 6) && !paymentProofUrl) {
+            Alert.alert('Verification Required', 'Please enter a valid UPI Transaction ID or upload a screenshot to proceed.');
             return;
         }
 
@@ -126,19 +184,27 @@ export default function PaymentScreen({ navigation, route }: Props) {
 
         setLoading(true);
         try {
-            // Re-using existing booking endpoint. We append the transaction ID to the notes.
-            await api.post('/bookings', {
-                bouncerId,
-                date,
-                time,
-                location,
-                latitude,
-                longitude,
-                duration,
-                totalPrice,
-                package: bookingPackage,
-                notes: notes ? notes + `\nTxn ID: ${transactionId}` : `Txn ID: ${transactionId}`,
-            });
+            if (bookingId) {
+                // Submit payment details for an existing booking request
+                await api.patch(`/bookings/${bookingId}/payment-details`, {
+                    transactionId,
+                    paymentProofUrl
+                });
+            } else {
+                // Legacy direct creation
+                await api.post('/bookings', {
+                    bouncerId,
+                    date,
+                    time,
+                    location,
+                    latitude,
+                    longitude,
+                    duration,
+                    totalPrice,
+                    package: bookingPackage,
+                    notes: notes ? notes + `\nTxn ID: ${transactionId}` : `Txn ID: ${transactionId}`,
+                });
+            }
 
             // Success Animation
             setShowSuccess(true);
@@ -149,7 +215,12 @@ export default function PaymentScreen({ navigation, route }: Props) {
             }).start();
 
             setTimeout(() => {
-                navigation.popToTop();
+                if (bookingId) {
+                    // Navigate back to the Chat screen!
+                    (navigation as any).navigate('Chat', { bookingId });
+                } else {
+                    navigation.popToTop();
+                }
             }, 2500);
 
         } catch (error: any) {
@@ -220,28 +291,30 @@ export default function PaymentScreen({ navigation, route }: Props) {
                         {/* Payment Method Card */}
                         <View style={styles.card}>
                             <Text style={styles.sectionTitle}>Pay using UPI</Text>
-                            <View style={styles.upiContainer}>
-                                <Text style={styles.upiId}>8602254165@sbi</Text>
-                                <Animated.View style={{ transform: [{ scale: copyBounce }] }}>
-                                    <TouchableOpacity 
-                                        style={[styles.copyButton, copied && styles.copyButtonSuccess]} 
-                                        onPress={handleCopyUPI}
-                                        activeOpacity={0.7}
-                                    >
-                                        <Ionicons name={copied ? "checkmark-circle" : "copy-outline"} size={16} color={copied ? THEME.success : THEME.gold} />
-                                        <Text style={[styles.copyButtonText, copied && { color: THEME.success }]}>
-                                            {copied ? 'Copied' : 'Copy UPI ID'}
-                                        </Text>
-                                    </TouchableOpacity>
-                                </Animated.View>
-                            </View>
-
-                            <View style={styles.qrContainer}>
-                                <View style={styles.qrBox}>
-                                    <Ionicons name="qr-code-outline" size={60} color={THEME.textSecondary} />
-                                    <Text style={styles.qrText}>Scan QR to Pay</Text>
+                            {hasUpi ? (
+                                <View style={styles.upiContainer}>
+                                    <Text style={styles.upiId}>{bouncerUpiId}</Text>
+                                    <Animated.View style={{ transform: [{ scale: copyBounce }] }}>
+                                        <TouchableOpacity 
+                                            style={[styles.copyButton, copied && styles.copyButtonSuccess]} 
+                                            onPress={handleCopyUPI}
+                                            activeOpacity={0.7}
+                                        >
+                                            <Ionicons name={copied ? "checkmark-circle" : "copy-outline"} size={16} color={copied ? THEME.success : THEME.gold} />
+                                            <Text style={[styles.copyButtonText, copied && { color: THEME.success }]}>
+                                                {copied ? 'Copied' : 'Copy UPI ID'}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    </Animated.View>
                                 </View>
-                            </View>
+                            ) : (
+                                <View style={styles.upiNotConfiguredBox}>
+                                    <Ionicons name="alert-circle-outline" size={24} color={THEME.error} />
+                                    <Text style={styles.upiNotConfiguredText}>
+                                        UPI not configured. Contact the guard directly to arrange payment.
+                                    </Text>
+                                </View>
+                            )}
                         </View>
 
                         {/* Payment Proof Section */}
@@ -258,6 +331,36 @@ export default function PaymentScreen({ navigation, route }: Props) {
                                     onChangeText={setTransactionId}
                                     autoCapitalize="characters"
                                 />
+                            </View>
+
+                            <View style={styles.uploadContainer}>
+                                <Text style={[styles.proofSubtitle, { marginTop: 15 }]}>Or upload a screenshot of your payment</Text>
+                                {paymentProofUrl ? (
+                                    <View style={styles.imagePreviewContainer}>
+                                        <Image source={{ uri: paymentProofUrl }} style={styles.imagePreview} />
+                                        <TouchableOpacity 
+                                            style={styles.removeImageBtn} 
+                                            onPress={() => setPaymentProofUrl(null)}
+                                        >
+                                            <Ionicons name="close-circle" size={28} color={THEME.error} />
+                                        </TouchableOpacity>
+                                    </View>
+                                ) : (
+                                    <TouchableOpacity 
+                                        style={styles.uploadBtn} 
+                                        onPress={handlePickImage}
+                                        disabled={uploadingImage}
+                                    >
+                                        {uploadingImage ? (
+                                            <ActivityIndicator size="small" color={THEME.gold} />
+                                        ) : (
+                                            <>
+                                                <Ionicons name="cloud-upload-outline" size={24} color={THEME.gold} />
+                                                <Text style={styles.uploadBtnText}>Upload Screenshot</Text>
+                                            </>
+                                        )}
+                                    </TouchableOpacity>
+                                )}
                             </View>
                         </View>
 
@@ -451,26 +554,21 @@ const styles = StyleSheet.create({
         color: THEME.gold,
         marginLeft: 6,
     },
-    qrContainer: {
+    upiNotConfiguredBox: {
+        flexDirection: 'row',
         alignItems: 'center',
-        marginVertical: 10,
-    },
-    qrBox: {
-        width: 150,
-        height: 150,
-        borderRadius: 16,
-        backgroundColor: 'rgba(255, 255, 255, 0.02)',
+        backgroundColor: 'rgba(255, 59, 48, 0.08)',
         borderWidth: 1,
-        borderColor: THEME.cardBorder,
-        borderStyle: 'dashed',
-        justifyContent: 'center',
-        alignItems: 'center',
+        borderColor: 'rgba(255, 59, 48, 0.3)',
+        borderRadius: 12,
+        padding: 14,
+        gap: 10,
     },
-    qrText: {
-        marginTop: 12,
-        fontSize: 12,
-        color: THEME.textSecondary,
-        fontWeight: '500',
+    upiNotConfiguredText: {
+        flex: 1,
+        fontSize: 13,
+        color: THEME.error,
+        lineHeight: 18,
     },
     proofSubtitle: {
         fontSize: 13,
@@ -497,6 +595,53 @@ const styles = StyleSheet.create({
         fontSize: 15,
         fontWeight: '600',
         letterSpacing: 1,
+    },
+    uploadContainer: {
+        marginTop: 5,
+        alignItems: 'center',
+        width: '100%',
+    },
+    uploadBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: 'rgba(255, 215, 0, 0.08)',
+        borderWidth: 1,
+        borderColor: THEME.gold,
+        borderRadius: 12,
+        paddingVertical: 12,
+        paddingHorizontal: 20,
+        width: '100%',
+        marginTop: 10,
+    },
+    uploadBtnText: {
+        color: THEME.gold,
+        fontSize: 15,
+        fontWeight: 'bold',
+        marginLeft: 10,
+    },
+    imagePreviewContainer: {
+        marginTop: 10,
+        position: 'relative',
+        width: '100%',
+        height: 180,
+        borderRadius: 12,
+        overflow: 'hidden',
+        borderWidth: 1,
+        borderColor: THEME.cardBorder,
+    },
+    imagePreview: {
+        width: '100%',
+        height: '100%',
+        resizeMode: 'cover',
+    },
+    removeImageBtn: {
+        position: 'absolute',
+        top: 8,
+        right: 8,
+        backgroundColor: 'rgba(0,0,0,0.6)',
+        borderRadius: 15,
+        padding: 2,
     },
     infoCard: {
         flexDirection: 'row',

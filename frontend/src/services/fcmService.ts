@@ -66,10 +66,24 @@ function handleNotificationNavigation(data?: RemoteMessageData) {
       navigate('Bookings', { bookingId: data.bookingId });
       break;
     case 'CHAT_MESSAGE':
-      navigate('Chat', { roomId: data.chatRoomId });
+    case 'chat':
+      navigate('Chat', { bookingId: data.bookingId });
       break;
     case 'HIRE_CONFIRMED':
+    case 'HIRE_REJECTED':
+    case 'HIRE_ACTIVE':
+    case 'HIRE_COMPLETED':
+      navigate('Chat', { bookingId: data.bookingId });
+      break;
+    case 'BOOKING_CANCELLED':
       navigate('Bookings', { bookingId: data.bookingId });
+      break;
+    case 'RATING_RECEIVED':
+      navigate('BouncerHome' as any);
+      break;
+    case 'SOS_ALERT':
+    case 'SOS':
+      navigate('BouncerHome' as any);
       break;
     default:
       console.log('[FCM] Unknown notification type, no navigation:', data.type);
@@ -83,22 +97,28 @@ function handleNotificationNavigation(data?: RemoteMessageData) {
  * - Android 13+ (API 33): uses PermissionsAndroid — required in RN CLI projects.
  * - Older Android / iOS: handled by Firebase messaging.requestPermission().
  */
-export async function requestNotificationPermission(): Promise<boolean> {
+export async function requestNotificationPermission(prompt: boolean = true): Promise<boolean> {
   try {
     if (Platform.OS === 'android' && Platform.Version >= 33) {
-      const status = await PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
-        {
-          title: 'Notification Permission',
-          message:
-            'SOS Guard needs permission to send you notifications about bookings and alerts.',
-          buttonPositive: 'Allow',
-          buttonNegative: 'Deny',
-        },
-      );
-      if (status !== PermissionsAndroid.RESULTS.GRANTED) {
-        console.warn('[FCM] POST_NOTIFICATIONS permission denied');
-        return false;
+      const hasPermission = await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS);
+      if (!hasPermission && prompt) {
+        const status = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
+          {
+            title: 'Notification Permission',
+            message: 'SOS Guard needs permission to send you notifications about bookings and alerts.',
+            buttonPositive: 'Allow',
+            buttonNegative: 'Deny',
+          },
+        );
+        if (status !== PermissionsAndroid.RESULTS.GRANTED) {
+          console.warn('[FCM] POST_NOTIFICATIONS permission denied');
+          return false;
+        }
+      } else if (!hasPermission && !prompt) {
+          console.warn('[FCM] POST_NOTIFICATIONS permission not granted (prompt=false)');
+          // We will still return true here so initFCM can get a token for data messages.
+          return true; 
       }
     }
 
@@ -183,10 +203,10 @@ export async function initFCM(
   // Prevent duplicate listeners
   cleanupFCMListeners();
 
-  const granted = await requestNotificationPermission();
+  const granted = await requestNotificationPermission(false);
   if (!granted) {
     console.warn('[FCM] Notifications not permitted — skipping init');
-    return;
+    // Proceeding anyway because Android 13 allows tokens without post_notifications
   }
 
   // ── Get initial token ────────────────────────────────────────────────────

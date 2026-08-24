@@ -1,5 +1,6 @@
 const path = require('path');
 const {getDefaultConfig, mergeConfig} = require('@react-native/metro-config');
+const exclusionList = require('metro-config/src/defaults/exclusionList');
 
 const projectRoot = path.resolve(__dirname, '..');
 const frontendRoot = __dirname;
@@ -19,6 +20,11 @@ const config = {
     babelTransformerPath: require.resolve('react-native-svg-transformer'),
   },
   resolver: {
+    blockList: exclusionList([
+      /.*\/android\/.*/,
+      /.*\/ios\/.*/,
+      /.*\.cxx.*/,
+    ]),
     nodeModulesPaths: [
       path.resolve(frontendRoot, 'node_modules'),
       path.resolve(projectRoot, 'node_modules'),

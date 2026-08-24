@@ -22,17 +22,17 @@ import { useNavigation } from '@react-navigation/native';
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 const THEME = {
-    bgPrimary: '#090909',
-    bgSecondary: '#121212',
-    card: '#1A1A1A',
+    bgPrimary: '#121214',
+    bgSecondary: '#1A1A1E',
+    card: '#1A1A1E',
     cardBorder: 'rgba(255, 215, 0, 0.12)',
     gold: '#FFD700',
     goldDark: '#FFC107',
     goldDim: 'rgba(255, 215, 0, 0.15)',
     textPrimary: '#FFFFFF',
-    textSecondary: '#B0B0B0',
+    textSecondary: '#8E8E93',
     textMuted: '#666666',
-    border: 'rgba(255, 255, 255, 0.08)',
+    border: 'rgba(255, 255, 255, 0.06)',
 };
 
 const CONTACT = {

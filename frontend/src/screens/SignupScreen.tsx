@@ -1,11 +1,18 @@
 import React, { useState, useContext } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, Switch, StatusBar } from 'react-native';
+import { 
+    View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, 
+    StatusBar, KeyboardAvoidingView, Platform, Animated
+} from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { AuthStackParamList } from '../types';
 import { AuthContext } from '../context/AuthContext';
 import api, { setAuthToken } from '../services/api';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { supabase } from '../config/supabase';
+
+// Premium Components
+import PremiumBackground from '../components/login/PremiumBackground';
+import AuthenticationCard from '../components/login/AuthenticationCard';
+import InputField from '../components/login/InputField';
 
 type SignupScreenNavigationProp = StackNavigationProp<AuthStackParamList, 'Signup'>;
 
@@ -19,6 +26,31 @@ export default function SignupScreen({ navigation }: Props) {
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const { login } = useContext(AuthContext);
+
+    // Animations
+    const fadeAnim = React.useRef(new Animated.Value(0)).current;
+    const slideAnim = React.useRef(new Animated.Value(20)).current;
+
+    React.useEffect(() => {
+        Animated.parallel([
+            Animated.timing(fadeAnim, {
+                toValue: 1,
+                duration: 600,
+                useNativeDriver: true,
+            }),
+            Animated.timing(slideAnim, {
+                toValue: 0,
+                duration: 600,
+                useNativeDriver: true,
+            })
+        ]).start();
+    }, []);
+
+    React.useLayoutEffect(() => {
+        navigation.setOptions({
+            headerShown: false,
+        });
+    }, [navigation]);
 
     const handleSignup = async () => {
         if (!name || !email || !password) {
@@ -46,8 +78,7 @@ export default function SignupScreen({ navigation }: Props) {
                 throw error || new Error('Signup failed');
             }
 
-            // We use the auth_id linking strategy. First set token for API calls.
-            // When auto-confirm is not enabled, data.session might be null, but let's assume it logs in automatically for now.
+            // If auto-confirm is not enabled, data.session might be null
             if (!data.session) {
                 Alert.alert('Success', 'Account created! Please verify your email.');
                 navigation.navigate('Login');
@@ -57,7 +88,7 @@ export default function SignupScreen({ navigation }: Props) {
             const token = data.session.access_token;
             setAuthToken(token);
 
-            // Fetch the user profile from our backend, which will Auto-Create it based on token metadata
+            // Fetch the user profile from our backend
             const response = await api.get('/auth/me', { headers: { Authorization: `Bearer ${token}` } });
             const userData = response.data.user;
 
@@ -69,123 +100,130 @@ export default function SignupScreen({ navigation }: Props) {
         }
     };
 
-    React.useLayoutEffect(() => {
-        navigation.setOptions({
-            headerShown: false,
-        });
-    }, [navigation]);
-
     return (
-        <View style={styles.container}>
-            <StatusBar barStyle="light-content" backgroundColor="#0F0F0F" />
+        <PremiumBackground>
+            <StatusBar barStyle="light-content" backgroundColor="#070708" />
+            <KeyboardAvoidingView 
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                style={styles.container}
+            >
+                <View style={styles.fixedContent}>
+                    <Animated.View style={[
+                        styles.formContainer,
+                        { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }
+                    ]}>
+                        <View style={styles.header}>
+                            <Text style={styles.title}>New Account</Text>
+                            <Text style={styles.subtitle}>Join ShieldOfSecurity Network</Text>
+                        </View>
 
-            <View style={styles.header}>
-                <Text style={styles.title}>New Account</Text>
-                <Text style={styles.subtitle}>Join SecureGuard Network</Text>
-            </View>
+                        <AuthenticationCard>
+                            <InputField 
+                                iconName="account-outline"
+                                label="Full Name / Company Name"
+                                value={name}
+                                onChangeText={setName}
+                            />
 
-            <View style={styles.formContainer}>
-                <TextInput
-                    style={styles.input}
-                    placeholder="Full Name / Company Name"
-                    placeholderTextColor="#666"
-                    value={name}
-                    onChangeText={setName}
-                />
+                            <InputField 
+                                iconName="email-outline"
+                                label="Email Address"
+                                value={email}
+                                onChangeText={setEmail}
+                                autoCapitalize="none"
+                                keyboardType="email-address"
+                            />
 
-                <TextInput
-                    style={styles.input}
-                    placeholder="Email Address"
-                    placeholderTextColor="#666"
-                    value={email}
-                    onChangeText={setEmail}
-                    autoCapitalize="none"
-                    keyboardType="email-address"
-                />
+                            <InputField 
+                                iconName="lock-outline"
+                                label="Password"
+                                value={password}
+                                onChangeText={setPassword}
+                                isPassword
+                            />
 
-                <TextInput
-                    style={styles.input}
-                    placeholder="Password"
-                    placeholderTextColor="#666"
-                    value={password}
-                    onChangeText={setPassword}
-                    secureTextEntry
-                />
+                            <TouchableOpacity 
+                                style={styles.primaryButton} 
+                                onPress={handleSignup} 
+                                disabled={loading}
+                            >
+                                {loading ? (
+                                    <ActivityIndicator color="#000" />
+                                ) : (
+                                    <Text style={styles.primaryButtonText}>CREATE ACCOUNT</Text>
+                                )}
+                            </TouchableOpacity>
 
-                <TouchableOpacity style={styles.button} onPress={handleSignup} disabled={loading}>
-                    {loading ? <ActivityIndicator color="#000" /> : <Text style={styles.buttonText}>CREATE ACCOUNT</Text>}
-                </TouchableOpacity>
-
-                <TouchableOpacity onPress={() => navigation.navigate('Login')} style={styles.loginLink}>
-                    <Text style={styles.link}>Already have an account? <Text style={{ color: '#FFD700', fontWeight: 'bold' }}>Login</Text></Text>
-                </TouchableOpacity>
-            </View>
-        </View>
+                            <TouchableOpacity onPress={() => navigation.navigate('Login')} style={styles.footerLinkContainer}>
+                                <Text style={styles.linkText}>
+                                    Already have an account? <Text style={styles.linkTextBold}>Login</Text>
+                                </Text>
+                            </TouchableOpacity>
+                        </AuthenticationCard>
+                    </Animated.View>
+                </View>
+            </KeyboardAvoidingView>
+        </PremiumBackground>
     );
 }
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+    },
+    fixedContent: {
+        flex: 1,
         justifyContent: 'center',
-        padding: 30,
-        backgroundColor: '#0F0F0F',
+        paddingVertical: 10,
+    },
+    formContainer: {
+        paddingHorizontal: 20,
     },
     header: {
-        marginBottom: 40,
+        marginBottom: 24,
         alignItems: 'center',
     },
     title: {
-        fontSize: 32,
+        fontSize: 28,
         fontWeight: 'bold',
         color: '#fff',
         letterSpacing: 1,
+        marginBottom: 4,
     },
     subtitle: {
-        fontSize: 16,
-        color: '#888',
-        marginTop: 5,
+        fontSize: 14,
+        color: '#8E8E93',
+        letterSpacing: 0.3,
     },
-    formContainer: {
-        width: '100%',
-    },
-    input: {
-        height: 55,
-        borderRadius: 12,
-        marginBottom: 16,
-        paddingHorizontal: 15,
-        backgroundColor: '#1E1E1E',
-        color: '#fff',
-        borderWidth: 1,
-        borderColor: '#333',
-        fontSize: 16,
-    },
-    button: {
+    primaryButton: {
         backgroundColor: '#FFD700',
-        height: 55,
-        borderRadius: 12,
+        height: 54,
+        borderRadius: 14,
         justifyContent: 'center',
         alignItems: 'center',
-        marginTop: 20,
+        marginTop: 10,
         shadowColor: '#FFD700',
         shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 10,
-        elevation: 5,
+        shadowOpacity: 0.2,
+        shadowRadius: 8,
+        elevation: 4,
     },
-    buttonText: {
+    primaryButtonText: {
         color: '#000',
-        fontSize: 16,
-        fontWeight: '900',
-        letterSpacing: 1,
+        fontSize: 15,
+        fontWeight: '700',
+        letterSpacing: 1.5,
     },
-    loginLink: {
-        marginTop: 30,
-        alignSelf: 'center',
+    footerLinkContainer: {
+        marginTop: 15,
+        alignItems: 'center',
     },
-    link: {
-        color: '#888',
-        textAlign: 'center',
-        fontSize: 14,
+    linkText: {
+        color: '#8E8E93',
+        fontSize: 13,
     },
+    linkTextBold: {
+        color: '#FFD700',
+        fontWeight: 'bold',
+    }
 });

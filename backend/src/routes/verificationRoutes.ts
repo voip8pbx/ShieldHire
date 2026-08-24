@@ -1,7 +1,10 @@
 import { Router, Request, Response } from 'express';
 import { supabaseAdmin } from '../config/supabase';
+import { authenticate, authorize } from '../middleware/authMiddleware';
 
 const router = Router();
+
+router.use(authenticate, authorize(['ADMIN']));
 
 // Helper to convert snake_case DB columns to camelCase for frontend
 const camelCaseKeys = (obj: any): any => {
@@ -13,6 +16,104 @@ const camelCaseKeys = (obj: any): any => {
     }
     return newObj;
 };
+
+// ==========================================
+// CLIENT VERIFICATION ROUTES (must be before /:id)
+// ==========================================
+
+// GET all pending clients
+router.get('/clients/pending', async (req: Request, res: Response) => {
+    try {
+        const { data: pendingClients, error } = await supabaseAdmin
+            .from('clients')
+            .select('*, users(name, email)')
+            .eq('verificationStatus', 'PENDING')
+            .order('createdAt', { ascending: false });
+
+        if (error) throw error;
+        const formatted = pendingClients.map((c: any) => {
+            const f = camelCaseKeys(c);
+            if (c.users) {
+                f.user = camelCaseKeys(Array.isArray(c.users) ? c.users[0] : c.users);
+                delete f.users;
+            }
+            return f;
+        });
+        res.json(formatted);
+    } catch (error) {
+        console.error('Error fetching pending clients:', error);
+        res.status(500).json({ error: 'Failed to fetch pending clients' });
+    }
+});
+
+// GET all clients (with status filter)
+router.get('/clients', async (req: Request, res: Response) => {
+    try {
+        const { status } = req.query;
+        let query = supabaseAdmin
+            .from('clients')
+            .select('*, users(name, email)')
+            .order('createdAt', { ascending: false });
+
+        if (status && typeof status === 'string') {
+            query = query.eq('verificationStatus', status.toUpperCase());
+        }
+
+        const { data: clients, error } = await query;
+        if (error) throw error;
+        const formatted = clients.map((c: any) => {
+            const f = camelCaseKeys(c);
+            if (c.users) {
+                f.user = camelCaseKeys(Array.isArray(c.users) ? c.users[0] : c.users);
+                delete f.users;
+            }
+            return f;
+        });
+        res.json(formatted);
+    } catch (error) {
+        console.error('Error fetching clients:', error);
+        res.status(500).json({ error: 'Failed to fetch clients' });
+    }
+});
+
+// PATCH - Approve a client
+router.patch('/clients/:id/approve', async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const { error: updateError } = await supabaseAdmin
+            .from('clients')
+            .update({ verificationStatus: 'APPROVED' })
+            .eq('id', id);
+
+        if (updateError) throw updateError;
+        res.json({ message: 'Client approved successfully' });
+    } catch (error) {
+        console.error('Error approving client:', error);
+        res.status(500).json({ error: 'Failed to approve client' });
+    }
+});
+
+// PATCH - Reject a client
+router.patch('/clients/:id/reject', async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const { reason } = req.body;
+        const { error: updateError } = await supabaseAdmin
+            .from('clients')
+            .update({ verificationStatus: 'REJECTED', rejectionReason: reason })
+            .eq('id', id);
+
+        if (updateError) throw updateError;
+        res.json({ message: 'Client rejected successfully' });
+    } catch (error) {
+        console.error('Error rejecting client:', error);
+        res.status(500).json({ error: 'Failed to reject client' });
+    }
+});
+
+// ==========================================
+// BOUNCER VERIFICATION ROUTES
+// ==========================================
 
 // GET all pending verifications
 router.get('/pending', async (req: Request, res: Response) => {
@@ -108,10 +209,9 @@ router.patch('/:id/approve', async (req: Request, res: Response) => {
     console.log(`[VERIFICATION] Approve request received for ID: ${req.params.id}`);
     try {
         const { id } = req.params;
-        const { adminId } = req.body; // Admin user ID
+        const { adminId } = req.body;
         let warningMessage = '';
 
-        // Validate adminId (UUID check)
         const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
         const verifiedBy = (adminId && uuidRegex.test(adminId)) ? adminId : null;
 
@@ -136,28 +236,17 @@ router.patch('/:id/approve', async (req: Request, res: Response) => {
 
         if (fetchError) throw fetchError;
 
-
         try {
-            // 1. Update User Role
             let newRole = 'BOUNCER';
-            // Determine role logic
             if (bouncer.isGunman) newRole = 'GUNMAN';
-            else if (bouncer.registrationType === 'Agency') newRole = 'BOUNCER';
 
             const targetUserId = bouncer.userId || bouncer.user_id;
-            if (!targetUserId) {
-                console.error('[VERIFICATION] No userId found for bouncer:', bouncer);
-                throw new Error('User ID not found for bouncer');
-            }
+            if (!targetUserId) throw new Error('User ID not found for bouncer');
 
             await supabaseAdmin
                 .from('users')
                 .update({ role: newRole })
                 .eq('id', targetUserId);
-
-            // 2. Data is already in 'bouncers' table, no need to sync to 'trainer_profiles'
-            // The verification_status was already updated in the previous step (calling this function)
-
         } catch (syncError) {
             console.error('Error updating user role:', syncError);
             warningMessage = 'Failed to update user role. Manual review may be required.';
@@ -169,11 +258,7 @@ router.patch('/:id/approve', async (req: Request, res: Response) => {
             delete formatted.users;
         }
 
-        res.json({
-            message: 'Bouncer approved successfully',
-            bouncer: formatted,
-            warning: warningMessage
-        });
+        res.json({ message: 'Bouncer approved successfully', bouncer: formatted, warning: warningMessage });
     } catch (error) {
         console.error('Error approving bouncer:', error);
         res.status(500).json({ error: 'Failed to approve bouncer' });
@@ -190,7 +275,6 @@ router.patch('/:id/reject', async (req: Request, res: Response) => {
             return res.status(400).json({ error: 'Rejection reason is required' });
         }
 
-        // Validate adminId (UUID check)
         const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
         const verifiedBy = (adminId && uuidRegex.test(adminId)) ? adminId : null;
 
@@ -221,10 +305,7 @@ router.patch('/:id/reject', async (req: Request, res: Response) => {
             delete formatted.users;
         }
 
-        res.json({
-            message: 'Bouncer rejected',
-            bouncer: formatted
-        });
+        res.json({ message: 'Bouncer rejected', bouncer: formatted });
     } catch (error) {
         console.error('Error rejecting bouncer:', error);
         res.status(500).json({ error: 'Failed to reject bouncer' });
@@ -232,4 +313,3 @@ router.patch('/:id/reject', async (req: Request, res: Response) => {
 });
 
 export default router;
-

@@ -1,8 +1,23 @@
 import { Request, Response } from 'express';
 import { supabaseAdmin } from '../config/supabase';
-import { getIO } from '../socket';
+import { getIO, onlineBouncers } from '../socket';
+import { sendPushToToken } from '../utils/fcmAdmin';
 
-// Helper to convert snake_case DB columns to camelCase for frontend
+const SOS_RADIUS_KM = 10;
+
+// Haversine formula — returns distance in km between two coordinates
+const getDistanceKm = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
+    const R = 6371;
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLng = ((lng2 - lng1) * Math.PI) / 180;
+    const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos((lat1 * Math.PI) / 180) *
+        Math.cos((lat2 * Math.PI) / 180) *
+        Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+};
+
 const camelCaseKeys = (obj: any): any => {
     if (!obj) return null;
     const newObj: any = {};
@@ -20,31 +35,77 @@ export const createAlert = async (req: Request, res: Response) => {
 
         const { data: alert, error } = await supabaseAdmin
             .from('emergency_alerts')
-            .insert({
-                userId: userId,
-                latitude,
-                longitude,
-                location,
-                status: 'OPEN'
-            })
+            .insert({ userId, latitude, longitude, location, status: 'OPEN' })
             .select('*, users(name, email, contactNo)')
             .single();
 
         if (error) throw error;
 
-        // Fetch user details separately if not returned by insert (depending on RLS/Permissions, insert .select() might not join)
-        // With service role, it should work.
-        // But let's map it.
         const formattedAlert = camelCaseKeys(alert);
         if (alert.users) {
             formattedAlert.user = camelCaseKeys(alert.users);
             delete formattedAlert.users;
         }
 
+        // ── 1. Notify nearby ONLINE bouncers via Socket.io ──────────────────
+        const nearbySocketIds: string[] = [];
+        const notifiedBouncerIds = new Set<string>();
+
+        onlineBouncers.forEach((bouncer, socketId) => {
+            const dist = getDistanceKm(latitude, bouncer.lat, longitude, bouncer.lng);
+            if (dist <= SOS_RADIUS_KM) {
+                try {
+                    getIO().to(socketId).emit('new-alert', formattedAlert);
+                    nearbySocketIds.push(socketId);
+                    notifiedBouncerIds.add(bouncer.bouncerId);
+                } catch (e) {
+                    console.error('[SOS] Socket emit failed for', socketId);
+                }
+            }
+        });
+
+        console.log(`[SOS] Notified ${nearbySocketIds.length} online bouncer(s) within ${SOS_RADIUS_KM}km`);
+
+        // ── 2. FCM push to APPROVED bouncers who are offline or out of range ─
         try {
-            getIO().emit('new-alert', formattedAlert);
-        } catch (socketError) {
-            console.error('Socket emission failed:', socketError);
+            const { data: allBouncers } = await supabaseAdmin
+                .from('bouncers')
+                .select('id, userId, users(fcm_token)')
+                .eq('verificationStatus', 'APPROVED')
+                .eq('isAvailable', true);
+
+            if (allBouncers && allBouncers.length > 0) {
+                const senderName = formattedAlert.user?.name || 'Someone';
+                const pushBody = `🚨 ${senderName} needs help nearby! Tap to view location.`;
+
+                const pushPromises = allBouncers
+                    .filter((b: any) => {
+                        // Skip bouncers already notified via socket
+                        if (notifiedBouncerIds.has(b.id)) return false;
+                        const token = Array.isArray(b.users) ? b.users[0]?.fcm_token : b.users?.fcm_token;
+                        return !!token;
+                    })
+                    .map((b: any) => {
+                        const token = Array.isArray(b.users) ? b.users[0]?.fcm_token : b.users?.fcm_token;
+                        return sendPushToToken(
+                            token,
+                            '🚨 Emergency SOS Alert',
+                            pushBody,
+                            {
+                                type: 'SOS_ALERT',
+                                alertId: String(formattedAlert.id || ''),
+                                latitude: String(latitude),
+                                longitude: String(longitude),
+                                location: location || '',
+                            }
+                        ).catch((err) => console.error('[FCM] Push failed for bouncer', b.id, err?.code));
+                    });
+
+                await Promise.allSettled(pushPromises);
+                console.log(`[SOS] FCM push sent to ${pushPromises.length} offline bouncer(s)`);
+            }
+        } catch (fcmErr) {
+            console.error('[SOS] FCM batch push error:', fcmErr);
         }
 
         res.status(201).json(formattedAlert);
@@ -86,7 +147,7 @@ export const getAlerts = async (req: Request, res: Response) => {
             if (retries === 0) {
                 res.status(500).json({ error: 'Internal server error', details: error.message });
             } else {
-                await delay(1000); // Wait 1 second before retrying
+                await delay(1000);
             }
         }
     }
@@ -111,4 +172,3 @@ export const acknowledgeAlert = async (req: Request, res: Response) => {
         res.status(500).json({ error: 'Failed to acknowledge alert' });
     }
 };
-
