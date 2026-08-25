@@ -11,20 +11,23 @@ import { AppRegistry } from 'react-native';
 import messaging from '@react-native-firebase/messaging';
 import App from './App';
 import { name as appName } from './app.json';
-import { registerBackgroundNotificationOpenedHandler } from './src/services/fcmService';
 
 // ─── FCM Background / Killed-state message handler ───────────────────────────
-// This headless task runs in the background even when the app is killed.
-// Do NOT do UI work here; this is for silent data processing only.
-messaging().setBackgroundMessageHandler(async remoteMessage => {
-  console.log('[FCM] Background message received:', JSON.stringify(remoteMessage));
-  // You can update local state, trigger a local notification via Notifee here.
-  // Example: store the incoming booking ID in AsyncStorage for later pickup.
-});
+try {
+  messaging().setBackgroundMessageHandler(async remoteMessage => {
+    console.log('[FCM] Background message received:', JSON.stringify(remoteMessage));
+  });
+} catch (e) {
+  console.warn('[FCM] setBackgroundMessageHandler failed:', e);
+}
 
 // ─── Register tap handler for background-state notifications ─────────────────
-// This fires when the user taps a notification while the app was in background.
-registerBackgroundNotificationOpenedHandler();
+try {
+  const { registerBackgroundNotificationOpenedHandler } = require('./src/services/fcmService');
+  registerBackgroundNotificationOpenedHandler();
+} catch (e) {
+  console.warn('[FCM] registerBackgroundNotificationOpenedHandler failed:', e);
+}
 
 // ─── Register the React Native app ───────────────────────────────────────────
 AppRegistry.registerComponent(appName, () => App);

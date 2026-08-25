@@ -28,7 +28,9 @@ const AnimatedSplashScreen: React.FC<AnimatedSplashScreenProps> = ({ onAnimation
 
     useEffect(() => {
         // Hide the native splash screen immediately when this component mounts
-        BootSplash.hide({ fade: true });
+        BootSplash.hide({ fade: true }).catch(err => {
+            console.warn('[AnimatedSplashScreen] BootSplash.hide failed:', err);
+        });
 
         // Start the sequence
         Animated.sequence([
@@ -107,30 +109,34 @@ const AnimatedSplashScreen: React.FC<AnimatedSplashScreenProps> = ({ onAnimation
     }, []);
 
     // When both conditions are met, trigger completion (with a 3.5s safety max timeout)
-    useEffect(() => {
-        let safetyTimer: NodeJS.Timeout;
-        if (animationsDone) {
-            safetyTimer = setTimeout(() => {
-                console.log('[AnimatedSplashScreen] Max safety timeout reached, dismissing splash screen');
-                onAnimationComplete();
-            }, 3500);
-        }
+    const hasCompleted = useRef(false);
 
-        if (animationsDone && isAppLoaded) {
-            if (safetyTimer) clearTimeout(safetyTimer);
+    useEffect(() => {
+        if (!animationsDone) return;
+
+        const complete = () => {
+            if (hasCompleted.current) return;
+            hasCompleted.current = true;
+            onAnimationComplete();
+        };
+
+        // Safety timeout — dismiss even if isAppLoaded never fires
+        const safetyTimer = setTimeout(() => {
+            console.log('[AnimatedSplashScreen] Max safety timeout reached, dismissing splash screen');
+            complete();
+        }, 3500);
+
+        if (isAppLoaded) {
+            clearTimeout(safetyTimer);
             Animated.timing(fadeAnim, {
                 toValue: 0,
                 duration: 300,
                 useNativeDriver: true,
-            }).start(() => {
-                onAnimationComplete();
-            });
+            }).start(() => complete());
         }
 
-        return () => {
-            if (safetyTimer) clearTimeout(safetyTimer);
-        };
-    }, [animationsDone, isAppLoaded, onAnimationComplete, fadeAnim]);
+        return () => clearTimeout(safetyTimer);
+    }, [animationsDone, isAppLoaded]);
 
 
     return (

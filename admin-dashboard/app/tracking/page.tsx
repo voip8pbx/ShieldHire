@@ -7,6 +7,58 @@ import { GoogleMap, useJsApiLoader, Marker, InfoWindow } from '@react-google-map
 const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || 'AIzaSyCV1MNMAyPMvM0jXnPmVG01ikwxa1ETERg';
 const libraries: ("places" | "drawing" | "geometry" | "visualization")[] = ["places"];
 
+const darkMapStyles = [
+  { elementType: 'geometry', stylers: [{ color: '#111111' }] },
+  { elementType: 'labels.icon', stylers: [{ visibility: 'off' }] },
+  { elementType: 'labels.text.stroke', stylers: [{ color: '#111111' }] },
+  { elementType: 'labels.text.fill', stylers: [{ color: '#9e9e9e' }] },
+  {
+    featureType: 'administrative.locality',
+    elementType: 'labels.text.fill',
+    stylers: [{ color: '#c4c4c4' }]
+  },
+  {
+    featureType: 'poi',
+    elementType: 'labels.text.fill',
+    stylers: [{ color: '#747474' }]
+  },
+  {
+    featureType: 'road',
+    elementType: 'geometry.fill',
+    stylers: [{ color: '#222222' }]
+  },
+  {
+    featureType: 'road',
+    elementType: 'geometry.stroke',
+    stylers: [{ color: '#1a1a1a' }]
+  },
+  {
+    featureType: 'road',
+    elementType: 'labels.text.fill',
+    stylers: [{ color: '#8a8a8a' }]
+  },
+  {
+    featureType: 'road.highway',
+    elementType: 'geometry',
+    stylers: [{ color: '#333333' }]
+  },
+  {
+    featureType: 'road.highway',
+    elementType: 'geometry.stroke',
+    stylers: [{ color: '#222222' }]
+  },
+  {
+    featureType: 'water',
+    elementType: 'geometry',
+    stylers: [{ color: '#0d0d0d' }]
+  },
+  {
+    featureType: 'water',
+    elementType: 'labels.text.fill',
+    stylers: [{ color: '#4e4e4e' }]
+  }
+];
+
 const mapContainerStyle = {
   width: '100%',
   height: '500px',
@@ -48,24 +100,22 @@ export default function TrackingPage() {
             if (error) {
                 console.error('Error fetching bookings:', error);
             } else if (data) {
-                // Handle both native latitude/longitude AND legacy bundled |COORDS:
+                // Parse location strings to extract bundled |COORDS: coordinates
                 const parsedBookings = data.map((b: any) => {
-                    let lat = b.latitude;
-                    let lng = b.longitude;
+                    let lat: number | null = null;
+                    let lng: number | null = null;
                     let loc = b.location;
 
                     if (loc && loc.includes('|COORDS:')) {
                         const parts = loc.split('|COORDS:');
                         loc = parts[0];
                         const coords = parts[1].split(',');
-                        if (!lat && !lng) {
-                            lat = parseFloat(coords[0]);
-                            lng = parseFloat(coords[1]);
-                        }
+                        lat = parseFloat(coords[0]);
+                        lng = parseFloat(coords[1]);
                     }
 
                     return { ...b, latitude: lat, longitude: lng, location: loc };
-                }).filter((b: any) => b.latitude && b.longitude);
+                });
 
                 setBookings(parsedBookings);
             }
@@ -85,145 +135,159 @@ export default function TrackingPage() {
         );
     }
 
-    const mapCenter = selectedBooking 
+    const geoBookings = bookings.filter((b: any) => b.latitude && b.longitude);
+    const mapCenter = selectedBooking && selectedBooking.latitude && selectedBooking.longitude
         ? { lat: selectedBooking.latitude, lng: selectedBooking.longitude }
-        : bookings.length > 0 && bookings[0].latitude && bookings[0].longitude
-            ? { lat: bookings[0].latitude, lng: bookings[0].longitude }
+        : geoBookings.length > 0
+            ? { lat: geoBookings[0].latitude, lng: geoBookings[0].longitude }
             : defaultCenter;
 
     return (
-        <div className="content-spacing relative">
+        <div className="layout-container animate-fade-in space-y-8">
             {/* Header */}
-            <div className="section-spacing flex justify-between items-center">
+            <div className="page-header border-b-3 border-text-primary pb-6 mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-4xl font-bold text-[var(--text-primary)] mb-3">
+                    <h1 className="page-title text-xl sm:text-3xl lg:text-4xl font-black uppercase tracking-tight text-text-primary">
                         Live Event Tracking
                     </h1>
-                    <p className="text-base text-[var(--text-secondary)]">
-                        Real-time map tracking of upcoming and active events
+                    <p className="page-subtitle text-xs font-mono text-text-muted uppercase tracking-wider mt-1">
+                        // Real-time map tracking of upcoming and active operations
                     </p>
                 </div>
-                <button onClick={fetchBookings} className="btn-outline">
-                    Refresh
+                <button
+                    onClick={fetchBookings}
+                    className="btn btn-secondary border-2 border-black rounded-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all px-4 py-2 cursor-pointer font-mono font-black text-xs uppercase"
+                >
+                    REFRESH_MAP
                 </button>
             </div>
 
             {/* Main Map View */}
-            <div className="card card-spacing p-6">
-                <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-4 flex items-center gap-2">
-                    <span className="text-[var(--primary-color)]">📍</span> Global Event Map
+            <div className="card border-3 border-text-primary bg-bg-secondary p-6 rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                <h2 className="text-xl font-black text-text-primary uppercase tracking-wider font-mono mb-4 flex items-center gap-2">
+                    // GLOBAL_EVENT_MAP
                 </h2>
-                <div className="w-full relative border border-[var(--border-color)] rounded-xl overflow-hidden bg-[var(--surface-elevated)]">
+                <div className="w-full relative border-3 border-text-primary rounded-none overflow-hidden bg-bg-primary shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
                     {isLoaded ? (
                         <GoogleMap
-                            mapContainerStyle={mapContainerStyle}
+                            mapContainerStyle={{ ...mapContainerStyle, borderRadius: '0px' }}
                             center={mapCenter}
                             zoom={selectedBooking ? 15 : 12}
                             options={{
                                 disableDefaultUI: false,
                                 zoomControl: true,
                                 streetViewControl: false,
-                                mapTypeControl: false
+                                mapTypeControl: false,
+                                styles: darkMapStyles
                             }}
                         >
-                            {bookings.map((booking) => (
+                            {geoBookings.map((booking) => (
                                 <Marker 
                                     key={booking.id}
                                     position={{ lat: booking.latitude, lng: booking.longitude }}
                                     onClick={() => setSelectedBooking(booking)}
+                                    icon={{
+                                        url: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><circle cx="12" cy="12" r="8" fill="%23facc15" stroke="black" stroke-width="2.5"/></svg>',
+                                        scaledSize: typeof window !== 'undefined' && window.google ? new window.google.maps.Size(16, 16) : undefined
+                                    }}
                                 />
                             ))}
 
-                            {selectedBooking && (
+                            {selectedBooking && selectedBooking.latitude && selectedBooking.longitude && (
                                 <InfoWindow
                                     position={{ lat: selectedBooking.latitude, lng: selectedBooking.longitude }}
                                     onCloseClick={() => setSelectedBooking(null)}
                                 >
-                                    <div className="text-black p-2 min-w-[200px]">
-                                        <h4 className="font-bold text-lg border-b border-gray-200 pb-1 mb-2">Booking Details</h4>
-                                        <div className="space-y-1 text-sm">
-                                            <p><span className="font-semibold text-gray-700">Status:</span> 
-                                                <span className="ml-1 px-1.5 py-0.5 bg-gray-100 rounded text-xs font-medium">
+                                    <div className="text-black p-2 min-w-[200px] font-mono">
+                                        <h4 className="font-black text-sm border-b-2 border-black pb-1 mb-2 uppercase">// DISPATCH_METRICS</h4>
+                                        <div className="space-y-1 text-[11px] leading-tight">
+                                            <p><span className="font-black">STATUS:</span> 
+                                                <span className="ml-1 px-1.5 py-0.5 bg-yellow-400 text-black border border-black font-black text-[9px]">
                                                     {selectedBooking.status}
                                                 </span>
                                             </p>
-                                            <p><span className="font-semibold text-gray-700">Client:</span> {selectedBooking.users?.name || 'N/A'}</p>
-                                            <p><span className="font-semibold text-gray-700">Contact:</span> {selectedBooking.users?.contactNo || 'N/A'}</p>
-                                            <p><span className="font-semibold text-gray-700">Bouncer:</span> {selectedBooking.bouncers?.name || 'Pending'}</p>
-                                            <p><span className="font-semibold text-gray-700">Date:</span> {new Date(selectedBooking.date).toLocaleDateString()} at {selectedBooking.time}</p>
-                                            <p><span className="font-semibold text-gray-700">Address:</span> {selectedBooking.location || 'Precise Map Location'}</p>
+                                            <p><span className="font-black">CLIENT:</span> {selectedBooking.users?.name || 'N/A'}</p>
+                                            <p><span className="font-black">TEL:</span> {selectedBooking.users?.contactNo || 'N/A'}</p>
+                                            <p><span className="font-black">BOUNCER:</span> {selectedBooking.bouncers?.name || 'Pending'}</p>
+                                            <p><span className="font-black">DATE:</span> {new Date(selectedBooking.date).toLocaleDateString()} at {selectedBooking.time}</p>
+                                            <p><span className="font-black">LOC:</span> {selectedBooking.location || 'Precise Map Location'}</p>
                                         </div>
                                     </div>
                                 </InfoWindow>
                             )}
                         </GoogleMap>
                     ) : (
-                        <div className="w-full h-[500px] flex items-center justify-center bg-[var(--surface-hover)]">
-                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--primary-color)]"></div>
+                        <div className="w-full h-[500px] flex items-center justify-center bg-bg-primary">
+                            <div className="animate-spin border-2 border-primary-yellow border-t-transparent h-12 w-12 rounded-none"></div>
                         </div>
                     )}
                 </div>
             </div>
 
             {/* Bookings List */}
-            <div className="card card-spacing">
-                <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-4">
-                    Upcoming & Active Deployments
+            <div className="card border-3 border-text-primary bg-bg-secondary p-6 rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                <h2 className="text-xl font-black text-text-primary uppercase tracking-wider font-mono mb-4">
+                    // ACTIVE_DEPLOYMENTS
                 </h2>
                 
                 {loading ? (
-                    <div className="py-8 text-center text-[var(--text-secondary)]">Loading active events...</div>
+                    <div className="py-8 text-center text-text-muted font-mono">// LOADING_ACTIVE_EVENTS...</div>
                 ) : bookings.length === 0 ? (
-                    <div className="py-8 text-center text-[var(--text-secondary)]">No events with location data found.</div>
+                    <div className="py-8 text-center text-text-muted font-mono">// NO_ACTIVE_DEPLOYMENTS_FOUND</div>
                 ) : (
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse">
+                    <div className="table-container">
+                        <table className="professional-table">
                             <thead>
-                                <tr className="border-b border-[var(--border-color)]">
-                                    <th className="p-3 text-sm font-semibold text-[var(--text-secondary)]">Date & Time</th>
-                                    <th className="p-3 text-sm font-semibold text-[var(--text-secondary)]">Client</th>
-                                    <th className="p-3 text-sm font-semibold text-[var(--text-secondary)]">Bouncer</th>
-                                    <th className="p-3 text-sm font-semibold text-[var(--text-secondary)]">Status</th>
-                                    <th className="p-3 text-sm font-semibold text-[var(--text-secondary)]">Location</th>
-                                    <th className="p-3 text-sm font-semibold text-[var(--text-secondary)] text-right">Action</th>
+                                <tr>
+                                    <th>DATE & TIME</th>
+                                    <th>CLIENT PROFILE</th>
+                                    <th>BOUNCER PROFILE</th>
+                                    <th>STATUS</th>
+                                    <th className="hidden md:table-cell">DEPLOYMENT LOCATION</th>
+                                    <th className="text-right">ACTIONS</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {bookings.map((b) => (
-                                    <tr key={b.id} className="border-b border-[var(--border-color)] hover:bg-[var(--surface-hover)]">
-                                        <td className="p-3 text-sm">
-                                            <div>{new Date(b.date).toLocaleDateString()}</div>
-                                            <div className="text-[var(--text-secondary)]">{b.time}</div>
+                                    <tr key={b.id}>
+                                        <td>
+                                            <div className="font-mono text-xs font-bold text-text-primary">{new Date(b.date).toLocaleDateString()}</div>
+                                            <div className="text-[10px] font-mono text-text-dim mt-0.5">{b.time}</div>
                                         </td>
-                                        <td className="p-3 text-sm">
-                                            <div>{b.users?.name || 'Unknown'}</div>
-                                            <div className="text-xs text-[var(--text-secondary)]">{b.users?.contactNo}</div>
+                                        <td>
+                                            <div className="font-black text-text-primary uppercase tracking-wide">{b.users?.name || 'Unknown'}</div>
+                                            <div className="text-[10px] font-mono text-text-dim mt-0.5">{b.users?.contactNo}</div>
                                         </td>
-                                        <td className="p-3 text-sm">
-                                            <div>{b.bouncers?.name || 'Pending'}</div>
+                                        <td>
+                                            <div className="font-black text-text-primary uppercase tracking-wide">{b.bouncers?.name || 'Pending'}</div>
+                                            <div className="text-[10px] font-mono text-text-dim mt-0.5">AGENT_ID: {b.id.split('-')[0]}</div>
                                         </td>
-                                        <td className="p-3 text-sm">
-                                            <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                                                b.status === 'CONFIRMED' ? 'bg-green-500/20 text-green-400' : 
-                                                b.status === 'PENDING' ? 'bg-yellow-500/20 text-yellow-400' : 
-                                                'bg-gray-500/20 text-gray-400'
+                                        <td>
+                                            <span className={`px-2.5 py-0.5 border border-black font-mono font-black text-[9px] rounded-none shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] uppercase inline-block ${
+                                                b.status === 'CONFIRMED' ? 'bg-success text-black' : 
+                                                b.status === 'PENDING' ? 'bg-primary-yellow text-black' : 
+                                                'bg-bg-tertiary text-text-dim border-text-dim'
                                             }`}>
                                                 {b.status}
                                             </span>
                                         </td>
-                                        <td className="p-3 text-sm max-w-[200px] truncate" title={b.location}>
+                                        <td className="hidden md:table-cell max-w-[200px] truncate font-mono text-xs text-text-primary uppercase" title={b.location}>
                                             {b.location || 'Location Set'}
                                         </td>
-                                        <td className="p-3 text-sm text-right">
-                                            <button 
-                                                onClick={() => {
-                                                    setSelectedBooking(b);
-                                                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                                                }}
-                                                className="px-3 py-1.5 bg-[var(--primary-glow)] text-[var(--primary-color)] border border-[var(--primary-color)] font-semibold rounded-md hover:bg-[var(--primary-color)] hover:text-black transition-colors"
-                                            >
-                                                Locate
-                                            </button>
+                                        <td className="text-right">
+                                            {b.latitude && b.longitude ? (
+                                                <button 
+                                                    onClick={() => {
+                                                        setSelectedBooking(b);
+                                                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                                                    }}
+                                                    className="btn btn-sm btn-primary py-1 px-3 border-2 border-black font-mono font-black text-[10px] text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all uppercase cursor-pointer"
+                                                >
+                                                    LOCATE_AGENT
+                                                </button>
+                                            ) : (
+                                                <span className="font-mono font-black text-[10px] text-text-dim uppercase">NO_GPS</span>
+                                            )}
                                         </td>
                                     </tr>
                                 ))}

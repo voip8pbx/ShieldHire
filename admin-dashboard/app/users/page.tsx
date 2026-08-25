@@ -41,39 +41,41 @@ export default function UsersPage() {
     };
 
     return (
-        <div className="content-spacing">
+        <div className="animate-fade-in space-y-8">
             {/* Header */}
-            <div className="section-spacing">
-                <h1 className="text-4xl font-bold text-[var(--text-primary)] mb-3">
-                    Users Directory
-                </h1>
-                <p className="text-base text-[var(--text-secondary)]">
-                    Manage and monitor all registered users
-                </p>
+            <div className="page-header border-b-3 border-text-primary pb-6 mb-8">
+                <div>
+                    <h1 className="page-title text-xl sm:text-3xl lg:text-4xl font-black uppercase tracking-tight text-text-primary">
+                        Users Directory
+                    </h1>
+                    <p className="page-subtitle text-xs font-mono text-text-muted uppercase tracking-wider mt-1">
+                        // System access registry and operational accounts
+                    </p>
+                </div>
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 section-spacing" style={{ marginTop: '24px', marginBottom: '24px' }}>
-                <div className="card card-spacing" style={{ padding: '16px' }}>
-                    <div className="detail-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div className="detail-label">Total Users</div>
-                        <div className="detail-value text-2xl font-bold">{users.length}</div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div className="card border-3 border-text-primary bg-bg-secondary p-5 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-none">
+                    <div className="flex justify-between items-center">
+                        <div className="text-xs font-black font-mono text-text-dim uppercase tracking-wider">// TOTAL_ACCOUNTS</div>
+                        <div className="text-3xl font-black font-mono text-text-primary">{users.length}</div>
                     </div>
                 </div>
 
-                <div className="card card-spacing" style={{ padding: '16px' }}>
-                    <div className="detail-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div className="detail-label">Bouncer Accounts</div>
-                        <div className="detail-value text-2xl font-bold text-[var(--primary)]">
+                <div className="card border-3 border-text-primary bg-bg-secondary p-5 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-none">
+                    <div className="flex justify-between items-center">
+                        <div className="text-xs font-black font-mono text-text-dim uppercase tracking-wider">// BOUNCER_AGENTS</div>
+                        <div className="text-3xl font-black font-mono text-primary-yellow">
                             {users.filter(u => u.role === 'BOUNCER').length}
                         </div>
                     </div>
                 </div>
 
-                <div className="card card-spacing" style={{ padding: '16px' }}>
-                    <div className="detail-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div className="detail-label">Client Accounts</div>
-                        <div className="detail-value text-2xl font-bold text-[var(--secondary)]">
+                <div className="card border-3 border-text-primary bg-bg-secondary p-5 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-none">
+                    <div className="flex justify-between items-center">
+                        <div className="text-xs font-black font-mono text-text-dim uppercase tracking-wider">// CLIENT_ACCOUNTS</div>
+                        <div className="text-3xl font-black font-mono text-info">
                             {users.filter(u => u.role === 'USER').length}
                         </div>
                     </div>
@@ -81,173 +83,168 @@ export default function UsersPage() {
             </div>
 
             {/* Users Table */}
-            <div className="card overflow-hidden">
-                <table className="professional-table" style={{ fontSize: '16px' }}>
-                    <style jsx>{`
-                        .professional-table th,
-                        .professional-table td {
-                            font-size: 16px !important;
-                          padding-top: 6px !important;
-                          padding-bottom: 6px !important;
-                    
-                        }
-                        .professional-table th {
-                            font-weight: 600;
-                            text-transform: uppercase;
-                            font-size: 0.75rem;
-                            background-color: rgba(255, 255, 255, 0.03);
-                        }
-                    `}</style>
-                    <thead>
-                        <tr>
-                            <th>User Details</th>
-                            <th>Contact Information</th>
-                            <th>Role</th>
-                            <th>Joined Date</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {loading ? (
+            <div className="card border-3 border-text-primary rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+                <div className="table-container">
+                    <table className="professional-table">
+                        <thead>
                             <tr>
-                                <td colSpan={5} className="text-center py-12">
-                                    <div className="skeleton h-8 w-32 mx-auto"></div>
-                                </td>
+                                <th>USER ID / NAME</th>
+                                <th>CONTACT INFORMATION</th>
+                                <th>SYSTEM ROLE</th>
+                                <th className="hidden sm:table-cell">REGISTRATION DATE</th>
+                                <th className="text-right">ACTIONS</th>
                             </tr>
-                        ) : users.length === 0 ? (
-                            <tr>
-                                <td colSpan={5} className="text-center py-12 text-[var(--text-tertiary)]">
-                                    No users found
-                                </td>
-                            </tr>
-                        ) : (
-                            users.map((user) => (
-                                <tr key={user.id}>
-                                    <td>
-                                        <div>
-                                            <div className="font-bold text-[var(--text-primary)] mb-1">
-                                                {user.name}
-                                            </div>
-                                            <div className="text-xs text-[var(--text-tertiary)]">
-                                                ID: {user.id.slice(0, 8)}...
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div>
-                                            <div className="text-[var(--text-primary)] mb-1">
-                                                {user.email}
-                                            </div>
-                                            {user.contactNo && (
-                                                <div className="text-xs text-[var(--text-tertiary)]">
-                                                    {user.contactNo}
-                                                </div>
-                                            )}
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <span className={`rounded-md font-semibold inline-block ${user.role === 'BOUNCER'
-                                            ? 'bg-[var(--primary-glow)] text-[var(--primary)] border border-[var(--primary)]'
-                                            : user.role === 'USER'
-                                                ? 'bg-[var(--secondary-glow)] text-[var(--secondary)] border border-[var(--secondary)]'
-                                                : 'bg-[var(--surface-elevated)] text-[var(--text-tertiary)]'
-                                            }`} style={{ fontSize: '10px', paddingTop: '2px', paddingBottom: '2px', paddingLeft: '6px', paddingRight: '6px', borderRadius: '9999px' }}>
-                                            {user.role === 'USER' ? 'CLIENT' : user.role}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div className="text-[var(--text-secondary)]">
-                                            {new Date(user.createdAt).toLocaleDateString('en-IN', {
-                                                day: 'numeric',
-                                                month: 'short',
-                                                year: 'numeric',
-                                            })}
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <button
-                                            onClick={() => setSelectedUser(user)}
-                                            className="px-4 py-2 rounded-lg bg-[var(--primary)] text-[var(--text-inverse)] hover:bg-[var(--primary-light)] transition-all text-sm font-semibold"
-                                        >
-                                            View Details
-                                        </button>
+                        </thead>
+                        <tbody>
+                            {loading ? (
+                                <tr>
+                                    <td colSpan={5} className="text-center py-12">
+                                        <div className="skeleton h-8 w-32 mx-auto"></div>
                                     </td>
                                 </tr>
-                            ))
-                        )}
-                    </tbody>
-                </table>
+                            ) : users.length === 0 ? (
+                                <tr>
+                                    <td colSpan={5} className="text-center py-12 text-text-tertiary font-mono">
+                                        NO USERS REGISTERED IN DATABASE
+                                    </td>
+                                </tr>
+                            ) : (
+                                users.map((user) => (
+                                    <tr key={user.id}>
+                                        <td>
+                                            <div>
+                                                <div className="font-black text-text-primary mb-1 uppercase tracking-wide">
+                                                    {user.name}
+                                                </div>
+                                                <div className="text-[10px] font-mono text-text-dim uppercase">
+                                                    ID: {user.id}
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div>
+                                                <div className="text-text-primary font-bold font-mono">
+                                                    {user.email}
+                                                </div>
+                                                {user.contactNo && (
+                                                    <div className="text-[10px] font-mono text-text-dim">
+                                                        TEL: {user.contactNo}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span className={`px-2.5 py-0.5 border border-black font-mono font-black text-[9px] rounded-none shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] uppercase inline-block ${
+                                                user.role === 'BOUNCER'
+                                                    ? 'bg-primary-yellow text-black'
+                                                    : user.role === 'USER'
+                                                        ? 'bg-info text-white'
+                                                        : 'bg-surface-hover text-text-primary border-text-primary'
+                                            }`}>
+                                                {user.role === 'USER' ? 'CLIENT' : user.role}
+                                            </span>
+                                        </td>
+                                        <td className="hidden sm:table-cell">
+                                            <div className="text-text-secondary font-mono font-bold text-xs">
+                                                {new Date(user.createdAt).toLocaleDateString('en-IN', {
+                                                    day: 'numeric',
+                                                    month: 'short',
+                                                    year: 'numeric',
+                                                })}
+                                            </div>
+                                        </td>
+                                        <td className="text-right">
+                                            <button
+                                                onClick={() => setSelectedUser(user)}
+                                                className="btn btn-sm btn-primary py-1 px-3 border-2 border-black font-mono font-black text-[10px] text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all uppercase"
+                                            >
+                                                INSPECT_USER
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
             {/* User Detail Modal */}
             {selectedUser && (
                 <div
-                    className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center p-8 z-50"
+                    className="fixed inset-0 bg-black/85 flex items-center justify-center p-8 z-50 animate-fade-in"
                     onClick={() => setSelectedUser(null)}
                 >
                     <div
-                        className="card p-10 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+                        className="card bg-bg-secondary border-3 border-white rounded-none p-8 max-w-2xl w-full shadow-[6px_6px_0px_0px_rgba(250,204,21,1)]"
                         onClick={(e) => e.stopPropagation()}
                     >
-                        <button
-                            onClick={() => setSelectedUser(null)}
-                            className="float-right text-3xl text-[var(--text-tertiary)] hover:text-[var(--text-primary)] font-bold"
-                        >
-                            ×
-                        </button>
+                        <div className="flex justify-between items-center border-b-3 border-text-primary pb-3 mb-6">
+                            <h2 className="text-xl font-black uppercase text-white font-mono tracking-wider">
+                                // ACCOUNT_INSPECTION_PANEL
+                            </h2>
+                            <button
+                                onClick={() => setSelectedUser(null)}
+                                className="text-2xl text-text-tertiary hover:text-white font-black font-mono"
+                            >
+                                [✕]
+                            </button>
+                        </div>
 
-                        <h2 className="text-3xl font-bold text-[var(--text-primary)] mb-8 text-center bg-zinc-800 py-2 ">
-                            User Details
-                        </h2>
-
-                        <div className="space-y-6 mx-8 ">
-                            <div className="detail-row border-b border-white/10 pb-1.5 mb-2" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', margin: '20px' }}>
-                                <div className="detail-label">Full Name</div>
-                                <div className="detail-value">{selectedUser.name}</div>
+                        <div className="space-y-4 font-mono">
+                            <div className="flex justify-between items-center border-b border-white/10 pb-2">
+                                <span className="text-xs font-black text-text-dim uppercase">FULL NAME</span>
+                                <span className="text-sm font-bold text-white uppercase">{selectedUser.name}</span>
                             </div>
 
-                            <div className="detail-row border-b border-white/10 pb-1.5 mb-2" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '20px' }}>
-                                <div className="detail-label">Email Address</div>
-                                <div className="detail-value">{selectedUser.email}</div>
+                            <div className="flex justify-between items-center border-b border-white/10 pb-2">
+                                <span className="text-xs font-black text-text-dim uppercase">SYSTEM ID</span>
+                                <span className="text-xs font-bold text-primary-yellow font-mono">{selectedUser.id}</span>
+                            </div>
+
+                            <div className="flex justify-between items-center border-b border-white/10 pb-2">
+                                <span className="text-xs font-black text-text-dim uppercase">EMAIL ADDRESS</span>
+                                <span className="text-sm font-bold text-white font-mono">{selectedUser.email}</span>
                             </div>
 
                             {selectedUser.contactNo && (
-                                <div className="detail-row border-b border-white/10 pb-1.5 mb-2" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '20px' }}>
-                                    <div className="detail-label">Contact Number</div>
-                                    <div className="detail-value">{selectedUser.contactNo}</div>
+                                <div className="flex justify-between items-center border-b border-white/10 pb-2">
+                                    <span className="text-xs font-black text-text-dim uppercase">TELEPHONE NO</span>
+                                    <span className="text-sm font-bold text-white font-mono">{selectedUser.contactNo}</span>
                                 </div>
                             )}
 
-                            <div className="detail-row border-b border-white/10 pb-1.5 mb-2" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '20px' }}>
-                                <div className="detail-label">Account Type</div>
-                                <div className="detail-value">
-                                    <span className={`rounded-md font-semibold inline-block ${selectedUser.role === 'BOUNCER'
-                                        ? 'bg-[var(--primary-glow)] text-[var(--primary)] border border-[var(--primary)]'
-                                        : 'bg-[var(--secondary-glow)] text-[var(--secondary)] border border-[var(--secondary)]'
-                                        }`} style={{ fontSize: '10px', paddingTop: '2px', paddingBottom: '2px', paddingLeft: '6px', paddingRight: '6px', borderRadius: '9999px' }}>
-                                        {selectedUser.role === 'USER' ? 'CLIENT' : selectedUser.role}
-                                    </span>
-                                </div>
+                            <div className="flex justify-between items-center border-b border-white/10 pb-2">
+                                <span className="text-xs font-black text-text-dim uppercase">ACCESS ROLE</span>
+                                <span className={`px-2.5 py-0.5 border border-black font-mono font-black text-[9px] rounded-none shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] uppercase ${
+                                    selectedUser.role === 'BOUNCER'
+                                        ? 'bg-primary-yellow text-black'
+                                        : 'bg-info text-white'
+                                }`}>
+                                    {selectedUser.role === 'USER' ? 'CLIENT' : selectedUser.role}
+                                </span>
                             </div>
 
-                            <div className="detail-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginLeft: '20px', marginRight: '20px' }}>
-                                <div className="detail-label">Registered On</div>
-                                <div className="detail-value">
+                            <div className="flex justify-between items-center border-b border-white/10 pb-2">
+                                <span className="text-xs font-black text-text-dim uppercase">REGISTERED AT</span>
+                                <span className="text-sm font-bold text-white">
                                     {new Date(selectedUser.createdAt).toLocaleDateString('en-IN', {
                                         day: 'numeric',
                                         month: 'long',
                                         year: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit'
                                     })}
-                                </div>
+                                </span>
                             </div>
                         </div>
 
-                        <div className="flex gap-4 mt-8 pt-8 border-t border-[var(--border)]">
+                        <div className="flex gap-4 mt-8">
                             <button
                                 onClick={() => setSelectedUser(null)}
-                                className="flex-1 btn-outline py-4"
+                                className="w-full btn btn-primary border-2 border-black font-mono font-black text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all uppercase"
                             >
-                                Close
+                                DISMISS_INSPECTION
                             </button>
                         </div>
                     </div>

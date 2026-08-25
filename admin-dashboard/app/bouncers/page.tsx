@@ -76,39 +76,39 @@ export default function BouncersPage() {
     };
 
     return (
-        <div className="animate-fade-in">
+        <div className="animate-fade-in space-y-8">
             {/* Header */}
-            <div className="page-header">
+            <div className="page-header border-b-3 border-text-primary pb-6 mb-8">
                 <div>
-                    <h1 className="page-title">
+                    <h1 className="page-title text-4xl font-black uppercase tracking-tight text-text-primary">
                         Bouncers Directory
                     </h1>
-                    <p className="page-subtitle">
-                        Manage and monitor all registered security personnel
+                    <p className="page-subtitle text-xs font-mono text-text-muted uppercase tracking-wider mt-1">
+                        // Security personnel registry and live dispatch statuses
                     </p>
                 </div>
             </div>
 
             {/* Stats Summary */}
-            <div className="stats-grid mb-8">
-                <div className="card p-4 sm:p-6" style={{ padding: '16px' }}>
-                    <div className="flex items-center justify-between" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div className="text-sm font-bold text-text-muted uppercase tracking-wider">Total Bouncers</div>
-                        <div className="text-2xl font-bold">{bouncers.length}</div>
+            <div className="stats-grid grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div className="card border-3 border-text-primary bg-bg-secondary p-5 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-none">
+                    <div className="flex items-center justify-between">
+                        <div className="text-xs font-black font-mono text-text-dim uppercase tracking-wider">// REGISTERED_FORCE</div>
+                        <div className="text-3xl font-black font-mono text-text-primary">{bouncers.length}</div>
                     </div>
                 </div>
-                <div className="card p-4 sm:p-6" style={{ padding: '16px' }}>
-                    <div className="flex items-center justify-between" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div className="text-sm font-bold text-text-muted uppercase tracking-wider">Available</div>
-                        <div className="text-2xl font-bold text-success">
+                <div className="card border-3 border-text-primary bg-bg-secondary p-5 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-none">
+                    <div className="flex items-center justify-between">
+                        <div className="text-xs font-black font-mono text-text-dim uppercase tracking-wider">// AVAILABLE_AGENTS</div>
+                        <div className="text-3xl font-black font-mono text-success">
                             {bouncers.filter(b => b.isAvailable).length}
                         </div>
                     </div>
                 </div>
-                <div className="card card-spacing" style={{ padding: '16px' }}>
-                    <div className="detail-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div className="detail-label">Licensed Gunmen</div>
-                        <div className="detail-value text-2xl font-bold text-primary-yellow">
+                <div className="card border-3 border-text-primary bg-bg-secondary p-5 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-none">
+                    <div className="flex items-center justify-between">
+                        <div className="text-xs font-black font-mono text-text-dim uppercase tracking-wider">// LICENSED_GUNMEN</div>
+                        <div className="text-3xl font-black font-mono text-primary-yellow">
                             {bouncers.filter(b => b.hasGunLicense).length}
                         </div>
                     </div>
@@ -116,55 +116,41 @@ export default function BouncersPage() {
             </div>
 
             {/* Filter Tabs */}
-            <div className="flex flex-wrap gap-2 sm:gap-4 mb-6" style={{ gap: '17px', marginBottom: '10px' }}>
+            <div className="flex flex-wrap gap-3 mb-6">
                 {['all', 'available', 'unavailable'].map((tab) => (
                     <button
                         key={tab}
                         onClick={() => setFilter(tab as typeof filter)}
-                        className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-bold text-sm uppercase tracking-wide transition-all ${filter === tab
+                        className={`px-4 py-2 border-2 border-black font-black font-mono text-xs uppercase tracking-wider transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none cursor-pointer ${filter === tab
                             ? 'bg-primary-yellow text-black'
-                            : 'bg-surface text-text-muted hover:bg-surface-hover border border-border-gray'
+                            : 'bg-bg-secondary text-text-muted hover:bg-surface-hover hover:text-white'
                             }`}
-                        style={{ paddingTop: '4px', paddingBottom: '4px', paddingLeft: '10px', paddingRight: '10px', fontSize: '12px' }}
                     >
                         {tab}
-                        <span className="hidden sm:inline">
-                            {tab === 'all' && ` (${bouncers.length})`}
-                            {tab === 'available' && ` (${bouncers.filter(b => b.isAvailable).length})`}
-                            {tab === 'unavailable' && ` (${bouncers.filter(b => !b.isAvailable).length})`}
+                        <span>
+                            {tab === 'all' && ` [${bouncers.length}]`}
+                            {tab === 'available' && ` [${bouncers.filter(b => b.isAvailable).length}]`}
+                            {tab === 'unavailable' && ` [${bouncers.filter(b => !b.isAvailable).length}]`}
                         </span>
                     </button>
                 ))}
             </div>
 
             {/* Professional Table */}
-            <div className="card overflow-hidden">
+            <div className="card border-3 border-text-primary rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
                 <div className="table-container">
-                    <table className="professional-table" style={{ fontSize: '11px' }}>
-                    <style jsx>{`
-                        .professional-table,
-                        .professional-table th,
-                        .professional-table td,
-                        .professional-table span,
-                        .professional-table button {
-                            font-size: 11px !important;
-                        }
-                        .professional-table th,
-                        .professional-table td {
-                            padding: 6px 6px 6px 6px !important;
-                        }
-                    `}</style>
+                    <table className="professional-table">
                         <thead>
                             <tr>
-                                <th>Bouncer Details</th>
-                                <th>Contact Information</th>
-                                <th>Age</th>
-                                <th>Gender</th>
-                                <th>Rating</th>
-                                <th>Type</th>
-                                <th>Gun License</th>
-                                <th>Status</th>
-                                <th>Actions</th>
+                                <th>BOUNCER IDENTITY</th>
+                                <th className="hidden sm:table-cell">CONTACT INFORMATION</th>
+                                <th className="hidden lg:table-cell">AGE</th>
+                                <th className="hidden lg:table-cell">GENDER</th>
+                                <th>RATING</th>
+                                <th className="hidden md:table-cell">REGISTRATION TYPE</th>
+                                <th className="hidden md:table-cell">GUN LICENSE</th>
+                                <th>DISPATCH STATUS</th>
+                                <th className="text-right">ACTIONS</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -176,8 +162,8 @@ export default function BouncersPage() {
                                 </tr>
                             ) : filteredBouncers.length === 0 ? (
                                 <tr>
-                                    <td colSpan={9} className="text-center py-12 text-text-tertiary">
-                                        No bouncers found
+                                    <td colSpan={9} className="text-center py-12 text-text-tertiary font-mono">
+                                        NO SECURITY AGENTS REGISTERED IN THIS SHIFT
                                     </td>
                                 </tr>
                             ) : (
@@ -185,70 +171,69 @@ export default function BouncersPage() {
                                     <tr key={bouncer.id}>
                                         <td>
                                             <div>
-                                                <div className="font-bold text-text-primary mb-1">
+                                                <div className="font-black text-text-primary mb-1 uppercase tracking-wide">
                                                     {bouncer.name}
                                                 </div>
-                                                <div className="text-xs text-text-tertiary">
-                                                    ID: {bouncer.id.slice(0, 8)}...
+                                                <div className="text-[10px] font-mono text-text-dim uppercase">
+                                                    ID: {bouncer.id}
                                                 </div>
                                             </div>
                                         </td>
-                                        <td>
+                                        <td className="hidden sm:table-cell">
                                             <div>
-                                                <div className="text-text-primary mb-1">
+                                                <div className="text-text-primary font-bold font-mono">
                                                     {bouncer.contactNo}
                                                 </div>
-                                                <div className="text-xs text-text-tertiary">
+                                                <div className="text-[10px] font-mono text-text-dim">
                                                     {bouncer.user.email}
                                                 </div>
                                             </div>
                                         </td>
-                                        <td>{bouncer.age} years</td>
-                                        <td>{bouncer.gender}</td>
+                                        <td className="hidden lg:table-cell font-bold font-mono text-xs">{bouncer.age} YRS</td>
+                                        <td className="hidden lg:table-cell font-bold font-mono text-xs uppercase">{bouncer.gender}</td>
                                         <td>
-                                            <span className="font-bold text-primary">
+                                            <span className="font-black text-primary-yellow font-mono">
                                                 {bouncer.rating.toFixed(1)} / 5.0
                                             </span>
                                         </td>
-                                        <td>
-                                            <span className="px-1 py-0 rounded-md text-xs font-semibold bg-info-glow text-info border border-info" style={{ padding: '1px 4px', display: 'inline-block' }}>
+                                        <td className="hidden md:table-cell">
+                                            <span className="px-2 py-0.5 border border-black font-mono font-black text-[9px] rounded-none shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] uppercase bg-info text-white inline-block">
                                                 {bouncer.registrationType}
                                             </span>
                                         </td>
-                                        <td>
+                                        <td className="hidden md:table-cell">
                                             {bouncer.hasGunLicense ? (
-                                                <span className="px-3 py-1 rounded-md text-xs font-semibold bg-success-glow text-success border border-success">
-                                                    Licensed
+                                                <span className="px-2 py-0.5 border border-black font-mono font-black text-[9px] rounded-none shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] uppercase bg-success text-black">
+                                                    LICENSED
                                                 </span>
                                             ) : (
-                                                <span className="text-text-tertiary">No License</span>
+                                                <span className="text-text-tertiary font-mono text-xs">UNARMED</span>
                                             )}
                                         </td>
                                         <td>
                                             {bouncer.isAvailable ? (
-                                                <span className="status-badge status-active">Available</span>
+                                                <span className="status-badge status-active font-mono font-black">AVAILABLE</span>
                                             ) : (
-                                                <span className="status-badge status-inactive">Unavailable</span>
+                                                <span className="status-badge status-inactive font-mono font-black">UNAVAILABLE</span>
                                             )}
                                         </td>
-                                        <td>
-                                            <div className="flex gap-2">
+                                        <td className="text-right">
+                                            <div className="flex gap-2 justify-end">
                                                 <button
                                                     onClick={() => setSelectedBouncerId(bouncer.id)}
-                                                    className="bg-primary-yellow text-black hover:brightness-110 transition-all font-semibold rounded-full"
-                                                    style={{ padding: '2px 6px' }}
+                                                    className="btn btn-sm btn-primary py-1 px-3 border-2 border-black font-mono font-black text-[10px] text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all uppercase"
                                                 >
-                                                    View
+                                                    INSPECT
                                                 </button>
                                                 <button
                                                     onClick={() => handleToggleAvailability(bouncer.id, bouncer.isAvailable)}
-                                                    className={`transition-all font-semibold rounded-full ${bouncer.isAvailable
-                                                        ? 'bg-error text-white hover:bg-red-600'
-                                                        : 'bg-success text-white hover:bg-green-600'
-                                                        }`}
-                                                        style={{ padding: '2px 6px' }}
+                                                    className={`btn btn-sm border-2 border-black font-mono font-black py-1 px-3 text-[10px] shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all uppercase ${
+                                                        bouncer.isAvailable
+                                                            ? 'bg-error text-white'
+                                                            : 'bg-success text-black'
+                                                    }`}
                                                 >
-                                                    {bouncer.isAvailable ? 'Disable' : 'Enable'}
+                                                    {bouncer.isAvailable ? 'DISABLE' : 'ENABLE'}
                                                 </button>
                                             </div>
                                         </td>

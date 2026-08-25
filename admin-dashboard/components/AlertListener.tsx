@@ -195,57 +195,59 @@ export default function AlertListener() {
     if (alerts.length === 0) return null;
 
     return (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm animate-pulse-red">
-            <div className="bg-red-900 border-4 border-red-500 rounded-2xl p-8 max-w-2xl w-full shadow-2xl text-white relative overflow-hidden animate-shake max-h-[90vh] overflow-y-auto custom-scrollbar">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 animate-pulse-red">
+            <div className="bg-error border-4 border-black rounded-none p-8 max-w-2xl w-full shadow-[6px_6px_0px_0px_rgba(255,255,255,1)] text-white relative overflow-hidden animate-shake max-h-[90vh] overflow-y-auto custom-scrollbar">
                 {/* Siren Effect Overlay */}
-                <div className="absolute inset-0 bg-red-500/10 animate-pulse"></div>
+                <div className="absolute inset-0 bg-red-500/10 animate-pulse pointer-events-none"></div>
 
                 {/* Close Button */}
                 <button
                     onClick={() => setAlerts([])} 
-                    className="absolute top-4 right-4 z-50 bg-red-800 hover:bg-red-700 text-white rounded-full p-2 transition-colors border border-red-400"
+                    className="absolute top-4 right-4 z-50 bg-black hover:bg-zinc-900 text-white rounded-none p-2 border-2 border-white font-mono text-xs uppercase cursor-pointer"
                     aria-label="Close Alert"
                 >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
+                    [ DISMISS_ALL ]
                 </button>
 
-                <div className="relative z-10 text-center">
+                <div className="relative z-10 text-center font-mono">
                     <div className="flex justify-center mb-6">
                         <div className="relative">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-24 w-24 text-red-500 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                            </svg>
-                            <div className="absolute inset-0 h-24 w-24 rounded-full bg-red-500/20 blur-xl animate-pulse"></div>
+                            <div className="w-20 h-20 bg-warning border-3 border-black flex items-center justify-center shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] animate-bounce">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                            </div>
+                            <div className="absolute inset-0 w-20 h-20 bg-red-500/25 blur-lg animate-pulse pointer-events-none"></div>
                         </div>
                     </div>
 
-                    <h2 className="text-4xl font-black uppercase tracking-widest mb-2 animate-pulse">SOS EMERGENCY</h2>
-                    <p className="text-xl text-red-200 mb-8 font-bold tracking-wide">
-                        {isSocketConnected || isSupabaseConnected ? '🔴 LIVE MONITORING' : '⚠️ RECONNECTING...'}
+                    <h2 className="text-3xl font-black uppercase tracking-widest text-black bg-warning inline-block px-4 py-1.5 border-3 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] mb-4 animate-pulse">
+                        SOS EMERGENCY DETECTED
+                    </h2>
+                    <p className="text-xs text-white mb-8 font-black uppercase tracking-wider bg-black/40 inline-block px-3 py-1">
+                        {isSocketConnected || isSupabaseConnected ? '🔴 LIVE DISPATCH LINK ACTIVE' : '⚠️ RECONNECTING LINK...'}
                     </p>
 
-                    <div className="space-y-6 text-left bg-black/30 p-6 rounded-xl border border-red-700">
+                    <div className="space-y-6 text-left bg-black border-3 border-black p-6 rounded-none shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]">
                         {alerts.map(alert => (
-                            <div key={alert.id} className="border-b border-red-800 last:border-0 pb-6 last:pb-0 mb-6 last:mb-0">
+                            <div key={alert.id} className="border-b border-white/20 last:border-0 pb-6 last:pb-0 mb-6 last:mb-0">
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <p className="text-xs text-red-400 uppercase font-bold">Officer Name</p>
-                                        <p className="text-lg font-bold">{alert.user?.name || 'Unknown Officer'}</p>
+                                        <p className="text-[10px] text-red-400 uppercase font-black">// SECURITY_OFFICER</p>
+                                        <p className="text-base font-black uppercase text-white">{alert.user?.name || 'Unknown Officer'}</p>
                                     </div>
                                     <div>
-                                        <p className="text-xs text-red-400 uppercase font-bold">Contact No</p>
-                                        <p className="text-lg font-bold">{alert.user?.contactNo || 'N/A'}</p>
+                                        <p className="text-[10px] text-red-400 uppercase font-black">// TELEPHONE_LINK</p>
+                                        <p className="text-base font-black text-white">{alert.user?.contactNo || 'N/A'}</p>
                                     </div>
                                     <div className="col-span-2">
-                                        <p className="text-xs text-red-400 uppercase font-bold">Reported Location</p>
-                                        <p className="text-lg font-mono text-yellow-400">{alert.location || 'Location data unavailable'}</p>
+                                        <p className="text-[10px] text-red-400 uppercase font-black">// REPORTED_DEPLOYMENT_LOCATION</p>
+                                        <p className="text-sm font-black text-warning uppercase">{alert.location || 'Location data unavailable'}</p>
                                     </div>
                                     <div className="col-span-2">
-                                        <p className="text-xs text-red-400 uppercase font-bold">Coordinates</p>
-                                        <p className="text-sm font-mono text-gray-300">
-                                            Lat: {alert.latitude?.toFixed(6) || '---'}, Long: {alert.longitude?.toFixed(6) || '---'}
+                                        <p className="text-[10px] text-red-400 uppercase font-black">// GPS_COORDINATES</p>
+                                        <p className="text-xs font-bold text-gray-300">
+                                            LAT: {alert.latitude?.toFixed(6) || '---'} | LNG: {alert.longitude?.toFixed(6) || '---'}
                                         </p>
                                     </div>
 
@@ -254,15 +256,21 @@ export default function AlertListener() {
                                         <div className="col-span-2 mt-2">
                                             {isLoaded ? (
                                                 <GoogleMap
-                                                    mapContainerStyle={mapContainerStyle}
+                                                    mapContainerStyle={{ ...mapContainerStyle, borderRadius: '0px', border: '2px solid black' }}
                                                     center={{ lat: alert.latitude, lng: alert.longitude }}
                                                     zoom={15}
+                                                    options={{
+                                                        disableDefaultUI: true,
+                                                        zoomControl: false,
+                                                        streetViewControl: false,
+                                                        mapTypeControl: false
+                                                    }}
                                                 >
                                                     <Marker position={{ lat: alert.latitude, lng: alert.longitude }} />
                                                 </GoogleMap>
                                             ) : (
-                                                <div className="h-[200px] w-full bg-red-950/50 rounded-lg flex items-center justify-center border border-red-800 animate-pulse">
-                                                    <p className="text-red-400 text-sm font-bold uppercase tracking-widest">
+                                                <div className="h-[200px] w-full bg-zinc-900 border-2 border-black rounded-none flex items-center justify-center animate-pulse">
+                                                    <p className="text-red-500 text-xs font-black uppercase tracking-widest">
                                                        {loadError ? 'Map loading failed' : 'Loading Map...'}
                                                     </p>
                                                 </div>
@@ -272,9 +280,9 @@ export default function AlertListener() {
                                 </div>
                                 <button
                                     onClick={() => handleAcknowledge(alert.id)}
-                                    className="mt-4 w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg transition-colors uppercase tracking-wide shadow-lg border-2 border-transparent hover:border-red-400 transform active:scale-95 transition-all"
+                                    className="mt-6 w-full bg-warning hover:bg-yellow-500 text-black border-2 border-black rounded-none font-mono font-black py-3 px-6 shadow-[2.5px_2.5px_0px_0px_rgba(255,255,255,1)] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all uppercase tracking-wide cursor-pointer"
                                 >
-                                    Acknowledge & Dismiss
+                                    ACKNOWLEDGE_&_DISMISS
                                 </button>
                             </div>
                         ))}
@@ -284,15 +292,15 @@ export default function AlertListener() {
             <style jsx global>{`
                 @keyframes shake {
                     0%, 100% { transform: translateX(0); }
-                    10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
-                    20%, 40%, 60%, 80% { transform: translateX(5px); }
+                    10%, 30%, 50%, 70%, 90% { transform: translateX(-3px); }
+                    20%, 40%, 60%, 80% { transform: translateX(3px); }
                 }
                 .animate-shake {
                     animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both infinite;
                 }
                 @keyframes pulse-red {
-                    0%, 100% { background-color: rgba(0,0,0,0.5); }
-                    50% { background-color: rgba(220, 38, 38, 0.3); }
+                    0%, 100% { background-color: rgba(0,0,0,0.7); }
+                    50% { background-color: rgba(220, 38, 38, 0.4); }
                 }
                 .animate-pulse-red {
                     animation: pulse-red 2s infinite;

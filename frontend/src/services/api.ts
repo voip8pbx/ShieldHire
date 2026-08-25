@@ -5,7 +5,7 @@ import { getAuth, getIdToken } from './authService';
 const DEVELOPMENT_URL = ENV.DEV_BASE_URL;
 const PRODUCTION_URL = ENV.PROD_BASE_URL;
 
-export const BASE_URL = __DEV__ ? DEVELOPMENT_URL : PRODUCTION_URL;
+export const BASE_URL = PRODUCTION_URL;
 
 console.log(`[API] Using Base URL: ${BASE_URL}`);
 

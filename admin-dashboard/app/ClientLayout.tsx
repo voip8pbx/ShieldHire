@@ -32,7 +32,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
     // Close sidebar on route change (mobile only)
     useEffect(() => {
         const handleRouteChange = () => {
-            if (windowWidth < 481) {
+            if (windowWidth < 769) {
                 setSidebarOpen(false);
             }
         };
@@ -46,8 +46,8 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
     // We'll set initial sidebarOpen based on width: true for tablet and up, false for mobile.
     useEffect(() => {
         if (!mounted) {
-            // Set initial state based on width
-            setSidebarOpen(windowWidth >= 481);
+            // Set initial state based on width — sidebar hidden on mobile/tablet
+            setSidebarOpen(windowWidth >= 769);
         }
     }, [mounted, windowWidth]);
 

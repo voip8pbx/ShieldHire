@@ -147,31 +147,31 @@ export default function BouncerDrawer({ bouncerId, isOpen, onClose, onRefresh }:
 
                     {/* Drawer */}
                     <motion.div 
-                        initial={{ x: '100%', boxShadow: '-20px 0 50px rgba(0,0,0,0)' }} 
-                        animate={{ x: 0, boxShadow: '-20px 0 50px rgba(0,0,0,0.5)' }} 
-                        exit={{ x: '100%', boxShadow: '-20px 0 50px rgba(0,0,0,0)' }} 
+                        initial={{ x: '100%' }} 
+                        animate={{ x: 0 }} 
+                        exit={{ x: '100%' }} 
                         transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                        className="fixed inset-y-0 right-0 w-full md:w-[85vw] lg:w-[75vw] max-w-6xl bg-background border-l border-border-gray z-[101] flex flex-col shadow-2xl"
+                        className="fixed inset-y-0 right-0 w-full md:w-[85vw] lg:w-[75vw] max-w-6xl bg-bg-primary border-l-3 border-text-primary z-[101] flex flex-col shadow-2xl rounded-none"
                     >
                         {loading ? (
                             <div className="flex-1 flex items-center justify-center">
-                                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-yellow"></div>
+                                <div className="animate-spin border-2 border-primary-yellow border-t-transparent h-12 w-12 rounded-none"></div>
                             </div>
                         ) : (
                             <>
                                 {/* Drawer Header */}
-                                <div className="h-20 border-b border-border-gray flex items-center justify-between px-6 bg-surface shrink-0">
+                                <div className="h-20 border-b-3 border-text-primary flex items-center justify-between px-6 bg-bg-secondary shrink-0">
                                     <div className="flex items-center gap-4">
-                                        <button onClick={onClose} className="p-2 hover:bg-zinc-800 rounded-lg transition-colors text-gray-400 hover:text-white">
-                                            <X size={24} />
+                                        <button onClick={onClose} className="btn btn-sm btn-icon border-2 border-text-primary hover:bg-surface-hover hover:text-white rounded-none">
+                                            <X size={20} className="stroke-[2.5]" />
                                         </button>
                                         <div>
-                                            <h2 className="text-xl font-bold text-white leading-tight">{bouncer?.name}</h2>
-                                            <div className="text-xs text-gray-400 flex items-center gap-2">
-                                                ID: {bouncer?.id}
+                                            <h2 className="text-xl font-black text-white leading-tight uppercase font-mono">{bouncer?.name}</h2>
+                                            <div className="text-[10px] font-mono text-gray-400 flex items-center gap-2">
+                                                AGENT_ID: {bouncer?.id}
                                                 {Object.keys(editedData).length > 0 && (
-                                                    <span className="text-primary-yellow font-bold flex items-center gap-1">
-                                                        <span className="w-1.5 h-1.5 rounded-full bg-primary-yellow animate-pulse"></span> Unsaved changes
+                                                    <span className="text-primary-yellow font-black flex items-center gap-1 border border-primary-yellow px-1 py-0.5 text-[8px] bg-bg-primary">
+                                                        [ UNSAVED_EDITS ]
                                                     </span>
                                                 )}
                                             </div>
@@ -182,25 +182,25 @@ export default function BouncerDrawer({ bouncerId, isOpen, onClose, onRefresh }:
                                             <>
                                                 <button 
                                                     onClick={() => { setEditedData({}); setIsEditing(false); }} 
-                                                    className="px-4 py-2 text-sm font-bold text-gray-300 hover:text-white transition-colors"
+                                                    className="px-4 py-2 text-xs font-black text-text-muted hover:text-white transition-colors uppercase font-mono"
                                                 >
-                                                    Cancel
+                                                    [CANCEL]
                                                 </button>
                                                 <button 
                                                     onClick={handleSave} 
                                                     disabled={isSaving}
-                                                    className="px-6 py-2 bg-primary-yellow hover:brightness-110 text-black text-sm font-bold rounded-lg shadow-lg transition-all flex items-center gap-2 disabled:opacity-50"
+                                                    className="btn btn-sm btn-primary border-2 border-black font-mono font-black text-black py-1 px-4 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all uppercase flex items-center gap-2 disabled:opacity-50"
                                                 >
-                                                    {isSaving ? <span className="animate-spin w-4 h-4 border-2 border-black border-t-transparent rounded-full" /> : <Save size={16} />}
-                                                    Save Changes
+                                                    {isSaving ? <span className="animate-spin w-4 h-4 border-2 border-black border-t-transparent" /> : <Save size={14} className="stroke-[2.5]" />}
+                                                    SAVE_PROFILE
                                                 </button>
                                             </>
                                         ) : (
                                             <button 
                                                 onClick={() => setIsEditing(true)} 
-                                                className="px-6 py-2 bg-zinc-800 hover:bg-zinc-700 text-white border border-zinc-700 text-sm font-bold rounded-lg transition-colors flex items-center gap-2"
+                                                className="btn btn-sm border-2 border-text-primary bg-bg-primary hover:bg-surface-hover text-white font-mono font-black py-1 px-4 shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all uppercase flex items-center gap-2"
                                             >
-                                                Edit Profile
+                                                EDIT_PROFILE
                                             </button>
                                         )}
                                     </div>
@@ -209,37 +209,48 @@ export default function BouncerDrawer({ bouncerId, isOpen, onClose, onRefresh }:
                                 {/* Drawer Body */}
                                 <div className="flex-1 flex overflow-hidden">
                                     {/* Sidebar Navigation */}
-                                    <div className="w-64 border-r border-border-gray bg-surface/50 overflow-y-auto hidden md:block shrink-0 p-4">
-                                        <div className="space-y-2">
-                                            {TABS.map(tab => (
-                                                <button
-                                                    key={tab.id}
-                                                    onClick={() => setActiveTab(tab.id)}
-                                                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-sm ${activeTab === tab.id ? 'bg-primary-yellow/10 text-primary-yellow border border-primary-yellow/20' : 'text-gray-400 hover:bg-zinc-800 hover:text-white border border-transparent'}`}
-                                                >
-                                                    <tab.icon size={18} className={activeTab === tab.id ? 'text-primary-yellow' : 'text-gray-500'} />
-                                                    {tab.label}
-                                                </button>
-                                            ))}
+                                    <div className="w-64 border-r-3 border-text-primary bg-bg-secondary overflow-y-auto hidden md:block shrink-0 p-4">
+                                        <div className="space-y-3">
+                                            {TABS.map(tab => {
+                                                const TabIcon = tab.icon;
+                                                const isActive = activeTab === tab.id;
+                                                return (
+                                                    <button
+                                                        key={tab.id}
+                                                        onClick={() => setActiveTab(tab.id)}
+                                                        className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-none font-black text-xs uppercase tracking-wider font-mono border-2 transition-all ${
+                                                            isActive 
+                                                                ? 'bg-primary-yellow text-black border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] font-bold' 
+                                                                : 'text-text-muted border-transparent hover:bg-surface-hover hover:text-text-primary hover:border-text-primary'
+                                                        }`}
+                                                    >
+                                                        <TabIcon size={16} className={isActive ? 'text-black stroke-[2.5]' : 'text-gray-500'} />
+                                                        {tab.label}
+                                                    </button>
+                                                );
+                                            })}
                                         </div>
                                     </div>
 
                                     {/* Mobile Navigation */}
                                     <div className="md:hidden flex overflow-x-auto border-b border-border-gray bg-surface shrink-0 absolute top-20 left-0 right-0 z-10 px-4 py-2 gap-2 hide-scrollbar">
-                                         {TABS.map(tab => (
-                                            <button
-                                                key={tab.id}
-                                                onClick={() => setActiveTab(tab.id)}
-                                                className={`flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-lg transition-all font-medium text-sm ${activeTab === tab.id ? 'bg-primary-yellow/10 text-primary-yellow border border-primary-yellow/20' : 'text-gray-400 border border-border-gray'}`}
-                                            >
-                                                <tab.icon size={14} />
-                                                {tab.label}
-                                            </button>
-                                        ))}
+                                         {TABS.map(tab => {
+                                            const TabIcon = tab.icon;
+                                            return (
+                                                <button
+                                                    key={tab.id}
+                                                    onClick={() => setActiveTab(tab.id)}
+                                                    className={`flex-shrink-0 flex items-center gap-2 px-3 py-1.5 rounded-none font-bold text-xs uppercase tracking-wider font-mono border-2 ${activeTab === tab.id ? 'bg-primary-yellow text-black border-black' : 'text-gray-400 border-border-gray'}`}
+                                                >
+                                                    <TabIcon size={12} />
+                                                    {tab.label}
+                                                </button>
+                                            );
+                                         })}
                                     </div>
 
                                     {/* Content Area */}
-                                    <div className="flex-1 overflow-y-auto p-6 md:p-10 pt-20 md:pt-10 scroll-smooth">
+                                    <div className="flex-1 overflow-y-auto p-6 md:p-10 pt-20 md:pt-10 scroll-smooth bg-bg-primary">
                                         <div className="max-w-4xl mx-auto">
                                             {activeTab === 'overview' && <OverviewSection bouncer={mergedData} />}
                                             {activeTab === 'profile' && <ProfileSection bouncer={mergedData} isEditing={isEditing} onUpdate={handleUpdateField} />}

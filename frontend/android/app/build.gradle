@@ -67,7 +67,7 @@ react {
     //   The cli.js file which is the React Native CLI entrypoint. Default is ../../node_modules/react-native/cli.js
     cliFile = file("../../../node_modules/react-native/cli.js")
     entryFile = file("../../index.js")
-    hermesCommand = "../../../node_modules/react-native/sdks/hermesc/win64-bin/hermesc.exe"
+    hermesCommand = file("../../../node_modules/react-native/sdks/hermesc/win64-bin/hermesc.exe").absolutePath
 
 
 
@@ -106,7 +106,9 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0"
-        
+        ndk {
+            abiFilters "arm64-v8a"
+        }
         // Inject Google Maps API Key dynamically from .env
         resValue "string", "map_api_key", env['GOOGLE_MAPS_API_KEY'] ?: "AIzaSyCV1MNMAyPMvM0jXnPmVG01ikwxa1ETERg"
     }

@@ -156,9 +156,9 @@ export default function Sidebar({ isOpen, windowWidth, onClose }: SidebarProps) 
 
     // Determine breakpoints
 
-    const isMobile = windowWidth < 481;
+    const isMobile = windowWidth < 769;
 
-    const isTablet = windowWidth >= 481 && windowWidth < 769;
+    const isTablet = false; // Removed - icon strip was overlapping content on phones
 
     const isLaptopAndUp = windowWidth >= 769;
 
@@ -186,7 +186,7 @@ export default function Sidebar({ isOpen, windowWidth, onClose }: SidebarProps) 
 
     // Calculate sidebar width
 
-    const sidebarWidth = isMobile ? 280 : (isTablet ? 60 : 280);
+    const sidebarWidth = 280; // Always full width — no icon-strip mode
 
 
 
@@ -211,168 +211,85 @@ export default function Sidebar({ isOpen, windowWidth, onClose }: SidebarProps) 
 
 
             {/* Sidebar */}
-
-            <aside className={`sidebar ${isMobile && !isOpen ? 'sidebar-collapsed' : ''}`} style={{ width: `${sidebarWidth}px` }}>
-
+            <aside className={`sidebar border-r-3 border-text-primary ${isMobile && !isOpen ? 'sidebar-collapsed' : ''}`} style={{ width: `${sidebarWidth}px` }}>
                 {/* Logo Area */}
-
-                <div className="h-16 flex items-center px-4 sm:px-6 border-b border-border-gray bg-bg-primary mb-6">
-
-                    <div className="flex items-center gap-3" style={{ paddingLeft: '1rem' }}>
-
-                        <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-primary-yellow flex items-center justify-center text-black font-bold text-lg">
-
+                <div className="h-16 flex items-center px-4 sm:px-6 border-b-3 border-text-primary bg-bg-primary mb-6">
+                    <div className="flex items-center gap-3" style={{ paddingLeft: '0.25rem' }}>
+                        <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-none bg-primary-yellow border-2 border-black flex items-center justify-center text-black font-black text-lg font-mono shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
                             S
-
                         </div>
-
                         <div className="flex flex-col">
-
                             {showText && (
-
                                 <>
-
-                                    <h1 className="text-lg sm:text-xl font-bold text-text-primary tracking-tight">
-
-                                        SECURITY
-
+                                    <h1 className="text-sm font-black text-text-primary tracking-wider uppercase font-mono">
+                                        SHIELDHIRE
                                     </h1>
-
-                                    <span className="text-[10px] sm:text-xs font-bold text-primary-yellow -mt-1 tracking-widest">
-
-                                        ADMIN
-
+                                    <span className="text-[10px] font-black text-primary-yellow tracking-widest uppercase font-mono">
+                                        OPS_CONSOLE
                                     </span>
-
                                 </>
-
                             )}
-
                         </div>
-
                     </div>
-
                 </div>
 
-
-
                 {/* Navigation */}
-
-                <nav className="flex-1 p-3 sm:p-4 overflow-y-auto pt-6" style={{ paddingTop: '12.75px' }}>
-
-                    <div className="flex flex-col gap-6">
-
+                <nav className="flex-1 p-3 sm:p-4 overflow-y-auto pt-4">
+                    <div className="flex flex-col gap-3">
                         {navItems.map((item) => {
-
                             const isActive = pathname === item.href;
-
                             return (
-
                                 <Link
-
                                     key={item.name}
-
                                     href={item.href}
-
                                     onClick={handleLinkClick}
-
-                                    style={{ paddingLeft: '8.5px' }}
-
                                     className={`
-
-                                        flex items-center justify-between px-3 sm:px-4 py-3 rounded-lg pl-6
-
-                                        transition-all duration-200 font-medium text-sm
-
-                                        group relative
-
+                                        flex items-center justify-between px-3 py-2.5 rounded-none
+                                        font-bold text-xs uppercase tracking-wider font-mono
+                                        transition-all group relative border-2
                                         ${isActive
-                                            ? 'bg-surface-hover text-primary-yellow'
-                                            : 'text-text-muted hover:bg-surface-hover hover:text-text-primary'
+                                            ? 'bg-primary-yellow text-black border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]'
+                                            : 'text-text-muted border-transparent hover:bg-surface-hover hover:text-text-primary hover:border-text-primary'
                                         }
                                     `}
                                 >
-                                    {/* Active Indicator Pill */}
-                                    {isActive && (
-                                        <div 
-                                            className="absolute left-0 top-0 h-full w-[6px] bg-primary-yellow rounded-full z-20"
-                                        />
-                                    )}
-
-                                    <div className="flex items-center gap-4 pl-3">
-
+                                    <div className="flex items-center gap-3">
                                         <span className={`
-
-                                            ${isActive ? 'text-primary-yellow' : 'text-text-dim group-hover:text-text-primary'}
-
+                                            ${isActive ? 'text-black' : 'text-text-dim group-hover:text-text-primary'}
                                         `}>
-
                                             {item.icon}
-
                                         </span>
-
                                         {showText && (
-
-                                            <span className="text-base font-semibold tracking-wide">{item.name}</span>
-
+                                            <span className="text-xs font-black tracking-wider">{item.name}</span>
                                         )}
-
                                     </div>
 
-
-
                                     {item.badge && (
-
                                         <span
-
                                             className={`
-
-                                                px-2 py-0.5 rounded-full text-[10px] font-bold min-w-[20px] text-center
-
+                                                px-1.5 py-0.5 rounded-none text-[9px] font-black font-mono border min-w-[18px] text-center
                                                 ${isActive
-
-                                                    ? 'bg-primary-yellow text-black'
-
-                                                    : 'bg-primary-yellow text-black'
-
+                                                    ? 'bg-black text-primary-yellow border-primary-yellow'
+                                                    : 'bg-primary-yellow text-black border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]'
                                                 }
-
                                             `}
-
                                         >
-
                                             {item.badge}
-
                                         </span>
-
                                     )}
-
                                 </Link>
-
                             );
-
                         })}
-
                     </div>
-
                 </nav>
 
-
-
                 {/* Footer / Version Info */}
-
-                <div className="p-3 sm:p-4 border-t border-border-gray">
-
-                    <div className="text-xs text-text-dim text-center">
-
-                        <span className="hidden sm:inline">v1.0.0 &copy; 2026 ShieldHire</span>
-
-                        <span className="sm:hidden">v1.0.0</span>
-
+                <div className="p-3 sm:p-4 border-t-2 border-text-primary bg-bg-primary">
+                    <div className="text-[10px] font-black font-mono text-text-dim text-center uppercase tracking-widest">
+                        <span className="hidden sm:inline">V1.0.0 // SHIELDHIRE SEC</span>
+                        <span className="sm:hidden">V1.0.0</span>
                     </div>
-
                 </div>
-
             </aside>
 
         </>

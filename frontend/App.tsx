@@ -6,7 +6,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { AuthProvider, AuthContext } from './src/context/AuthContext';
 import { ThemeProvider, ThemeContext } from './src/context/ThemeContext';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { StatusBar, Platform } from 'react-native';
+import { StatusBar, Platform, View, Alert } from 'react-native';
 import { setNavigationRef, checkInitialNotification } from './src/services/fcmService';
 import BootSplash from 'react-native-bootsplash';
 
@@ -199,6 +199,12 @@ const AppContent = () => {
     const navigationRef = useRef<NavigationContainerRef<any>>(null);
     const [isSplashAnimationComplete, setSplashAnimationComplete] = useState(false);
 
+    // Hard timeout — force dismiss splash after 8s no matter what
+    useEffect(() => {
+        const t = setTimeout(() => setSplashAnimationComplete(true), 8000);
+        return () => clearTimeout(t);
+    }, []);
+
     // Pass navigation ref to FCM service so it can deep-link from notifications
     useEffect(() => {
         if (navigationRef.current) {
@@ -211,12 +217,27 @@ const AppContent = () => {
         checkInitialNotification();
     }, []);
 
-    if (isLoading || !isSplashAnimationComplete) {
+    // Fail-safe to ensure native splash screen is dismissed in production release builds
+    useEffect(() => {
+        if (isSplashAnimationComplete) {
+            console.log('[App] Splash animation complete. Triggering native BootSplash.hide fail-safe...');
+            const timer = setTimeout(() => {
+                BootSplash.hide({ fade: true }).catch(err => {
+                    Alert.alert('BootSplash Error (Fail-safe)', err?.message || String(err));
+                });
+            }, 150);
+            return () => clearTimeout(timer);
+        }
+    }, [isSplashAnimationComplete]);
+
+    if (!isSplashAnimationComplete) {
         return (
-            <AnimatedSplashScreen 
-                isAppLoaded={!isLoading}
-                onAnimationComplete={() => setSplashAnimationComplete(true)}
-            />
+            <View style={{ flex: 1 }} pointerEvents="none">
+                <AnimatedSplashScreen
+                    isAppLoaded={true}
+                    onAnimationComplete={() => setSplashAnimationComplete(true)}
+                />
+            </View>
         );
     }
 
@@ -247,11 +268,13 @@ const AppContent = () => {
     };
 
     return (
-        <NavigationContainer 
-            ref={navigationRef} 
+        <NavigationContainer
+            ref={navigationRef}
             theme={navigationTheme}
             onReady={() => {
-                BootSplash.hide({ fade: true });
+                BootSplash.hide({ fade: true }).catch(err => {
+                    Alert.alert('BootSplash Error (onReady)', err?.message || String(err));
+                });
             }}
         >
             <StatusBar barStyle="light-content" backgroundColor="#0F0F0F" />

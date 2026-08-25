@@ -125,7 +125,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const fetchAndSetUser = async (accessToken: string) => {
         try {
             setAuthToken(accessToken);
-            const response = await api.get('/auth/me');
+            const response = await Promise.race([
+                api.get('/auth/me'),
+                new Promise<never>((_, reject) => setTimeout(() => reject(new Error('timeout')), 10000))
+            ]);
             const fetchedUser: User = response.data.user;
             setToken(accessToken);
             setUser(fetchedUser);
