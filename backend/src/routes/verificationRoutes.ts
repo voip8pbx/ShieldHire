@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { supabaseAdmin } from '../config/supabase';
 import { authenticate, authorize } from '../middleware/authMiddleware';
+import { sendPushToToken } from '../utils/fcmAdmin';
 
 const router = Router();
 
@@ -86,6 +87,38 @@ router.patch('/clients/:id/approve', async (req: Request, res: Response) => {
             .eq('id', id);
 
         if (updateError) throw updateError;
+
+        // Fetch client to get userId for role update + FCM
+        const { data: client } = await supabaseAdmin
+            .from('clients')
+            .select('userId, user_id, users(fcm_token, name)')
+            .eq('id', id)
+            .single();
+
+        if (client) {
+            const targetUserId = client.userId || client.user_id;
+
+            // Update user role to CLIENT
+            if (targetUserId) {
+                await supabaseAdmin
+                    .from('users')
+                    .update({ role: 'CLIENT' })
+                    .eq('id', targetUserId);
+            }
+
+            // Send FCM push notification
+            const userRow = Array.isArray(client.users) ? client.users[0] : client.users;
+            const fcmToken = userRow?.fcm_token;
+            if (fcmToken) {
+                sendPushToToken(
+                    fcmToken,
+                    '✅ Account Approved!',
+                    'Your client account has been verified. You can now hire security professionals.',
+                    { type: 'VERIFICATION_APPROVED', status: 'APPROVED' },
+                ).catch(err => console.error('[FCM] Failed to send client approval push:', err));
+            }
+        }
+
         res.json({ message: 'Client approved successfully' });
     } catch (error) {
         console.error('Error approving client:', error);
@@ -104,6 +137,27 @@ router.patch('/clients/:id/reject', async (req: Request, res: Response) => {
             .eq('id', id);
 
         if (updateError) throw updateError;
+
+        // Send FCM push notification
+        const { data: client } = await supabaseAdmin
+            .from('clients')
+            .select('users(fcm_token)')
+            .eq('id', id)
+            .single();
+
+        if (client) {
+            const userRow = Array.isArray(client.users) ? client.users[0] : client.users;
+            const fcmToken = userRow?.fcm_token;
+            if (fcmToken) {
+                sendPushToToken(
+                    fcmToken,
+                    '❌ Verification Rejected',
+                    reason || 'Your client account was not approved. Please contact support.',
+                    { type: 'VERIFICATION_REJECTED', status: 'REJECTED', reason: reason || '' },
+                ).catch(err => console.error('[FCM] Failed to send client rejection push:', err));
+            }
+        }
+
         res.json({ message: 'Client rejected successfully' });
     } catch (error) {
         console.error('Error rejecting client:', error);
@@ -230,7 +284,7 @@ router.patch('/:id/approve', async (req: Request, res: Response) => {
 
         const { data: bouncer, error: fetchError } = await supabaseAdmin
             .from('bouncers')
-            .select('*, users(name, email)')
+            .select('*, users(name, email, fcm_token)')
             .eq('id', id)
             .single();
 
@@ -250,6 +304,18 @@ router.patch('/:id/approve', async (req: Request, res: Response) => {
         } catch (syncError) {
             console.error('Error updating user role:', syncError);
             warningMessage = 'Failed to update user role. Manual review may be required.';
+        }
+
+        // Send FCM push notification to the bouncer
+        const userRow = Array.isArray(bouncer.users) ? bouncer.users[0] : bouncer.users;
+        const fcmToken = userRow?.fcm_token;
+        if (fcmToken) {
+            sendPushToToken(
+                fcmToken,
+                '✅ Verification Approved!',
+                'Congratulations! Your bouncer profile has been verified. You can now accept bookings.',
+                { type: 'VERIFICATION_APPROVED', status: 'APPROVED' },
+            ).catch(err => console.error('[FCM] Failed to send bouncer approval push:', err));
         }
 
         const formatted = camelCaseKeys(bouncer);
@@ -293,11 +359,23 @@ router.patch('/:id/reject', async (req: Request, res: Response) => {
 
         const { data: bouncer, error: fetchError } = await supabaseAdmin
             .from('bouncers')
-            .select('*, users(name, email)')
+            .select('*, users(name, email, fcm_token)')
             .eq('id', id)
             .single();
 
         if (fetchError) throw fetchError;
+
+        // Send FCM push notification to the bouncer
+        const userRow = Array.isArray(bouncer.users) ? bouncer.users[0] : bouncer.users;
+        const fcmToken = userRow?.fcm_token;
+        if (fcmToken) {
+            sendPushToToken(
+                fcmToken,
+                '❌ Verification Rejected',
+                reason || 'Your bouncer profile was not approved. Please contact support.',
+                { type: 'VERIFICATION_REJECTED', status: 'REJECTED', reason: reason },
+            ).catch(err => console.error('[FCM] Failed to send bouncer rejection push:', err));
+        }
 
         const formatted = camelCaseKeys(bouncer);
         if (bouncer.users) {

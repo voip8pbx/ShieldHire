@@ -42,6 +42,7 @@ model Client {
   age                Int?
   gender             String?
   profilePhoto       String?
+  govtIdPhoto        String?   @default("")
   location           String?
   verificationStatus String    @default("PENDING")
   rejectionReason    String?

@@ -1,18 +1,31 @@
 import express from 'express';
 import { supabaseAdmin } from '../config/supabase';
 import { authenticate, authorize } from '../middleware/authMiddleware';
+import { onlineBouncers } from '../socket';
 
 const router = express.Router();
 
 const parseBioMetadata = (bioStr: string | null) => {
-    const defaultVal = { bio: bioStr || '', upiId: '' };
+    const defaultVal = { bio: bioStr || '', upiId: '', singleShiftPrice: 2000, vipBodyguardPrice: 4000 };
     if (!bioStr) return defaultVal;
     
-    const parts = bioStr.split(' | UPI ID: ');
-    if (parts.length > 1) {
-        return { bio: parts[0], upiId: parts[1] };
-    }
-    return defaultVal;
+    const parts = bioStr.split(' | ');
+    const result = { bio: parts[0] || '', upiId: '', singleShiftPrice: 2000, vipBodyguardPrice: 4000 };
+    
+    parts.forEach((part, index) => {
+        if (index === 0 && !part.includes(': ')) {
+            result.bio = part;
+        } else if (part.startsWith('UPI ID: ')) {
+            result.upiId = part.replace('UPI ID: ', '').trim();
+        } else if (part.startsWith('SINGLE_SHIFT_PRICE: ')) {
+            const val = parseInt(part.replace('SINGLE_SHIFT_PRICE: ', ''), 10);
+            if (!isNaN(val) && val > 0) result.singleShiftPrice = val;
+        } else if (part.startsWith('VIP_BODYGUARD_PRICE: ')) {
+            const val = parseInt(part.replace('VIP_BODYGUARD_PRICE: ', ''), 10);
+            if (!isNaN(val) && val > 0) result.vipBodyguardPrice = val;
+        }
+    });
+    return result;
 };
 
 // Helper to convert snake_case DB columns to camelCase for frontend
@@ -24,9 +37,11 @@ const camelCaseKeys = (obj: any): any => {
         newObj[camelKey] = obj[key];
     }
     if (newObj.bio !== undefined) {
-        const { bio, upiId } = parseBioMetadata(newObj.bio);
+        const { bio, upiId, singleShiftPrice, vipBodyguardPrice } = parseBioMetadata(newObj.bio);
         newObj.bio = bio;
         newObj.upiId = upiId;
+        newObj.singleShiftPrice = singleShiftPrice;
+        newObj.vipBodyguardPrice = vipBodyguardPrice;
     }
     return newObj;
 };
@@ -47,7 +62,7 @@ router.get('/', async (req, res) => {
 
         if (error) throw error;
 
-        const formattedBouncers = bouncers.map((b: any) => {
+        const formattedBouncers = bouncers.map((b: any, index: number) => {
             const formatted = camelCaseKeys(b);
             if (b.users) {
                 const user = Array.isArray(b.users) ? b.users[0] : b.users;
@@ -72,6 +87,35 @@ router.get('/', async (req, res) => {
 
             if (formatted.gunLicenseUrl) {
                 formatted.gunLicensePhoto = formatted.gunLicenseUrl;
+            }
+
+            // Check if live location is active in socket memory
+            let onlineLoc: { lat: number; lng: number } | null = null;
+            if (onlineBouncers && onlineBouncers.size > 0) {
+                for (const item of onlineBouncers.values()) {
+                    if (item.bouncerId === b.id && item.lat && item.lng) {
+                        onlineLoc = { lat: item.lat, lng: item.lng };
+                        break;
+                    }
+                }
+            }
+
+            if (onlineLoc) {
+                formatted.latitude = onlineLoc.lat;
+                formatted.longitude = onlineLoc.lng;
+            } else {
+                // Fallback coordinates spread realistically around Mumbai central area (19.0760, 72.8777)
+                const offsets = [
+                    { lat: 19.0760, lng: 72.8777 },
+                    { lat: 19.0825, lng: 72.8901 },
+                    { lat: 19.0650, lng: 72.8640 },
+                    { lat: 19.0910, lng: 72.8688 },
+                    { lat: 19.0540, lng: 72.8820 },
+                ];
+                const selected = offsets[index % offsets.length];
+                const hash = (b.id || '').split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0);
+                formatted.latitude = selected.lat + ((hash % 20) - 10) * 0.0005;
+                formatted.longitude = selected.lng + (((hash * 7) % 20) - 10) * 0.0005;
             }
 
             return formatted;

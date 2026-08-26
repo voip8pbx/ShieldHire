@@ -1,7 +1,7 @@
 {
   "name": "shield-hire-backend",
   "version": "1.0.0",
-  "description": "Backend API for Home Gym Trainer Application",
+  "description": "Backend API for ShieldHire — Professional Security & Bouncer Hiring Platform",
   "main": "dist/index.js",
   "scripts": {
     "start": "node dist/index.js",

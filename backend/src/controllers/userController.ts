@@ -11,23 +11,36 @@ const safeParseInt = (val: any): number | null => {
 
 
 const parseBioMetadata = (bioStr: string | null) => {
-    const defaultVal = { bio: bioStr || '', upiId: '' };
+    const defaultVal = { bio: bioStr || '', upiId: '', singleShiftPrice: 2000, vipBodyguardPrice: 4000 };
     if (!bioStr) return defaultVal;
     
-    const parts = bioStr.split(' | UPI ID: ');
-    if (parts.length > 1) {
-        return { bio: parts[0], upiId: parts[1] };
-    }
-    return defaultVal;
+    const parts = bioStr.split(' | ');
+    const result = { bio: parts[0] || '', upiId: '', singleShiftPrice: 2000, vipBodyguardPrice: 4000 };
+    
+    parts.forEach((part, index) => {
+        if (index === 0 && !part.includes(': ')) {
+            result.bio = part;
+        } else if (part.startsWith('UPI ID: ')) {
+            result.upiId = part.replace('UPI ID: ', '').trim();
+        } else if (part.startsWith('SINGLE_SHIFT_PRICE: ')) {
+            const val = parseInt(part.replace('SINGLE_SHIFT_PRICE: ', ''), 10);
+            if (!isNaN(val) && val > 0) result.singleShiftPrice = val;
+        } else if (part.startsWith('VIP_BODYGUARD_PRICE: ')) {
+            const val = parseInt(part.replace('VIP_BODYGUARD_PRICE: ', ''), 10);
+            if (!isNaN(val) && val > 0) result.vipBodyguardPrice = val;
+        }
+    });
+    return result;
 };
 
-const formatBioMetadata = (bio: string, upiId: string) => {
+const formatBioMetadata = (bio: string, upiId: string, singleShiftPrice?: number, vipBodyguardPrice?: number) => {
     const cleanBio = (bio || '').trim();
     const cleanUpi = (upiId || '').trim();
-    if (cleanUpi) {
-        return `${cleanBio} | UPI ID: ${cleanUpi}`;
-    }
-    return cleanBio;
+    let result = cleanBio;
+    if (cleanUpi) result += ` | UPI ID: ${cleanUpi}`;
+    if (singleShiftPrice) result += ` | SINGLE_SHIFT_PRICE: ${singleShiftPrice}`;
+    if (vipBodyguardPrice) result += ` | VIP_BODYGUARD_PRICE: ${vipBodyguardPrice}`;
+    return result;
 };
 
 // Helper to convert snake_case DB columns to camelCase for frontend
@@ -39,19 +52,21 @@ const camelCaseKeys = (obj: any): any => {
         newObj[camelKey] = obj[key];
     }
     if (newObj.bio !== undefined) {
-        const { bio, upiId } = parseBioMetadata(newObj.bio);
+        const { bio, upiId, singleShiftPrice, vipBodyguardPrice } = parseBioMetadata(newObj.bio);
         newObj.bio = bio;
         newObj.upiId = upiId;
+        newObj.singleShiftPrice = singleShiftPrice;
+        newObj.vipBodyguardPrice = vipBodyguardPrice;
     }
     return newObj;
 };
 
 export const updateProfile = async (req: Request, res: Response) => {
     try {
-        const userId = (req as any).user.id; // From auth middleware
-        const { name, contactNo, profilePhoto, age, gender, location, company, clientProfile, bouncerProfile } = req.body;
+        const userId = (req as any).user.id;
+        const { name, contactNo, profilePhoto, age, gender, location, company, govtIdPhoto, clientProfile, bouncerProfile } = req.body;
 
-        // 1. Update User Table directly in PostgreSQL (dynamic fields to prevent undefined bindings)
+        // 1. Update User Table
         const userUpdates: string[] = [];
         const userValues: any[] = [];
         let paramIndex = 1;
@@ -68,7 +83,7 @@ export const updateProfile = async (req: Request, res: Response) => {
             userUpdates.push(`"profilePhoto" = $${paramIndex++}`);
             userValues.push(profilePhoto);
         }
-        
+
         userUpdates.push(`"updatedAt" = $${paramIndex++}`);
         userValues.push(new Date().toISOString());
 
@@ -80,36 +95,45 @@ export const updateProfile = async (req: Request, res: Response) => {
             return res.status(404).json({ error: 'User not found' });
         }
 
-        // 1.5 Update Client Table directly in PostgreSQL
+        // 1.5 Upsert Client Profile (for USER role)
         if (updatedUser.role === 'USER') {
-            const clientAge = age || clientProfile?.age;
-            const clientGender = gender || clientProfile?.gender;
-            const clientLocation = location || clientProfile?.location;
+            const clientAge = age ?? clientProfile?.age;
+            const clientGender = gender ?? clientProfile?.gender;
+            const clientLocation = location ?? clientProfile?.location;
+            const clientGovtIdPhoto = govtIdPhoto ?? clientProfile?.govtIdPhoto ?? '';
 
             await pgPool.query(
-                `INSERT INTO clients ("userId", name, "contactNo", age, gender, location, "profilePhoto", "verificationStatus", "rejectionReason", "updatedAt") 
-                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) 
-                 ON CONFLICT ("userId") 
-                 DO UPDATE SET 
-                     name = EXCLUDED.name, 
-                     "contactNo" = EXCLUDED."contactNo", 
-                     age = EXCLUDED.age, 
-                     gender = EXCLUDED.gender, 
-                     location = EXCLUDED.location, 
-                     "profilePhoto" = EXCLUDED."profilePhoto", 
-                     "verificationStatus" = EXCLUDED."verificationStatus", 
-                     "rejectionReason" = EXCLUDED."rejectionReason", 
+                `INSERT INTO clients ("id", "userId", name, "contactNo", age, gender, location, "profilePhoto", "govtIdPhoto", "verificationStatus", "rejectionReason", "updatedAt")
+                 VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+                 ON CONFLICT ("userId")
+                 DO UPDATE SET
+                     name = EXCLUDED.name,
+                     "contactNo" = EXCLUDED."contactNo",
+                     age = EXCLUDED.age,
+                     gender = EXCLUDED.gender,
+                     location = EXCLUDED.location,
+                     "profilePhoto" = EXCLUDED."profilePhoto",
+                     "govtIdPhoto" = CASE
+                         WHEN EXCLUDED."govtIdPhoto" IS NOT NULL AND EXCLUDED."govtIdPhoto" != ''
+                         THEN EXCLUDED."govtIdPhoto"
+                         ELSE clients."govtIdPhoto"
+                     END,
+                     "verificationStatus" = CASE
+                         WHEN clients."verificationStatus" = 'APPROVED' THEN 'APPROVED'
+                         ELSE clients."verificationStatus"
+                     END,
                      "updatedAt" = EXCLUDED."updatedAt"`,
                 [
-                    userId, 
-                    name || updatedUser.name, 
-                    contactNo !== undefined ? contactNo : updatedUser.contactNo, 
-                    clientAge ? safeParseInt(clientAge) : null, 
-                    clientGender || null, 
-                    clientLocation || null, 
-                    profilePhoto !== undefined ? profilePhoto : updatedUser.profilePhoto, 
-                    'PENDING', 
-                    null, 
+                    userId,
+                    name || updatedUser.name,
+                    contactNo !== undefined ? contactNo : updatedUser.contactNo,
+                    clientAge ? safeParseInt(clientAge) : null,
+                    clientGender || null,
+                    clientLocation || null,
+                    profilePhoto !== undefined ? profilePhoto : updatedUser.profilePhoto,
+                    clientGovtIdPhoto,
+                    'PENDING',
+                    null,
                     new Date().toISOString()
                 ]
             );
@@ -149,15 +173,12 @@ export const updateProfile = async (req: Request, res: Response) => {
 
                 // Extended Profile
                 const submittedBio = bouncerProfile.bio !== undefined ? bouncerProfile.bio : (existingBouncer.bio || '');
-                const submittedUpi = bouncerProfile.upiId !== undefined ? bouncerProfile.upiId : '';
-                let currentUpi = '';
-                if (bouncerProfile.upiId === undefined) {
-                    const parsed = parseBioMetadata(existingBouncer.bio);
-                    currentUpi = parsed.upiId;
-                } else {
-                    currentUpi = submittedUpi;
-                }
-                bouncerUpdates.bio = formatBioMetadata(submittedBio, currentUpi);
+                const parsedExisting = parseBioMetadata(existingBouncer.bio);
+                const currentUpi = bouncerProfile.upiId !== undefined ? bouncerProfile.upiId : parsedExisting.upiId;
+                const currentSinglePrice = bouncerProfile.singleShiftPrice !== undefined ? safeParseInt(bouncerProfile.singleShiftPrice) || 2000 : parsedExisting.singleShiftPrice;
+                const currentVipPrice = bouncerProfile.vipBodyguardPrice !== undefined ? safeParseInt(bouncerProfile.vipBodyguardPrice) || 4000 : parsedExisting.vipBodyguardPrice;
+                
+                bouncerUpdates.bio = formatBioMetadata(submittedBio, currentUpi, currentSinglePrice, currentVipPrice);
 
                 if (bouncerProfile.skills) bouncerUpdates.skills = bouncerProfile.skills;
                 if (bouncerProfile.experience !== undefined) {
@@ -251,7 +272,6 @@ export const getProfile = async (req: Request, res: Response) => {
             contactNo: user.contactNo,
             age: user.age,
             profilePhoto: user.profilePhoto,
-            // Handle bouncers relation (1:1 but returns array in Supabase JS usually)
             bouncerProfile: (user.bouncers && user.bouncers.length > 0)
                 ? camelCaseKeys(user.bouncers[0])
                 : null
@@ -271,6 +291,17 @@ export const getProfile = async (req: Request, res: Response) => {
                     responseUser.role = bouncer.isGunman ? 'GUNMAN' : 'BOUNCER';
                 }
             }
+        }
+
+        // Always fetch clientProfile for USER role — required for onboarding routing
+        if (user.role === 'USER') {
+            const { data: clientData } = await supabaseAdmin
+                .from('clients')
+                .select('*')
+                .eq('userId', user.id)
+                .single();
+
+            responseUser.clientProfile = clientData ? camelCaseKeys(clientData) : null;
         }
 
         res.json(responseUser);

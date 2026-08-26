@@ -73,11 +73,11 @@ app.use(['/alerts', '/api/alerts'], alertRoutes);
 app.use('/api/system', systemRoutes);
 
 app.get('/api', (req, res) => {
-    res.json({ message: 'Home Gym Trainer API is running (via /api)' });
+    res.json({ message: 'ShieldHire API is running' });
 });
 
 app.get('/', (req, res) => {
-    res.json({ message: 'Home Gym Trainer API is running' });
+    res.json({ message: 'ShieldHire API is running' });
 });
 
 export default app;
