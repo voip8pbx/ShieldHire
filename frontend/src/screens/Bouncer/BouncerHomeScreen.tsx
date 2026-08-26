@@ -122,11 +122,17 @@ export default function BouncerHomeScreen() {
     useEffect(() => {
         const socket = io(BASE_URL);
 
-        socket.on('connect', () => {
+        socket.on('connect', async () => {
             console.log('Connected to socket server');
-            // Register bouncer with current location so backend can geo-filter SOS
             const bouncerId = user?.bouncerProfile?.id;
             if (!bouncerId) return;
+
+            const sharingPref = await AsyncStorage.getItem('@location_sharing_enabled');
+            if (sharingPref === 'false') {
+                socket.emit('register-bouncer', { bouncerId, lat: 0, lng: 0 });
+                return;
+            }
+
             Geolocation.getCurrentPosition(
                 (pos) => {
                     socket.emit('register-bouncer', {
@@ -136,7 +142,6 @@ export default function BouncerHomeScreen() {
                     });
                 },
                 () => {
-                    // fallback: register without location — backend will still send FCM
                     socket.emit('register-bouncer', { bouncerId, lat: 0, lng: 0 });
                 },
                 { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
@@ -195,6 +200,12 @@ export default function BouncerHomeScreen() {
     }, []);
 
     const getCurrentLocation = async () => {
+        const sharingPref = await AsyncStorage.getItem('@location_sharing_enabled');
+        if (sharingPref === 'false') {
+            setLocationName('Location Disabled');
+            return;
+        }
+
         const hasPermission = await requestLocationPermission();
         if (hasPermission) {
             Geolocation.getCurrentPosition(

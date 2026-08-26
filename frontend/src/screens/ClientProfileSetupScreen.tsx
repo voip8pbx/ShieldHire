@@ -49,8 +49,10 @@ export default function ClientProfileSetupScreen({ navigation }: Props) {
     const [gender, setGender] = useState<'Male' | 'Female' | 'Other' | ''>('');
     const [location, setLocation] = useState('');
     const [profilePhoto, setProfilePhoto] = useState<string | null>(user?.profilePhoto || null);
+    const [docPhoto, setDocPhoto] = useState<string | null>(null);
     
     const [uploadingImage, setUploadingImage] = useState(false);
+    const [uploadingDoc, setUploadingDoc] = useState(false);
     const [loading, setLoading] = useState(false);
 
     const handlePickImage = () => {
@@ -83,6 +85,36 @@ export default function ClientProfileSetupScreen({ navigation }: Props) {
         );
     };
 
+    const handlePickDoc = () => {
+        launchImageLibrary(
+            {
+                mediaType: 'photo',
+                includeBase64: true,
+                maxHeight: 1024,
+                maxWidth: 1024,
+                quality: 0.8,
+            },
+            async (response) => {
+                if (response.didCancel || response.errorCode || !response.assets?.[0]) return;
+                const asset = response.assets[0];
+                if (!asset.uri || !asset.base64) return;
+
+                setUploadingDoc(true);
+                try {
+                    const dataUri = `data:${asset.type};base64,${asset.base64}`;
+                    const uploadedUrl = await uploadImageToBlob(dataUri, `client-doc-${Date.now()}.jpg`, 'clients');
+                    if (uploadedUrl) {
+                        setDocPhoto(uploadedUrl);
+                    }
+                } catch (e: any) {
+                    Alert.alert('Upload Failed', 'Could not upload document image.');
+                } finally {
+                    setUploadingDoc(false);
+                }
+            }
+        );
+    };
+
     const handleSubmit = async () => {
         if (!name.trim() || !contactNo.trim() || !age.trim() || !gender || !location.trim()) {
             Alert.alert('Incomplete Form', 'Please fill in all the profile details to submit.');
@@ -100,6 +132,11 @@ export default function ClientProfileSetupScreen({ navigation }: Props) {
             return;
         }
 
+        if (!docPhoto) {
+            Alert.alert('ID Required', 'Please upload a Government ID / Identity Document for verification.');
+            return;
+        }
+
         setLoading(true);
         try {
             const response = await api.put('/user/profile', {
@@ -109,15 +146,11 @@ export default function ClientProfileSetupScreen({ navigation }: Props) {
                 age: ageNum,
                 gender,
                 location,
+                govtIdPhoto: docPhoto,
             });
 
             if (response.data && response.data.user) {
                 updateUser(response.data.user);
-                Alert.alert(
-                    'Profile Submitted',
-                    'Your profile details have been submitted for verification.',
-                    [{ text: 'Proceed', onPress: () => {} }]
-                );
             }
         } catch (error: any) {
             console.error('Submit Profile Error:', error);
@@ -253,6 +286,46 @@ export default function ClientProfileSetupScreen({ navigation }: Props) {
                                 </TouchableOpacity>
                             ))}
                         </View>
+                    </View>
+
+                    {/* Document Upload Card */}
+                    <View style={styles.formCard}>
+                        <Text style={styles.sectionLabel}>Government ID / Identity Verification</Text>
+                        <Text style={{ color: THEME.textMuted, fontSize: 13, marginBottom: 12 }}>
+                            Upload Aadhaar, Passport, or Government Photo ID for admin verification.
+                        </Text>
+                        <TouchableOpacity 
+                            onPress={handlePickDoc} 
+                            disabled={uploadingDoc}
+                            style={{
+                                height: 120,
+                                backgroundColor: 'rgba(255, 255, 255, 0.02)',
+                                borderWidth: 1.5,
+                                borderColor: docPhoto ? THEME.gold : THEME.cardBorder,
+                                borderStyle: 'dashed',
+                                borderRadius: 12,
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                overflow: 'hidden',
+                                position: 'relative'
+                            }}
+                        >
+                            {docPhoto ? (
+                                <Image source={{ uri: docPhoto }} style={{ width: '100%', height: '100%', resizeMode: 'cover' }} />
+                            ) : (
+                                <View style={{ alignItems: 'center' }}>
+                                    <Ionicons name="document-text-outline" size={32} color={THEME.gold} />
+                                    <Text style={{ color: THEME.textSecondary, marginTop: 6, fontSize: 13 }}>
+                                        {uploadingDoc ? 'Uploading document...' : 'Tap to Upload Identity Document'}
+                                    </Text>
+                                </View>
+                            )}
+                            {uploadingDoc && (
+                                <View style={styles.imageLoadingOverlay}>
+                                    <ActivityIndicator size="small" color={THEME.gold} />
+                                </View>
+                            )}
+                        </TouchableOpacity>
                     </View>
 
                     {/* Notice */}

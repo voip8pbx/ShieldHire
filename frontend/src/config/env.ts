@@ -31,7 +31,7 @@ export const ENV = {
 
     // Google Services — injected from frontend/.env at Metro bundle time
     GOOGLE_MAPS_API_KEY: GOOGLE_MAPS_API_KEY ?? '',
-    GOOGLE_WEB_CLIENT_ID: GOOGLE_WEB_CLIENT_ID || '475575826072-boqj4svjnan55e3ba887qd0nsmj3ivtu.apps.googleusercontent.com',
+    GOOGLE_WEB_CLIENT_ID: GOOGLE_WEB_CLIENT_ID || '376211888391-02rulpap4r0taldp1ml91a69dpg9gscb.apps.googleusercontent.com',
 
     // Payment Configuration — platform fallback UPI (only used if bouncer has no UPI configured)
     UPI_ID: UPI_ID || '',

@@ -249,7 +249,6 @@ const AppContent = () => {
 
     const isApproved = user?.bouncerProfile?.verificationStatus === 'APPROVED';
     const isClientApproved =
-        user?.role === 'USER' ||
         user?.role === 'ADMIN' ||
         user?.clientProfile?.verificationStatus === 'APPROVED';
 

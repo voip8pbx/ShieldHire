@@ -25,58 +25,65 @@ export const initGoogleSignIn = () => {
  * - Works correctly in React Native New Architecture / Bridgeless mode with v23+
  */
 export const signInWithGoogle = async (forceAccountPicker = false) => {
-    // 1. Ensure Google Play Services are available
-    await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+    try {
+        // 1. Ensure Google Play Services are available
+        await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
 
-    // 2. Optionally force account picker (so user can pick a different account)
-    if (forceAccountPicker) {
-        try { await GoogleSignin.signOut(); } catch (_) { }
+        // 2. Optionally force account picker (so user can pick a different account)
+        if (forceAccountPicker) {
+            try { await GoogleSignin.signOut(); } catch (_) { }
+        }
+
+        // 3. Trigger the native Google Sign-In UI
+        const signInResult = await GoogleSignin.signIn();
+        console.log('[AuthService] Google Sign-In result:', JSON.stringify(signInResult));
+
+        // 4. Handle v13+ response shape: { type: 'success' | 'cancelled' | 'noSavedCredentialFound', data }
+        if (signInResult.type === 'cancelled') {
+            const cancelError: any = new Error('Sign-in cancelled');
+            cancelError.code = '12501';
+            throw cancelError;
+        }
+
+        if (signInResult.type !== 'success') {
+            // At this point, type could be 'noSavedCredentialFound' or any future type
+            const type = (signInResult as any).type || 'unknown';
+            throw new Error(`Google Sign-In failed with type: ${type}`);
+        }
+
+        // 5. Extract the Google ID token
+        let googleIdToken: string | null | undefined = signInResult.data?.idToken;
+        // Legacy fallback for SDK versions that don't wrap in data
+        if (!googleIdToken) {
+            googleIdToken = (signInResult as any).idToken;
+        }
+        if (!googleIdToken) {
+            throw new Error('No ID token returned from Google Sign-In');
+        }
+
+        // 6. Use the native Firebase SDK to exchange the Google ID token for a Firebase credential.
+        //    signInWithCredential() works at the native layer — no JS fetch() needed.
+        const credential = GoogleAuthProvider.credential(googleIdToken);
+        const userCredential = await signInWithCredential(getAuth(), credential);
+        const firebaseUser = userCredential.user;
+        const firebaseToken = await firebaseGetIdToken(firebaseUser);
+
+        // Return a shape compatible with the rest of the app
+        return {
+            firebaseUser: {
+                uid: firebaseUser.uid,
+                email: firebaseUser.email || '',
+                displayName: firebaseUser.displayName || '',
+                photoURL: firebaseUser.photoURL || '',
+            },
+            firebaseToken,
+        };
+    } catch (error: any) {
+        if (error?.code === '10' || error?.message?.includes('DEVELOPER_ERROR')) {
+            console.error('[AuthService] Google Sign-In DEVELOPER_ERROR: Add Release SHA-1 fingerprint (F2:DE:97:09:30:8D:A6:D2:32:5C:B3:54:39:79:67:9C:05:6D:1C:1E) to Firebase Console.');
+        }
+        throw error;
     }
-
-    // 3. Trigger the native Google Sign-In UI
-    const signInResult = await GoogleSignin.signIn();
-    console.log('[AuthService] Google Sign-In result:', JSON.stringify(signInResult));
-
-    // 4. Handle v13+ response shape: { type: 'success' | 'cancelled' | 'noSavedCredentialFound', data }
-    if (signInResult.type === 'cancelled') {
-        const cancelError: any = new Error('Sign-in cancelled');
-        cancelError.code = '12501';
-        throw cancelError;
-    }
-
-    if (signInResult.type !== 'success') {
-        // At this point, type could be 'noSavedCredentialFound' or any future type
-        const type = (signInResult as any).type || 'unknown';
-        throw new Error(`Google Sign-In failed with type: ${type}`);
-    }
-
-    // 5. Extract the Google ID token
-    let googleIdToken: string | null | undefined = signInResult.data?.idToken;
-    // Legacy fallback for SDK versions that don't wrap in data
-    if (!googleIdToken) {
-        googleIdToken = (signInResult as any).idToken;
-    }
-    if (!googleIdToken) {
-        throw new Error('No ID token returned from Google Sign-In');
-    }
-
-    // 6. Use the native Firebase SDK to exchange the Google ID token for a Firebase credential.
-    //    signInWithCredential() works at the native layer — no JS fetch() needed.
-    const credential = GoogleAuthProvider.credential(googleIdToken);
-    const userCredential = await signInWithCredential(getAuth(), credential);
-    const firebaseUser = userCredential.user;
-    const firebaseToken = await firebaseGetIdToken(firebaseUser);
-
-    // Return a shape compatible with the rest of the app
-    return {
-        firebaseUser: {
-            uid: firebaseUser.uid,
-            email: firebaseUser.email || '',
-            displayName: firebaseUser.displayName || '',
-            photoURL: firebaseUser.photoURL || '',
-        },
-        firebaseToken,
-    };
 };
 
 // Sign out from Google and Firebase

@@ -13,6 +13,7 @@ import {
     ActivityIndicator,
     Linking
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AuthContext } from '../context/AuthContext';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -37,7 +38,20 @@ export default function ProfileScreen() {
     const [upiId, setUpiId] = useState(user?.bouncerProfile?.upiId || '');
     const [locationName, setLocationName] = useState('Fetching...');
     const [locationPermissionStatus, setLocationPermissionStatus] = useState<'Granted' | 'Denied' | 'Not Determined'>('Not Determined');
+    const [locationSharingEnabled, setLocationSharingEnabled] = useState(true);
     const [saving, setSaving] = useState(false);
+
+    useEffect(() => {
+        AsyncStorage.getItem('@location_sharing_enabled').then(val => {
+            if (val !== null) setLocationSharingEnabled(val === 'true');
+        });
+    }, []);
+
+    const toggleLocationSharing = async () => {
+        const nextVal = !locationSharingEnabled;
+        setLocationSharingEnabled(nextVal);
+        await AsyncStorage.setItem('@location_sharing_enabled', String(nextVal));
+    };
 
     // Update state if user context changes
     useEffect(() => {
@@ -374,30 +388,6 @@ export default function ProfileScreen() {
                     </TouchableOpacity>
                 </View>
 
-                {/* Membership Plan Card */}
-                {user?.role !== 'BOUNCER' && user?.role !== 'GUNMAN' && (
-                    <View style={styles.card}>
-                        <View style={styles.cardHeaderRow}>
-                            <MaterialCommunityIcons name="shield-crown" size={20} color={GOLD} />
-                            <Text style={styles.cardTitle}>Membership Plan</Text>
-                        </View>
-                        <Text style={styles.planName}>{membership.name}</Text>
-                        <Text style={styles.renewText}>Valid through: {membership.renews}</Text>
-
-                        <View style={styles.activeBadge}>
-                            <View style={styles.greenDot} />
-                            <Text style={styles.activeText}>{membership.status}</Text>
-                        </View>
-
-                        <TouchableOpacity
-                            style={styles.manageBtn}
-                            onPress={() => requireAuth(navigation, 'Profile')}
-                        >
-                            <Text style={styles.manageBtnText}>Upgrade Security Plan</Text>
-                        </TouchableOpacity>
-                    </View>
-                )}
-
                 {/* Hiring Preferences Card */}
                 {user?.role !== 'BOUNCER' && user?.role !== 'GUNMAN' && (
                     <View style={styles.card}>
@@ -432,6 +422,24 @@ export default function ProfileScreen() {
                         <Ionicons name="chevron-forward" size={18} color="#666" />
                     </TouchableOpacity>
 
+                    <TouchableOpacity style={styles.menuItem} onPress={toggleLocationSharing}>
+                        <View style={styles.menuLeft}>
+                            <Ionicons name="location-outline" size={20} color="#ccc" />
+                            <Text style={styles.menuText}>Share Live Location</Text>
+                        </View>
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                            <Text style={{
+                                color: locationSharingEnabled ? '#4CD964' : '#FF3B30',
+                                marginRight: 8,
+                                fontSize: 12,
+                                fontWeight: '600'
+                            }}>
+                                {locationSharingEnabled ? 'ON' : 'OFF'}
+                            </Text>
+                            <Ionicons name="swap-horizontal" size={18} color="#666" />
+                        </View>
+                    </TouchableOpacity>
+
                     <TouchableOpacity style={styles.menuItem} onPress={handleLocationPermissionPress}>
                         <View style={styles.menuLeft}>
                             <Ionicons name="location-outline" size={20} color="#ccc" />
@@ -462,6 +470,24 @@ export default function ProfileScreen() {
                         <View style={styles.menuLeft}>
                             <Ionicons name="chatbubbles-outline" size={20} color="#ccc" />
                             <Text style={styles.menuText}>Contact Support</Text>
+                        </View>
+                        <Ionicons name="chevron-forward" size={18} color="#666" />
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={styles.menuItem}
+                        onPress={() => {
+                            // ⚠️ PRODUCTION SETUP REQUIRED: Replace this URL with your live privacy policy URL
+                            // Set PRIVACY_POLICY_URL = https://shieldhire.in/privacy-policy
+                            const PRIVACY_POLICY_URL = 'https://shieldhire.in/privacy-policy';
+                            Linking.openURL(PRIVACY_POLICY_URL).catch(() =>
+                                Alert.alert('Privacy Policy', 'Visit shieldhire.in/privacy-policy to read our Privacy Policy.')
+                            );
+                        }}
+                    >
+                        <View style={styles.menuLeft}>
+                            <Ionicons name="shield-checkmark-outline" size={20} color="#ccc" />
+                            <Text style={styles.menuText}>Privacy Policy</Text>
                         </View>
                         <Ionicons name="chevron-forward" size={18} color="#666" />
                     </TouchableOpacity>

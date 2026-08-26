@@ -118,8 +118,8 @@ export default function BouncerDetailScreen({ navigation, route }: Props) {
     if (!bouncer) return null;
 
     const isGunman = bouncer.isGunman || bouncer.hasGunLicense;
-    const SINGLE_SHIFT_PRICE = isGunman ? 3500 : 2000;
-    const VIP_BODYGUARD_PRICE = 4000;
+    const SINGLE_SHIFT_PRICE = (bouncer as any).singleShiftPrice || (isGunman ? 3500 : 2000);
+    const VIP_BODYGUARD_PRICE = (bouncer as any).vipBodyguardPrice || 4000;
     const selectedBasePrice = selectedPackage === 'VIP_BODYGUARD' ? VIP_BODYGUARD_PRICE : SINGLE_SHIFT_PRICE;
     const displayRating = bouncer.rating && bouncer.rating > 0 ? bouncer.rating.toFixed(1) : '4.8';
 

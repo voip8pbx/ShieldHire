@@ -12,6 +12,7 @@ import api from '../services/api';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Geolocation from 'react-native-geolocation-service';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { PermissionsAndroid } from 'react-native';
 import SOSConfirmationModal, { SOSModalState } from '../components/SOSConfirmationModal';
 import LinearGradient from 'react-native-linear-gradient';
@@ -141,6 +142,12 @@ export default function HomeScreen({ navigation }: Props) {
     useEffect(() => { getCurrentLocation(); }, []);
 
     const getCurrentLocation = async () => {
+        const sharingPref = await AsyncStorage.getItem('@location_sharing_enabled');
+        if (sharingPref === 'false') {
+            setLocationName('Location Disabled');
+            return;
+        }
+
         let hasPermission = false;
         if (Platform.OS === 'ios') {
             const auth = await Geolocation.requestAuthorization('whenInUse');

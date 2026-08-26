@@ -49,7 +49,8 @@ apply from: "../../../node_modules/react-native-vector-icons/fonts.gradle"
 
 
 project.ext.react = [
-    enableHermes: false
+    // Hermes is enabled via hermesEnabled=true in gradle.properties (React Native 0.70+ standard)
+    enableHermes: true
 ]
 
 /**
@@ -79,7 +80,7 @@ react {
 /**
  * Set this to true to Run Proguard on Release builds to minify the Java bytecode.
  */
-def enableProguardInReleaseBuilds = false
+def enableProguardInReleaseBuilds = true
 
 /**
  * The preferred build flavor of JavaScriptCore (JSC)
@@ -107,7 +108,9 @@ android {
         versionCode 1
         versionName "1.0"
         ndk {
-            abiFilters "arm64-v8a"
+            // Match reactNativeArchitectures in gradle.properties
+            // arm64-v8a: modern 64-bit Android (2016+), armeabi-v7a: legacy 32-bit support
+            abiFilters "arm64-v8a", "armeabi-v7a"
         }
         // Inject Google Maps API Key dynamically from .env
         resValue "string", "map_api_key", env['GOOGLE_MAPS_API_KEY'] ?: "AIzaSyCV1MNMAyPMvM0jXnPmVG01ikwxa1ETERg"
@@ -142,7 +145,7 @@ android {
     }
     buildTypes {
         debug {
-            signingConfig signingConfigs.debug
+            signingConfig signingConfigs.release
         }
         release {
             signingConfig signingConfigs.release

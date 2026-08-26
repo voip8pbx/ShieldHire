@@ -36,12 +36,14 @@ const THEME = {
 };
 
 const CONTACT = {
-    phone: '+91 XXXXXXXXXX',
+    // ⚠️  PRODUCTION SETUP REQUIRED: Replace with real support phone number before Play Store release
+    phone: '+91 9999999999',
     email: 'support@shieldhire.in',
     businessEmail: 'business@shieldhire.in',
     address: '14th Floor, Tower B, DLF Cyber City,\nGurugram, Haryana - 122002, India',
     website: 'https://shieldhire.in',
-    whatsapp: '+91 XXXXXXXXXX',
+    // ⚠️  PRODUCTION SETUP REQUIRED: Replace with real WhatsApp support number before Play Store release
+    whatsapp: '+91 9999999999',
     instagram: 'https://instagram.com/shieldhire',
     facebook: 'https://facebook.com/shieldhire',
     linkedin: 'https://linkedin.com/company/shieldhire',

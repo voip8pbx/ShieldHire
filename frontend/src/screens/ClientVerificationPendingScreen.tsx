@@ -91,17 +91,16 @@ export default function ClientVerificationPendingScreen({ navigation, route }: P
             ])
         ).start();
 
-        let interval: any = null;
-
-        // Check immediately on mount, then poll every 5 seconds if still pending
+        // Check immediately on mount
         checkVerificationStatus();
-        if (status === 'PENDING') {
-            interval = setInterval(checkVerificationStatus, 5000);
-        }
+    }, []); // only run on mount
 
-        return () => {
-            if (interval) clearInterval(interval);
-        };
+    // Separate effect for polling — only active while status is PENDING
+    useEffect(() => {
+        if (status !== 'PENDING') return;
+
+        const interval = setInterval(checkVerificationStatus, 5000);
+        return () => clearInterval(interval);
     }, [status]);
 
     const renderContent = () => {
@@ -122,7 +121,7 @@ export default function ClientVerificationPendingScreen({ navigation, route }: P
 
             return (
                 <View style={styles.contentContainer}>
-                    {/* Animated Loading Circles */}
+                    {/* Animated Loading Circle with Clock inside */}
                     <View style={styles.animationContainer}>
                         <Animated.View
                             style={[
@@ -140,10 +139,9 @@ export default function ClientVerificationPendingScreen({ navigation, route }: P
                                 },
                             ]}
                         />
-                    </View>
-
-                    <View style={styles.iconContainer}>
-                        <MaterialCommunityIcons name="clock-outline" size={80} color="#FFD700" />
+                        <View style={styles.iconContainer}>
+                            <MaterialCommunityIcons name="clock-outline" size={54} color="#FFD700" />
+                        </View>
                     </View>
 
                     <Text style={styles.title}>Client Account Pending</Text>
@@ -157,27 +155,28 @@ export default function ClientVerificationPendingScreen({ navigation, route }: P
 
                     <View style={styles.statusBox}>
                         <View style={styles.statusRow}>
-                            <MaterialCommunityIcons name="account-check" size={24} color="#FFD700" />
+                            <MaterialCommunityIcons name="account-check" size={20} color="#FFD700" style={{ marginRight: 12 }} />
                             <Text style={styles.statusText}>Account Created</Text>
-                            <MaterialCommunityIcons name="check-circle" size={24} color="#4CAF50" />
+                            <MaterialCommunityIcons name="check-circle" size={20} color="#4CAF50" />
                         </View>
                         <View style={styles.statusRow}>
-                            <MaterialCommunityIcons name="shield-search" size={24} color="#FFD700" />
+                            <MaterialCommunityIcons name="shield-search" size={20} color="#FFD700" style={{ marginRight: 12 }} />
                             <Text style={styles.statusText}>Under Admin Review</Text>
                             <View style={styles.pendingDot} />
                         </View>
-                        <View style={[styles.statusRow, { opacity: 0.5 }]}>
-                            <MaterialCommunityIcons name="check-decagram" size={24} color="#888" />
+                        <View style={[styles.statusRow, { opacity: 0.4, borderBottomWidth: 0 }]}>
+                            <MaterialCommunityIcons name="check-decagram" size={20} color="#888" style={{ marginRight: 12 }} />
                             <Text style={styles.statusText}>Approval</Text>
-                            <MaterialCommunityIcons name="clock-outline" size={24} color="#888" />
+                            <MaterialCommunityIcons name="clock-outline" size={20} color="#888" />
                         </View>
                     </View>
 
                     <TouchableOpacity
                         style={styles.refreshButton}
                         onPress={checkVerificationStatus}
+                        activeOpacity={0.8}
                     >
-                        <MaterialCommunityIcons name="refresh" size={20} color="#000" />
+                        <MaterialCommunityIcons name="refresh" size={18} color="#000" />
                         <Text style={styles.refreshButtonText}>Check Status</Text>
                     </TouchableOpacity>
 
@@ -186,6 +185,7 @@ export default function ClientVerificationPendingScreen({ navigation, route }: P
                         onPress={() => {
                             logout();
                         }}
+                        activeOpacity={0.7}
                     >
                         <Text style={styles.backButtonText}>Back to Login</Text>
                     </TouchableOpacity>

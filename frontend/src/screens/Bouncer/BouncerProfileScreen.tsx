@@ -47,8 +47,22 @@ export default function BouncerProfileScreen() {
     const [registrationType, setRegistrationType] = useState(user?.bouncerProfile?.registrationType || '');
     const [agencyCode, setAgencyCode] = useState(user?.bouncerProfile?.agencyReferralCode || '');
     const [upiId, setUpiId] = useState(user?.bouncerProfile?.upiId || '');
+    const [singleShiftPrice, setSingleShiftPrice] = useState<string>((user?.bouncerProfile as any)?.singleShiftPrice?.toString() || '2000');
+    const [vipBodyguardPrice, setVipBodyguardPrice] = useState<string>((user?.bouncerProfile as any)?.vipBodyguardPrice?.toString() || '4000');
+    const [locationSharingEnabled, setLocationSharingEnabled] = useState(true);
     const [locationPermissionStatus, setLocationPermissionStatus] = useState<'Granted' | 'Denied' | 'Not Determined'>('Not Determined');
 
+    useEffect(() => {
+        AsyncStorage.getItem('@location_sharing_enabled').then(val => {
+            if (val !== null) setLocationSharingEnabled(val === 'true');
+        });
+    }, []);
+
+    const toggleLocationSharing = async () => {
+        const nextVal = !locationSharingEnabled;
+        setLocationSharingEnabled(nextVal);
+        await AsyncStorage.setItem('@location_sharing_enabled', String(nextVal));
+    };
 
     // Onboarding State
     const [showOnboarding, setShowOnboarding] = useState(false);
@@ -107,6 +121,8 @@ export default function BouncerProfileScreen() {
                     setRegistrationType(userData.bouncerProfile.registrationType || '');
                     setAgencyCode(userData.bouncerProfile.agencyReferralCode || '');
                     setUpiId(userData.bouncerProfile.upiId || '');
+                    if (userData.bouncerProfile.singleShiftPrice) setSingleShiftPrice(userData.bouncerProfile.singleShiftPrice.toString());
+                    if (userData.bouncerProfile.vipBodyguardPrice) setVipBodyguardPrice(userData.bouncerProfile.vipBodyguardPrice.toString());
                 }
             }
         } catch (error) {
@@ -224,6 +240,8 @@ export default function BouncerProfileScreen() {
                         registrationType,
                         agencyReferralCode: agencyCode,
                         upiId,
+                        singleShiftPrice,
+                        vipBodyguardPrice,
                     }
 
                 });
@@ -442,6 +460,41 @@ export default function BouncerProfileScreen() {
                         </View>
                     </View>
 
+                    {/* Hiring Package Rates */}
+                    <View style={styles.infoSection}>
+                        <Text style={styles.sectionLabel}>Hiring Package Rates (₹)</Text>
+                        <View style={styles.infoRow}>
+                            <Text style={styles.infoLabel}>Single Shift Rate:</Text>
+                            {isEditing ? (
+                                <TextInput
+                                    style={[styles.input, { textAlign: 'right' }]}
+                                    value={singleShiftPrice}
+                                    onChangeText={setSingleShiftPrice}
+                                    placeholder="2000"
+                                    placeholderTextColor="#666"
+                                    keyboardType="numeric"
+                                />
+                            ) : (
+                                <Text style={[styles.infoValue, { color: '#FFD700' }]}>₹{singleShiftPrice} / shift</Text>
+                            )}
+                        </View>
+                        <View style={styles.infoRow}>
+                            <Text style={styles.infoLabel}>VIP Bodyguard Rate:</Text>
+                            {isEditing ? (
+                                <TextInput
+                                    style={[styles.input, { textAlign: 'right' }]}
+                                    value={vipBodyguardPrice}
+                                    onChangeText={setVipBodyguardPrice}
+                                    placeholder="4000"
+                                    placeholderTextColor="#666"
+                                    keyboardType="numeric"
+                                />
+                            ) : (
+                                <Text style={[styles.infoValue, { color: '#FFD700' }]}>₹{vipBodyguardPrice} / shift</Text>
+                            )}
+                        </View>
+                    </View>
+
                     {/* Registration Info */}
                     <View style={styles.infoSection}>
                         <Text style={styles.sectionLabel}>Registration Details</Text>
@@ -519,9 +572,27 @@ export default function BouncerProfileScreen() {
                         <Ionicons name="chevron-forward" size={20} color="#666" />
                     </TouchableOpacity>
 
-                    <TouchableOpacity style={styles.menuItem} onPress={handleLocationPermissionPress}>
+                    <TouchableOpacity style={styles.menuItem} onPress={toggleLocationSharing}>
                         <View style={styles.menuLeft}>
                             <Ionicons name="location-outline" size={22} color="#ccc" />
+                            <Text style={styles.menuText}>Share Live Location</Text>
+                        </View>
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                            <Text style={{
+                                color: locationSharingEnabled ? '#4CD964' : '#FF3B30',
+                                marginRight: 8,
+                                fontSize: 12,
+                                fontWeight: '600'
+                            }}>
+                                {locationSharingEnabled ? 'ON' : 'OFF'}
+                            </Text>
+                            <Ionicons name="swap-horizontal" size={18} color="#666" />
+                        </View>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity style={styles.menuItem} onPress={handleLocationPermissionPress}>
+                        <View style={styles.menuLeft}>
+                            <Ionicons name="shield-outline" size={22} color="#ccc" />
                             <Text style={styles.menuText}>Location Permission</Text>
                         </View>
                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>

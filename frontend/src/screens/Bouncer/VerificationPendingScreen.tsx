@@ -106,21 +106,19 @@ export default function VerificationPendingScreen({ navigation, route }: Props) 
             ])
         ).start();
 
-        let interval: any = null;
-
+        // Check immediately on mount
         if (userId) {
             checkVerificationStatus();
-
-            // Poll every 5 seconds if still pending
-            if (status === 'PENDING') {
-                interval = setInterval(checkVerificationStatus, 5000);
-            }
         }
+    }, [userId]); // only re-run if userId changes
 
-        return () => {
-            if (interval) clearInterval(interval);
-        };
-    }, [userId, status, updateUser]);
+    // Separate effect for polling — only active while status is PENDING
+    useEffect(() => {
+        if (!userId || status !== 'PENDING') return;
+
+        const interval = setInterval(checkVerificationStatus, 5000);
+        return () => clearInterval(interval);
+    }, [userId, status]);
 
     const renderContent = () => {
         if (loading) {
