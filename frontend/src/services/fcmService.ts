@@ -181,6 +181,29 @@ export async function saveFCMTokenToSupabase(
   }
 }
 
+/**
+ * Clear the FCM token in Supabase.
+ * Run this on logout so the user stops receiving push notifications.
+ */
+export async function clearFCMTokenInSupabase(
+  userId: string,
+): Promise<void> {
+  try {
+    const { error } = await supabase
+      .from('users')
+      .update({ fcm_token: null, fcm_updated_at: null })
+      .eq('id', userId);
+
+    if (error) {
+      console.error('[FCM] Failed to clear token in Supabase:', error.message);
+    } else {
+      console.log('[FCM] Token cleared in Supabase for user:', userId);
+    }
+  } catch (err) {
+    console.error('[FCM] Unexpected error clearing token:', err);
+  }
+}
+
 // ─── Initializer ─────────────────────────────────────────────────────────────
 
 let _tokenRefreshUnsubscribe: (() => void) | null = null;

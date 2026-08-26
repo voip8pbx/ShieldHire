@@ -4,7 +4,7 @@ import { setAuthToken } from '../services/api';
 import { initGoogleSignIn, getAuth, onAuthStateChanged, getIdToken, signOut } from '../services/authService';
 import api from '../services/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { initFCM, cleanupFCMListeners } from '../services/fcmService';
+import { initFCM, cleanupFCMListeners, clearFCMTokenInSupabase } from '../services/fcmService';
 
 const TOKEN_KEY = 'shield_auth_token';
 const USER_KEY = 'shield_cached_user';
@@ -194,6 +194,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setPendingBouncerRegistration(null);
         // Stop FCM listeners before clearing credentials
         cleanupFCMListeners();
+        if (user?.id) {
+            clearFCMTokenInSupabase(user.id).catch(err =>
+                console.error('[AuthContext] Clear token failed:', err),
+            );
+        }
         try {
             await AsyncStorage.multiRemove([TOKEN_KEY, USER_KEY]);
             const firebaseAuth = getAuth();
