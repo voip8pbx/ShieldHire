@@ -66,32 +66,24 @@ export const updateProfile = async (req: Request, res: Response) => {
         const userId = (req as any).user.id;
         const { name, contactNo, profilePhoto, age, gender, location, company, govtIdPhoto, clientProfile, bouncerProfile } = req.body;
 
-        // 1. Update User Table
-        const userUpdates: string[] = [];
-        const userValues: any[] = [];
-        let paramIndex = 1;
+        // 1. Update User Table in Supabase
+        const userUpdates: any = {
+            updatedAt: new Date().toISOString()
+        };
 
-        if (name !== undefined) {
-            userUpdates.push(`name = $${paramIndex++}`);
-            userValues.push(name);
-        }
-        if (contactNo !== undefined) {
-            userUpdates.push(`"contactNo" = $${paramIndex++}`);
-            userValues.push(contactNo);
-        }
-        if (profilePhoto !== undefined) {
-            userUpdates.push(`"profilePhoto" = $${paramIndex++}`);
-            userValues.push(profilePhoto);
-        }
+        if (name !== undefined) userUpdates.name = name;
+        if (contactNo !== undefined) userUpdates.contactNo = contactNo;
+        if (profilePhoto !== undefined) userUpdates.profilePhoto = profilePhoto;
 
-        userUpdates.push(`"updatedAt" = $${paramIndex++}`);
-        userValues.push(new Date().toISOString());
+        const { data: updatedUser, error: userError } = await supabaseAdmin
+            .from('users')
+            .update(userUpdates)
+            .eq('id', userId)
+            .select()
+            .single();
 
-        const userQueryText = `UPDATE users SET ${userUpdates.join(', ')} WHERE id = $${paramIndex} RETURNING *`;
-        const userRes = await pgPool.query(userQueryText, [...userValues, userId]);
-        const updatedUser = userRes.rows[0];
-
-        if (!updatedUser) {
+        if (userError || !updatedUser) {
+            console.error('[UpdateProfile] User update failed:', userError?.message);
             return res.status(404).json({ error: 'User not found' });
         }
 
@@ -102,66 +94,54 @@ export const updateProfile = async (req: Request, res: Response) => {
             const clientLocation = location ?? clientProfile?.location;
             const clientGovtIdPhoto = govtIdPhoto ?? clientProfile?.govtIdPhoto ?? '';
 
-            await pgPool.query(
-                `INSERT INTO clients ("id", "userId", name, "contactNo", age, gender, location, "profilePhoto", "govtIdPhoto", "verificationStatus", "rejectionReason", "updatedAt")
-                 VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-                 ON CONFLICT ("userId")
-                 DO UPDATE SET
-                     name = EXCLUDED.name,
-                     "contactNo" = EXCLUDED."contactNo",
-                     age = EXCLUDED.age,
-                     gender = EXCLUDED.gender,
-                     location = EXCLUDED.location,
-                     "profilePhoto" = EXCLUDED."profilePhoto",
-                     "govtIdPhoto" = CASE
-                         WHEN EXCLUDED."govtIdPhoto" IS NOT NULL AND EXCLUDED."govtIdPhoto" != ''
-                         THEN EXCLUDED."govtIdPhoto"
-                         ELSE clients."govtIdPhoto"
-                     END,
-                     "verificationStatus" = CASE
-                         WHEN clients."verificationStatus" = 'APPROVED' THEN 'APPROVED'
-                         ELSE clients."verificationStatus"
-                     END,
-                     "updatedAt" = EXCLUDED."updatedAt"`,
-                [
-                    userId,
-                    name || updatedUser.name,
-                    contactNo !== undefined ? contactNo : updatedUser.contactNo,
-                    clientAge ? safeParseInt(clientAge) : null,
-                    clientGender || null,
-                    clientLocation || null,
-                    profilePhoto !== undefined ? profilePhoto : updatedUser.profilePhoto,
-                    clientGovtIdPhoto,
-                    'PENDING',
-                    null,
-                    new Date().toISOString()
-                ]
-            );
+            // Fetch existing client to keep verificationStatus intact
+            const { data: existingClient } = await supabaseAdmin
+                .from('clients')
+                .select('*')
+                .eq('userId', userId)
+                .single();
+
+            const clientPayload: any = {
+                userId,
+                name: name || updatedUser.name,
+                contactNo: contactNo !== undefined ? contactNo : updatedUser.contactNo,
+                age: clientAge ? safeParseInt(clientAge) : null,
+                gender: clientGender || null,
+                location: clientLocation || null,
+                profilePhoto: profilePhoto !== undefined ? profilePhoto : updatedUser.profilePhoto,
+                govtIdPhoto: clientGovtIdPhoto || existingClient?.govtIdPhoto || '',
+                verificationStatus: existingClient?.verificationStatus === 'APPROVED' ? 'APPROVED' : 'PENDING',
+                updatedAt: new Date().toISOString()
+            };
+
+            const { error: clientError } = await supabaseAdmin
+                .from('clients')
+                .upsert(clientPayload, { onConflict: 'userId' });
+
+            if (clientError) {
+                console.error('[UpdateProfile] Client upsert failed:', clientError.message);
+                throw clientError;
+            }
         }
 
-
-        // 2. Update Bouncer Profile directly in PostgreSQL if data provided
+        // 2. Update Bouncer Profile if data provided
         let updatedBouncer = null;
         if (bouncerProfile) {
-            // Check if user HAS a bouncer profile first
-            const existingBouncerRes = await pgPool.query(
-                'SELECT * FROM bouncers WHERE "userId" = $1',
-                [userId]
-            );
-            const existingBouncer = existingBouncerRes.rows[0];
+            const { data: existingBouncer } = await supabaseAdmin
+                .from('bouncers')
+                .select('*')
+                .eq('userId', userId)
+                .single();
 
             if (existingBouncer) {
-                // Prepare update object for bouncers table
                 const bouncerUpdates: any = {
                     updatedAt: new Date().toISOString()
                 };
 
-                // Sync name/contact if changed on user level
                 if (name) bouncerUpdates.name = name;
                 if (contactNo) bouncerUpdates.contactNo = contactNo;
                 if (profilePhoto) bouncerUpdates.profilePhoto = profilePhoto;
 
-                // Specific fields
                 if (bouncerProfile.age) {
                     const parsedAge = safeParseInt(bouncerProfile.age);
                     if (parsedAge !== null) bouncerUpdates.age = parsedAge;
@@ -171,7 +151,6 @@ export const updateProfile = async (req: Request, res: Response) => {
                 if (bouncerProfile.agencyReferralCode) bouncerUpdates.agencyReferralCode = bouncerProfile.agencyReferralCode;
                 if (bouncerProfile.isGunman !== undefined) bouncerUpdates.isGunman = bouncerProfile.isGunman;
 
-                // Extended Profile
                 const submittedBio = bouncerProfile.bio !== undefined ? bouncerProfile.bio : (existingBouncer.bio || '');
                 const parsedExisting = parseBioMetadata(existingBouncer.bio);
                 const currentUpi = bouncerProfile.upiId !== undefined ? bouncerProfile.upiId : parsedExisting.upiId;
@@ -187,23 +166,27 @@ export const updateProfile = async (req: Request, res: Response) => {
                 }
 
                 if (bouncerProfile.gallery) bouncerUpdates.gallery = bouncerProfile.gallery;
-
                 if (bouncerProfile.identityVerified !== undefined) bouncerUpdates.identity_verified = bouncerProfile.identityVerified;
                 if (bouncerProfile.aadhaarLast4) bouncerUpdates.aadhaar_last_4 = bouncerProfile.aadhaarLast4;
                 if (bouncerProfile.livenessVerifiedAt) bouncerUpdates.liveness_verified_at = bouncerProfile.livenessVerifiedAt;
 
-                const keys = Object.keys(bouncerUpdates);
-                const values = Object.values(bouncerUpdates);
-                const setClause = keys.map((key, index) => `"${key}" = $${index + 1}`).join(', ');
-                const queryText = `UPDATE bouncers SET ${setClause} WHERE id = $${keys.length + 1} RETURNING *`;
-                
-                const bouncerRes = await pgPool.query(queryText, [...values, existingBouncer.id]);
-                updatedBouncer = bouncerRes.rows[0];
+                const { data: bouncerRes, error: bouncerError } = await supabaseAdmin
+                    .from('bouncers')
+                    .update(bouncerUpdates)
+                    .eq('id', existingBouncer.id)
+                    .select()
+                    .single();
+
+                if (bouncerError) {
+                    console.error('[UpdateProfile] Bouncer update failed:', bouncerError.message);
+                    throw bouncerError;
+                }
+                updatedBouncer = bouncerRes;
             }
         }
 
         // 3. Format Response
-        const responseUser = {
+        const responseUser: any = {
             id: updatedUser.id,
             email: updatedUser.email,
             name: updatedUser.name,
@@ -214,27 +197,25 @@ export const updateProfile = async (req: Request, res: Response) => {
             bouncerProfile: updatedBouncer ? camelCaseKeys(updatedBouncer) : undefined
         };
 
-        // If bouncer wasn't updated but exists, fetch it to include in response
         if (!updatedBouncer) {
-            const bouncerRes = await pgPool.query(
-                'SELECT * FROM bouncers WHERE "userId" = $1',
-                [userId]
-            );
-            const bouncer = bouncerRes.rows[0];
+            const { data: bouncer } = await supabaseAdmin
+                .from('bouncers')
+                .select('*')
+                .eq('userId', userId)
+                .single();
             if (bouncer) {
                 responseUser.bouncerProfile = camelCaseKeys(bouncer);
             }
         }
 
-        // If client exists, fetch it to include in response
         if (updatedUser.role === 'USER') {
-            const clientRes = await pgPool.query(
-                'SELECT * FROM clients WHERE "userId" = $1',
-                [userId]
-            );
-            const client = clientRes.rows[0];
+            const { data: client } = await supabaseAdmin
+                .from('clients')
+                .select('*')
+                .eq('userId', userId)
+                .single();
             if (client) {
-                (responseUser as any).clientProfile = camelCaseKeys(client);
+                responseUser.clientProfile = camelCaseKeys(client);
             }
         }
 
