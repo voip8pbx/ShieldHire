@@ -196,7 +196,6 @@ export default function BouncerHomeScreen() {
         fetchPendingBookings();
         getCurrentLocation();
         notificationService.requestPermission();
-        checkOnboarding();
     }, []);
 
     const getCurrentLocation = async () => {
@@ -469,22 +468,6 @@ export default function BouncerHomeScreen() {
                 <MaterialCommunityIcons name="car-emergency" size={26} color="#fff" />
                 <Text style={styles.sosText}>SOS</Text>
             </TouchableOpacity>
-
-
-            {/* First-Time Onboarding Tooltip */}
-            <OnboardingTooltip
-                visible={showOnboarding}
-                title="Profile Setup"
-                message="Complete your profile to start receiving booking opportunities and improve your visibility."
-                targetPosition={{ top: height - 100, left: width - 80, width: 60, height: 60 }}
-                highlightPosition={{ top: height - 90, left: width - 80, width: 60, height: 60 }}
-                arrowDirection="down"
-                arrowPosition="right"
-                align="right"
-                nextLabel="Go to Profile"
-                onNext={handleOnboardingNext}
-                onSkip={handleOnboardingSkip}
-            />
 
             <SOSConfirmationModal
                 isVisible={sosModalVisible}

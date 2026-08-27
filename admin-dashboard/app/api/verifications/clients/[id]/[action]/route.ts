@@ -1,61 +1,44 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 
-const BACKEND_API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
-
-interface RouteParams {
-    params: Promise<{
-        id: string;
-        action: string;
-    }>;
-}
+const BACKEND_API_URL = (process.env.NEXT_PUBLIC_API_URL || 'https://shield-hire-znyu.vercel.app/api').replace('localhost', '127.0.0.1');
 
 export async function PATCH(
-    request: Request,
-    { params }: RouteParams
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string; action: string }> }
 ) {
     try {
-        const { id, action } = await params;
-
         const cookieStore = await cookies();
-        const token = cookieStore.get('admin_token')?.value;
-
-        if (!token) {
+        const adminToken = cookieStore.get('admin_token')?.value;
+        if (!adminToken) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        console.log(`[API PROXY] Forwarding client ${action} to: ${BACKEND_API_URL}/verifications/clients/${id}/${action}`);
-        const response = await fetch(`${BACKEND_API_URL}/verifications/clients/${id}/${action}`, {
+        const { id, action } = await params;
+        const body = await request.json().catch(() => ({}));
+
+        // Proxy to the backend — FCM push, role update etc. all handled there
+        const backendRes = await fetch(`${BACKEND_API_URL}/verifications/clients/${id}/${action}`, {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
+                'Authorization': `Bearer ${adminToken}`,
             },
+            body: JSON.stringify(body),
         });
-        console.log(`[API PROXY] Backend responded with status: ${response.status}`);
 
-        let result;
-        try {
-            result = await response.json();
-        } catch (e) {
-            console.error('Failed to parse backend response:', e);
-            throw new Error(`Invalid response from backend (Status: ${response.status})`);
-        }
+        const data = await backendRes.json().catch(() => ({}));
 
-        if (!response.ok) {
-            console.error(`Backend returned error: ${response.status}`, result);
+        if (!backendRes.ok) {
             return NextResponse.json(
-                { error: result.error || result.message || `Failed to ${action} client` },
-                { status: response.status }
+                { error: data.error || `Failed to ${action} client` },
+                { status: backendRes.status }
             );
         }
 
-        return NextResponse.json(result);
+        return NextResponse.json(data);
     } catch (error: any) {
         console.error('Error processing client verification:', error);
-        return NextResponse.json(
-            { error: error.message || 'Failed to process client verification' },
-            { status: 500 }
-        );
+        return NextResponse.json({ error: error.message || 'Failed to process client verification' }, { status: 500 });
     }
 }

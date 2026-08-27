@@ -1,12 +1,8 @@
 'use client';
 
-
-
 import Link from 'next/link';
-
 import { usePathname } from 'next/navigation';
-
-
+import { useEffect, useState } from 'react';
 
 interface SidebarProps {
     isOpen: boolean;
@@ -14,267 +10,185 @@ interface SidebarProps {
     onClose: () => void;
 }
 
-
-
-interface NavItem {
-
-    name: string;
-
-    href: string;
-
-    icon: React.ReactNode;
-
-    badge?: number;
-
-}
-
-
-
-const navItems: NavItem[] = [
-
-    {
-
-        name: 'Dashboard',
-
-        href: '/',
-
-        icon: (
-
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-
-            </svg>
-
-        )
-
-    },
-
-    {
-
-        name: 'Verifications',
-
-        href: '/verifications',
-
-        badge: 5,
-
-        icon: (
-
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-
-            </svg>
-
-        )
-
-    },
-
-    {
-
-        name: 'Bouncers',
-
-        href: '/bouncers',
-
-        icon: (
-
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-
-            </svg>
-
-        )
-
-    },
-
-    {
-
-        name: 'Users',
-
-        href: '/users',
-
-        icon: (
-
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-
-            </svg>
-
-        )
-
-    },
-
-    {
-
-        name: 'Engagements',
-
-        href: '/engagements',
-
-        icon: (
-
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-
-            </svg>
-
-        )
-
-    },
-
-    {
-
-        name: 'Live Tracking',
-
-        href: '/tracking',
-
-        icon: (
-
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-
-            </svg>
-
-        )
-
-    },
-
+// ── Icons ────────────────────────────────────────────────────────────────────
+
+const IconDashboard = () => (
+    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <rect x="3" y="3" width="7" height="7" rx="0" />
+        <rect x="14" y="3" width="7" height="7" rx="0" />
+        <rect x="3" y="14" width="7" height="7" rx="0" />
+        <rect x="14" y="14" width="7" height="7" rx="0" />
+    </svg>
+);
+
+const IconShield = () => (
+    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="square" strokeLinejoin="miter" d="M12 3l7 3.5V12c0 4-3 7-7 8-4-1-7-4-7-8V6.5L12 3z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4" />
+    </svg>
+);
+
+const IconBouncers = () => (
+    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="square" d="M16 7a4 4 0 11-8 0 4 4 0 018 0z" />
+        <path strokeLinecap="square" d="M3 20a9 9 0 0118 0" />
+    </svg>
+);
+
+const IconUsers = () => (
+    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="square" d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+        <circle cx="9" cy="7" r="4" />
+        <path strokeLinecap="square" d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" />
+    </svg>
+);
+
+const IconCalendar = () => (
+    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <rect x="3" y="4" width="18" height="18" rx="0" />
+        <path strokeLinecap="square" d="M16 2v4M8 2v4M3 10h18" />
+    </svg>
+);
+
+const IconMap = () => (
+    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="square" strokeLinejoin="miter" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" />
+        <circle cx="12" cy="9" r="2.5" />
+    </svg>
+);
+
+// ── Nav config ───────────────────────────────────────────────────────────────
+
+const navItems = [
+    { name: 'Dashboard',     href: '/',             icon: IconDashboard,  badgeKey: null },
+    { name: 'Verifications', href: '/verifications', icon: IconShield,     badgeKey: 'pendingVerifications' },
+    { name: 'Bouncers',      href: '/bouncers',      icon: IconBouncers,   badgeKey: null },
+    { name: 'Users',         href: '/users',          icon: IconUsers,      badgeKey: null },
+    { name: 'Engagements',   href: '/engagements',    icon: IconCalendar,   badgeKey: null },
+    { name: 'Live Tracking', href: '/tracking',       icon: IconMap,        badgeKey: null },
 ];
 
-
+// ── Component ─────────────────────────────────────────────────────────────────
 
 export default function Sidebar({ isOpen, windowWidth, onClose }: SidebarProps) {
-
     const pathname = usePathname();
-
-
-
-    // Determine breakpoints
-
     const isMobile = windowWidth < 769;
 
-    const isTablet = false; // Removed - icon strip was overlapping content on phones
+    // Live badge counts
+    const [pendingVerifications, setPendingVerifications] = useState<number | null>(null);
 
-    const isLaptopAndUp = windowWidth >= 769;
+    useEffect(() => {
+        const fetchCounts = async () => {
+            try {
+                const res = await fetch('/api/dashboard/stats', { cache: 'no-store' });
+                if (res.ok) {
+                    const data = await res.json();
+                    setPendingVerifications(data.pendingVerifications ?? null);
+                }
+            } catch {
+                // silently fail — badge just won't show
+            }
+        };
 
+        fetchCounts();
+        // Refresh every 60s
+        const id = setInterval(fetchCounts, 60_000);
+        return () => clearInterval(id);
+    }, []);
 
-
-    // Determine if we should show text (logo and nav items)
-
-    const showText = isMobile ? isOpen : !isTablet; // Show text in mobile when open, and in laptop/up always; never in tablet
-
-
-
-    const handleLinkClick = () => {
-
-        // Close sidebar on mobile when a link is clicked
-
-        if (isMobile) {
-
-            onClose();
-
-        }
-
+    const badgeCounts: Record<string, number | null> = {
+        pendingVerifications,
     };
 
-
-
-    // Calculate sidebar width
-
-    const sidebarWidth = 280; // Always full width — no icon-strip mode
-
-
+    const handleLinkClick = () => {
+        if (isMobile) onClose();
+    };
 
     return (
-
         <>
-
-            {/* Mobile Overlay - only show on mobile when sidebar is open */}
-
+            {/* Mobile overlay */}
             {isMobile && isOpen && (
-
                 <div
-
-                    className="mobile-menu-overlay active"
-
+                    className="fixed inset-0 bg-black/70 z-40 backdrop-blur-sm"
                     onClick={onClose}
-
                 />
-
             )}
 
-
-
             {/* Sidebar */}
-            <aside className={`sidebar border-r-3 border-text-primary ${isMobile && !isOpen ? 'sidebar-collapsed' : ''}`} style={{ width: `${sidebarWidth}px` }}>
-                {/* Logo Area */}
-                <div className="h-16 flex items-center px-4 sm:px-6 border-b-3 border-text-primary bg-bg-primary mb-6">
-                    <div className="flex items-center gap-3" style={{ paddingLeft: '0.25rem' }}>
-                        <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-none bg-primary-yellow border-2 border-black flex items-center justify-center text-black font-black text-lg font-mono shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
-                            S
+            <aside
+                className={`sidebar border-r-3 border-text-primary ${isMobile && !isOpen ? 'sidebar-collapsed' : ''}`}
+                style={{ width: 280 }}
+            >
+                {/* ── Logo ── */}
+                <div className="h-16 flex items-center gap-3 px-5 border-b-3 border-text-primary bg-bg-primary shrink-0">
+                    <div className="w-9 h-9 bg-primary-yellow border-2 border-black flex items-center justify-center shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] shrink-0">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="2.5" className="w-5 h-5">
+                            <path strokeLinecap="square" d="M12 3l7 3.5V12c0 4-3 7-7 8-4-1-7-4-7-8V6.5L12 3z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <div className="text-sm font-black text-text-primary tracking-widest uppercase font-mono leading-none">
+                            SHIELDHIRE
                         </div>
-                        <div className="flex flex-col">
-                            {showText && (
-                                <>
-                                    <h1 className="text-sm font-black text-text-primary tracking-wider uppercase font-mono">
-                                        SHIELDHIRE
-                                    </h1>
-                                    <span className="text-[10px] font-black text-primary-yellow tracking-widest uppercase font-mono">
-                                        OPS_CONSOLE
-                                    </span>
-                                </>
-                            )}
+                        <div className="text-[9px] font-black text-primary-yellow tracking-widest uppercase font-mono mt-0.5">
+                            OPS_CONSOLE
                         </div>
                     </div>
                 </div>
 
-                {/* Navigation */}
-                <nav className="flex-1 p-3 sm:p-4 overflow-y-auto pt-4">
-                    <div className="flex flex-col gap-3">
+                {/* ── Section label ── */}
+                <div className="px-5 pt-5 pb-2">
+                    <span className="text-[9px] font-black tracking-[0.2em] uppercase text-text-tertiary font-mono">
+                        // NAVIGATION
+                    </span>
+                </div>
+
+                {/* ── Nav ── */}
+                <nav className="flex-1 px-3 overflow-y-auto pb-4">
+                    <div className="flex flex-col gap-1">
                         {navItems.map((item) => {
                             const isActive = pathname === item.href;
+                            const Icon = item.icon;
+                            const count = item.badgeKey ? badgeCounts[item.badgeKey] : null;
+                            const showBadge = count !== null && count > 0;
+
                             return (
                                 <Link
-                                    key={item.name}
+                                    key={item.href}
                                     href={item.href}
                                     onClick={handleLinkClick}
                                     className={`
-                                        flex items-center justify-between px-3 py-2.5 rounded-none
-                                        font-bold text-xs uppercase tracking-wider font-mono
-                                        transition-all group relative border-2
+                                        group flex items-center justify-between
+                                        px-3 py-2.5 border-2 font-mono font-black text-xs
+                                        uppercase tracking-wider transition-all duration-100
                                         ${isActive
-                                            ? 'bg-primary-yellow text-black border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]'
-                                            : 'text-text-muted border-transparent hover:bg-surface-hover hover:text-text-primary hover:border-text-primary'
+                                            ? 'bg-primary-yellow text-black border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] translate-x-0 translate-y-0'
+                                            : 'text-text-muted border-transparent hover:border-text-primary hover:text-text-primary hover:bg-surface-hover hover:shadow-[2px_2px_0px_0px_var(--text-primary)] hover:-translate-x-0.5 hover:-translate-y-0.5'
                                         }
                                     `}
                                 >
                                     <div className="flex items-center gap-3">
+                                        {/* Active indicator bar */}
                                         <span className={`
+                                            shrink-0 transition-colors
                                             ${isActive ? 'text-black' : 'text-text-dim group-hover:text-text-primary'}
                                         `}>
-                                            {item.icon}
+                                            <Icon />
                                         </span>
-                                        {showText && (
-                                            <span className="text-xs font-black tracking-wider">{item.name}</span>
-                                        )}
+                                        <span>{item.name}</span>
                                     </div>
 
-                                    {item.badge && (
-                                        <span
-                                            className={`
-                                                px-1.5 py-0.5 rounded-none text-[9px] font-black font-mono border min-w-[18px] text-center
-                                                ${isActive
-                                                    ? 'bg-black text-primary-yellow border-primary-yellow'
-                                                    : 'bg-primary-yellow text-black border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]'
-                                                }
-                                            `}
-                                        >
-                                            {item.badge}
+                                    {/* Live badge */}
+                                    {showBadge && (
+                                        <span className={`
+                                            inline-flex items-center justify-center min-w-[20px] h-5
+                                            px-1.5 text-[9px] font-black font-mono border
+                                            ${isActive
+                                                ? 'bg-black text-primary-yellow border-black'
+                                                : 'bg-error text-white border-transparent shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]'
+                                            }
+                                        `}>
+                                            {count! > 99 ? '99+' : count}
                                         </span>
                                     )}
                                 </Link>
@@ -283,18 +197,37 @@ export default function Sidebar({ isOpen, windowWidth, onClose }: SidebarProps) 
                     </div>
                 </nav>
 
-                {/* Footer / Version Info */}
-                <div className="p-3 sm:p-4 border-t-2 border-text-primary bg-bg-primary">
-                    <div className="text-[10px] font-black font-mono text-text-dim text-center uppercase tracking-widest">
-                        <span className="hidden sm:inline">V1.0.0 // SHIELDHIRE SEC</span>
-                        <span className="sm:hidden">V1.0.0</span>
+                {/* ── Divider + status ── */}
+                <div className="px-5 pb-2">
+                    <span className="text-[9px] font-black tracking-[0.2em] uppercase text-text-tertiary font-mono">
+                        // SYSTEM
+                    </span>
+                </div>
+
+                {/* ── System status strip ── */}
+                <div className="mx-3 mb-3 border-2 border-text-primary bg-bg-primary p-3 shadow-[2px_2px_0px_0px_var(--text-primary)]">
+                    <div className="flex items-center justify-between mb-2">
+                        <span className="text-[9px] font-black font-mono text-text-tertiary uppercase tracking-widest">SYS_STATUS</span>
+                        <span className="flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 bg-success rounded-none animate-pulse" />
+                            <span className="text-[9px] font-black font-mono text-success uppercase">ONLINE</span>
+                        </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                        <span className="text-[9px] font-mono text-text-dim uppercase">PENDING_VER</span>
+                        <span className="text-[9px] font-black font-mono text-primary-yellow">
+                            {pendingVerifications === null ? '---' : pendingVerifications}
+                        </span>
+                    </div>
+                </div>
+
+                {/* ── Footer ── */}
+                <div className="px-5 py-3 border-t-2 border-text-primary bg-bg-primary">
+                    <div className="text-[9px] font-black font-mono text-text-dim uppercase tracking-widest text-center">
+                        V1.0.0 // SHIELDHIRE SEC
                     </div>
                 </div>
             </aside>
-
         </>
-
     );
-
 }
-

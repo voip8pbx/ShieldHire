@@ -82,8 +82,9 @@ export default function LoginScreen({ navigation }: Props) {
 
         setLoading(true);
         try {
+            const cleanEmail = email.trim().toLowerCase();
             const { data, error } = await supabase.auth.signInWithPassword({
-                email,
+                email: cleanEmail,
                 password,
             });
 

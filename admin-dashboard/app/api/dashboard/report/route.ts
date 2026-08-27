@@ -1,35 +1,29 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-
-const BACKEND_API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 
 export async function GET() {
     try {
         const cookieStore = await cookies();
-        const token = cookieStore.get('admin_token')?.value;
-
-        if (!token) {
+        if (!cookieStore.get('admin_token')?.value) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
         const [bouncersRes, usersRes, bookingsRes] = await Promise.all([
-            fetch(`${BACKEND_API_URL}/bouncers`, {
-                headers: { Authorization: `Bearer ${token}` },
-                cache: 'no-store',
-            }),
-            fetch(`${BACKEND_API_URL}/users`, {
-                headers: { Authorization: `Bearer ${token}` },
-                cache: 'no-store',
-            }),
-            fetch(`${BACKEND_API_URL}/bookings/admin/all`, {
-                headers: { Authorization: `Bearer ${token}` },
-                cache: 'no-store',
-            }),
+            supabaseAdmin
+                .from('bouncers')
+                .select('id, name, contactNo, verificationStatus, rating, isAvailable'),
+            supabaseAdmin
+                .from('users')
+                .select('id, name, email, role'),
+            supabaseAdmin
+                .from('bookings')
+                .select('id, userId, bouncerId, date, status, totalPrice, bouncers(name)'),
         ]);
 
-        const bouncers: any[] = bouncersRes.ok ? await bouncersRes.json() : [];
-        const users: any[] = usersRes.ok ? await usersRes.json() : [];
-        const bookings: any[] = bookingsRes.ok ? await bookingsRes.json() : [];
+        const bouncers: any[] = bouncersRes.data || [];
+        const users: any[] = usersRes.data || [];
+        const bookings: any[] = bookingsRes.data || [];
 
         const rows: string[] = [
             '--- BOUNCERS ---',
@@ -40,28 +34,22 @@ export async function GET() {
             '',
             '--- USERS ---',
             'ID,Name,Email,Role',
-            ...users.map(u =>
-                [u.id, u.name, u.email, u.role].join(',')
-            ),
+            ...users.map(u => [u.id, u.name, u.email, u.role].join(',')),
             '',
             '--- BOOKINGS ---',
-            'ID,Client,Bouncer,Date,Status,Amount,PaymentStatus',
+            'ID,BouncerName,Date,Status,Amount',
             ...bookings.map(b =>
                 [
                     b.id,
-                    b.clientName || '',
-                    b.bouncer?.name || '',
+                    (Array.isArray(b.bouncers) ? b.bouncers[0]?.name : b.bouncers?.name) || '',
                     b.date ? new Date(b.date).toLocaleDateString() : '',
                     b.status,
                     b.totalPrice,
-                    b.paymentStatus || '',
                 ].join(',')
             ),
         ];
 
-        const csv = rows.join('\n');
-
-        return new NextResponse(csv, {
+        return new NextResponse(rows.join('\n'), {
             status: 200,
             headers: {
                 'Content-Type': 'text/csv',

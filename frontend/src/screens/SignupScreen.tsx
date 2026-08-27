@@ -61,10 +61,11 @@ export default function SignupScreen({ navigation }: Props) {
         setLoading(true);
         try {
             const role = 'USER';
+            const cleanEmail = email.trim().toLowerCase();
 
             // Step 1: Sign up with Supabase
             const { data, error } = await supabase.auth.signUp({
-                email,
+                email: cleanEmail,
                 password,
                 options: {
                     data: {

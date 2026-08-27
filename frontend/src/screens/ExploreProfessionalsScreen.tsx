@@ -109,7 +109,7 @@ const GridCard = React.memo(({ item, onPress }: { item: Bouncer, onPress: () => 
                 <View style={styles.gridContent}>
                     <View style={styles.roleTag}>
                         <Text style={styles.roleText}>{roleText.toUpperCase()}</Text>
-                        {item.rating >= 4.5 && <MaterialCommunityIcons name="check-decagram" size={12} color="#FFD700" style={{ marginLeft: 4 }} />}
+                        {(item.verificationStatus === 'APPROVED' || (item as any).verification_status === 'APPROVED') && <MaterialCommunityIcons name="check-decagram" size={12} color="#FFD700" style={{ marginLeft: 4 }} />}
                     </View>
                     <Text style={styles.name} numberOfLines={1}>{displayName}</Text>
                     <View style={styles.statsRow}>
@@ -154,7 +154,7 @@ const ListCard = React.memo(({ item, onPress }: { item: Bouncer, onPress: () => 
                 <View style={styles.listContent}>
                     <View style={styles.listHeaderRow}>
                         <Text style={styles.listName} numberOfLines={1}>{displayName}</Text>
-                        {item.rating >= 4.5 && <MaterialCommunityIcons name="check-decagram" size={14} color="#FFD700" style={{ marginLeft: 6 }} />}
+                        {(item.verificationStatus === 'APPROVED' || (item as any).verification_status === 'APPROVED') && <MaterialCommunityIcons name="check-decagram" size={14} color="#FFD700" style={{ marginLeft: 6 }} />}
                     </View>
                     <Text style={styles.listRole}>{roleText}</Text>
                     <View style={styles.listStatsRow}>

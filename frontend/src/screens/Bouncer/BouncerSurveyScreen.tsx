@@ -9,7 +9,8 @@ import {
     Alert,
     Image,
     ActivityIndicator,
-    Dimensions
+    Dimensions,
+    BackHandler,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -57,6 +58,23 @@ export default function BouncerSurveyScreen({ navigation }: Props) {
     const [showLivenessCamera, setShowLivenessCamera] = useState(false);
     const [aadhaarError, setAadhaarError] = useState('');
 
+    const validateAadhaarLast4 = (digits: string): { valid: boolean; message: string } => {
+        if (!digits || digits.length !== 4) {
+            return { valid: false, message: 'Please enter exactly 4 digits of your Aadhaar card.' };
+        }
+        if (!/^\d{4}$/.test(digits)) {
+            return { valid: false, message: 'Aadhaar last 4 digits must contain numbers only.' };
+        }
+        if (/^(\d)\1{3}$/.test(digits)) {
+            return { valid: false, message: 'Invalid Aadhaar: Repetitive numbers (e.g. 0000, 1111) are not allowed.' };
+        }
+        const sequentialPatterns = ['0123', '1234', '2345', '3456', '4567', '5678', '6789', '9876', '8765', '7654', '6543', '5432', '4321', '3210'];
+        if (sequentialPatterns.includes(digits)) {
+            return { valid: false, message: 'Invalid Aadhaar: Sequential dummy numbers (e.g. 1234, 4321) are not allowed.' };
+        }
+        return { valid: true, message: 'Aadhaar format verified.' };
+    };
+
     useEffect(() => {
         const fetchProfile = async () => {
             console.log('[Survey] Fetching profile...');
@@ -89,7 +107,21 @@ export default function BouncerSurveyScreen({ navigation }: Props) {
             }
         };
         fetchProfile();
-    }, []);
+
+        const backAction = () => {
+            if (!navigation.canGoBack()) {
+                return true; // handled, do nothing
+            }
+            return false; // let default behavior happen
+        };
+
+        const backHandler = BackHandler.addEventListener(
+            'hardwareBackPress',
+            backAction
+        );
+
+        return () => backHandler.remove();
+    }, [navigation]);
 
     useEffect(() => {
         if (user) {
@@ -239,7 +271,9 @@ export default function BouncerSurveyScreen({ navigation }: Props) {
                     Alert.alert('Success', 'Profile updated successfully!', [
                         {
                             text: 'OK', onPress: () => {
-                                if (currentStep === STEPS.length - 1) navigation.goBack();
+                                if (currentStep === STEPS.length - 1 && navigation.canGoBack()) {
+                                    navigation.goBack();
+                                }
                             }
                         }
                     ]);
@@ -464,20 +498,49 @@ export default function BouncerSurveyScreen({ navigation }: Props) {
                                 <Text style={styles.verifyCardTitle}>Aadhaar Verification</Text>
                             </View>
                             <Text style={styles.label}>Last 4 Digits of Aadhaar</Text>
-                            <TextInput
-                                style={[styles.input, { letterSpacing: 4, fontSize: 18, fontWeight: 'bold' }]}
-                                placeholder="XXXX"
-                                placeholderTextColor="#666"
-                                keyboardType="numeric"
-                                maxLength={4}
-                                value={aadhaar}
-                                onChangeText={(text) => {
-                                    setAadhaar(text.replace(/[^0-9]/g, ''));
-                                    setAadhaarError('');
-                                }}
-                                editable={!isIdentityVerified}
-                            />
-                            {!!aadhaarError && <Text style={{ color: '#FF5252', marginTop: 4 }}>{aadhaarError}</Text>}
+                            <View style={{ position: 'relative' }}>
+                                <TextInput
+                                    style={[
+                                        styles.input,
+                                        { letterSpacing: 4, fontSize: 18, fontWeight: 'bold' },
+                                        aadhaar.length === 4 && (validateAadhaarLast4(aadhaar).valid ? { borderColor: '#4CAF50' } : { borderColor: '#FF5252' })
+                                    ]}
+                                    placeholder="XXXX"
+                                    placeholderTextColor="#666"
+                                    keyboardType="numeric"
+                                    maxLength={4}
+                                    value={aadhaar}
+                                    onChangeText={(text) => {
+                                        const cleaned = text.replace(/[^0-9]/g, '');
+                                        setAadhaar(cleaned);
+                                        if (cleaned.length === 4) {
+                                            const val = validateAadhaarLast4(cleaned);
+                                            setAadhaarError(val.valid ? '' : val.message);
+                                        } else {
+                                            setAadhaarError('');
+                                        }
+                                    }}
+                                    editable={!isIdentityVerified}
+                                />
+                            </View>
+
+                            {/* Live Verification Feedback Indicator */}
+                            {aadhaar.length === 4 && (
+                                <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6, gap: 4 }}>
+                                    <Ionicons
+                                        name={validateAadhaarLast4(aadhaar).valid ? "checkmark-circle" : "alert-circle"}
+                                        size={16}
+                                        color={validateAadhaarLast4(aadhaar).valid ? "#4CAF50" : "#FF5252"}
+                                    />
+                                    <Text style={{ color: validateAadhaarLast4(aadhaar).valid ? "#4CAF50" : "#FF5252", fontSize: 12, fontWeight: '600', flex: 1 }}>
+                                        {validateAadhaarLast4(aadhaar).message}
+                                    </Text>
+                                </View>
+                            )}
+
+                            {!!aadhaarError && aadhaar.length < 4 && (
+                                <Text style={{ color: '#FF5252', marginTop: 4, fontSize: 12 }}>{aadhaarError}</Text>
+                            )}
                             
                             <View style={styles.livenessSection}>
                                 <Text style={styles.label}>Face Liveness Check</Text>
@@ -490,8 +553,10 @@ export default function BouncerSurveyScreen({ navigation }: Props) {
                                     <TouchableOpacity 
                                         style={styles.livenessBtn}
                                         onPress={() => {
-                                            if (aadhaar.length !== 4) {
-                                                setAadhaarError('Please enter exactly 4 digits');
+                                            const validation = validateAadhaarLast4(aadhaar);
+                                            if (!validation.valid) {
+                                                setAadhaarError(validation.message);
+                                                Alert.alert('Invalid Aadhaar Digits', validation.message);
                                                 return;
                                             }
                                             setShowLivenessCamera(true);

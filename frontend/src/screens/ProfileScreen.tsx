@@ -32,6 +32,7 @@ export default function ProfileScreen() {
 
     // State
     const [image, setImage] = useState<string | null>(user?.profilePhoto || null);
+    const [bannerImage, setBannerImage] = useState<string | null>((user as any)?.clientProfile?.bannerPhoto || (user as any)?.bannerPhoto || null);
     const [isEditing, setIsEditing] = useState(false);
     const [name, setName] = useState(user?.name || '');
     const [contact, setContact] = useState(user?.contactNo || '');
@@ -167,8 +168,8 @@ export default function ProfileScreen() {
             {
                 mediaType: 'photo',
                 includeBase64: true,
-                maxHeight: 500,
-                maxWidth: 500,
+                maxHeight: 600,
+                maxWidth: 600,
                 quality: 0.8,
             },
             (response: ImagePickerResponse) => {
@@ -186,6 +187,32 @@ export default function ProfileScreen() {
         );
     };
 
+    const pickBannerImage = async () => {
+        if (!isEditing) return;
+
+        launchImageLibrary(
+            {
+                mediaType: 'photo',
+                includeBase64: true,
+                maxHeight: 800,
+                maxWidth: 1200,
+                quality: 0.8,
+            },
+            (response: ImagePickerResponse) => {
+                if (response.didCancel) {
+                    return;
+                } else if (response.errorCode) {
+                    Alert.alert("Error", response.errorMessage || "Failed to pick banner image");
+                } else if (response.assets && response.assets[0].base64) {
+                    const dataUri = `data:${response.assets[0].type};base64,${response.assets[0].base64}`;
+                    setBannerImage(dataUri);
+                } else if (response.assets && response.assets[0].uri) {
+                    setBannerImage(response.assets[0].uri);
+                }
+            }
+        );
+    };
+
     const toggleEdit = async () => {
         if (!token || token === 'guest_token') {
             requireAuth(navigation, 'Profile');
@@ -198,7 +225,7 @@ export default function ProfileScreen() {
                 if (image && image.startsWith('data:')) {
                     const uploadResponse = await api.post('/upload', {
                         image: image,
-                        filename: `client-${user?.id || Date.now()}.jpg`,
+                        filename: `client-profile-${user?.id || Date.now()}.jpg`,
                         folder: 'profile-photos'
                     });
                     if (uploadResponse.data && uploadResponse.data.url) {
@@ -207,10 +234,26 @@ export default function ProfileScreen() {
                     }
                 }
 
+                let bannerPhotoUrl = bannerImage;
+                if (bannerImage && bannerImage.startsWith('data:')) {
+                    const uploadBannerResponse = await api.post('/upload', {
+                        image: bannerImage,
+                        filename: `client-banner-${user?.id || Date.now()}.jpg`,
+                        folder: 'banners'
+                    });
+                    if (uploadBannerResponse.data && uploadBannerResponse.data.url) {
+                        bannerPhotoUrl = uploadBannerResponse.data.url;
+                        setBannerImage(bannerPhotoUrl);
+                    }
+                }
+
                 const payload: any = {
                     name,
                     contactNo: contact,
-                    profilePhoto: profilePhotoUrl
+                    profilePhoto: profilePhotoUrl,
+                    clientProfile: {
+                        bannerPhoto: bannerPhotoUrl,
+                    }
                 };
 
                 if (user?.role === 'BOUNCER' || user?.role === 'GUNMAN') {
@@ -287,6 +330,20 @@ export default function ProfileScreen() {
                 contentContainerStyle={styles.scrollContent}
                 showsVerticalScrollIndicator={false}
             >
+                {/* Background Banner Header */}
+                <View style={styles.bannerHeaderContainer}>
+                    {bannerImage || (user as any)?.clientProfile?.bannerPhoto ? (
+                        <Image source={{ uri: bannerImage || (user as any)?.clientProfile?.bannerPhoto }} style={styles.bannerHeaderImage} resizeMode="cover" />
+                    ) : (
+                        <LinearGradient colors={['#1E1E24', '#2C2A1E', '#121214']} style={styles.bannerHeaderGradient} />
+                    )}
+                    {isEditing && (
+                        <TouchableOpacity style={styles.changeBannerBtn} onPress={pickBannerImage}>
+                            <Ionicons name="camera-outline" size={14} color="#FFD700" />
+                            <Text style={styles.changeBannerText}>Edit Cover</Text>
+                        </TouchableOpacity>
+                    )}
+                </View>
 
                 {/* Premium Profile Card */}
                 <View style={styles.premiumProfileCard}>
@@ -324,10 +381,31 @@ export default function ProfileScreen() {
 
 
                             {/* Verification Badge */}
-                            <View style={[styles.verificationBadge, styles.verificationApprovedBadge]}>
-                                <MaterialCommunityIcons name="check-decagram" size={14} color="#000" />
-                                <Text style={styles.verificationText}>Verified Client</Text>
-                            </View>
+                            {(() => {
+                                const clientStatus = user?.clientProfile?.verificationStatus || (user as any)?.verificationStatus;
+                                const isApproved = clientStatus === 'APPROVED';
+                                const isRejected = clientStatus === 'REJECTED';
+                                return (
+                                    <View style={[
+                                        styles.verificationBadge,
+                                        isApproved && styles.verificationApprovedBadge,
+                                        isRejected && styles.verificationRejectedBadge,
+                                        !isApproved && !isRejected && styles.verificationPendingBadge,
+                                    ]}>
+                                        <MaterialCommunityIcons
+                                            name={isApproved ? "check-decagram" : isRejected ? "close-octagon" : "clock-outline"}
+                                            size={14}
+                                            color={isApproved ? "#000" : isRejected ? "#FF3B30" : "#FFD700"}
+                                        />
+                                        <Text style={[
+                                            styles.verificationText,
+                                            { color: isApproved ? '#000' : isRejected ? '#FF3B30' : '#FFD700' }
+                                        ]}>
+                                            {isApproved ? 'Verified Client' : isRejected ? 'Verification Rejected' : 'Verification Pending'}
+                                        </Text>
+                                    </View>
+                                );
+                            })()}
                         </View>
                     </View>
 
@@ -641,6 +719,16 @@ const styles = StyleSheet.create({
     verificationApprovedBadge: {
         backgroundColor: '#D4AF37',
     },
+    verificationPendingBadge: {
+        backgroundColor: 'rgba(255, 215, 0, 0.15)',
+        borderWidth: 1,
+        borderColor: '#FFD700',
+    },
+    verificationRejectedBadge: {
+        backgroundColor: 'rgba(255, 59, 48, 0.15)',
+        borderWidth: 1,
+        borderColor: '#FF3B30',
+    },
     verificationText: {
         fontSize: 11,
         fontWeight: '700',
@@ -824,5 +912,41 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: '#ddd',
         fontWeight: '500',
+    },
+    bannerHeaderContainer: {
+        height: 120,
+        width: '100%',
+        position: 'relative',
+        borderTopLeftRadius: 18,
+        borderTopRightRadius: 18,
+        overflow: 'hidden',
+        marginBottom: -30,
+    },
+    bannerHeaderImage: {
+        width: '100%',
+        height: '100%',
+    },
+    bannerHeaderGradient: {
+        width: '100%',
+        height: '100%',
+    },
+    changeBannerBtn: {
+        position: 'absolute',
+        top: 10,
+        right: 12,
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.65)',
+        paddingHorizontal: 10,
+        paddingVertical: 5,
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: 'rgba(255, 215, 0, 0.4)',
+        gap: 4,
+    },
+    changeBannerText: {
+        color: '#FFD700',
+        fontSize: 11,
+        fontWeight: '700',
     },
 });

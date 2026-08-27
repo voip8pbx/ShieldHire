@@ -24,6 +24,7 @@ import api from '../../services/api';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../types';
+import LinearGradient from 'react-native-linear-gradient';
 
 let hasShownProfileTooltipThisSession = false;
 
@@ -34,6 +35,7 @@ export default function BouncerProfileScreen() {
 
     // State
     const [image, setImage] = useState<string | null>(null);
+    const [bannerImage, setBannerImage] = useState<string | null>((user?.bouncerProfile as any)?.bannerPhoto || null);
     const [isEditing, setIsEditing] = useState(false);
 
     // User Basic Info
@@ -133,7 +135,6 @@ export default function BouncerProfileScreen() {
     useEffect(() => {
         fetchProfile();
         checkLocationPermission();
-        checkOnboarding();
     }, []);
 
     const checkLocationPermission = async () => {
@@ -225,14 +226,66 @@ export default function BouncerProfileScreen() {
         );
     };
 
+    const pickBannerImage = async () => {
+        if (!isEditing) return;
+
+        launchImageLibrary(
+            {
+                mediaType: 'photo',
+                includeBase64: true,
+                maxHeight: 800,
+                maxWidth: 1200,
+                quality: 0.8,
+            },
+            (response: ImagePickerResponse) => {
+                if (response.didCancel) {
+                    return;
+                } else if (response.errorCode) {
+                    Alert.alert("Error", response.errorMessage || "Failed to pick banner image");
+                } else if (response.assets && response.assets[0].base64) {
+                    const source = `data:${response.assets[0].type};base64,${response.assets[0].base64}`;
+                    setBannerImage(source);
+                } else if (response.assets && response.assets[0].uri) {
+                    setBannerImage(response.assets[0].uri);
+                }
+            }
+        );
+    };
+
     const toggleEdit = async () => {
         if (isEditing) {
             // Save logic
             try {
+                let profilePhotoUrl = image || user?.profilePhoto;
+                if (image && image.startsWith('data:')) {
+                    const uploadResponse = await api.post('/upload', {
+                        image: image,
+                        filename: `bouncer-profile-${user?.id || Date.now()}.jpg`,
+                        folder: 'profile-photos'
+                    });
+                    if (uploadResponse.data && uploadResponse.data.url) {
+                        profilePhotoUrl = uploadResponse.data.url;
+                        setImage(profilePhotoUrl);
+                    }
+                }
+
+                let bannerPhotoUrl = bannerImage;
+                if (bannerImage && bannerImage.startsWith('data:')) {
+                    const uploadBannerResponse = await api.post('/upload', {
+                        image: bannerImage,
+                        filename: `bouncer-banner-${user?.id || Date.now()}.jpg`,
+                        folder: 'banners'
+                    });
+                    if (uploadBannerResponse.data && uploadBannerResponse.data.url) {
+                        bannerPhotoUrl = uploadBannerResponse.data.url;
+                        setBannerImage(bannerPhotoUrl);
+                    }
+                }
+
                 const response = await api.put('/user/profile', {
                     name,
                     contactNo: contact,
-                    profilePhoto: image || user?.profilePhoto, // Send image if changed
+                    profilePhoto: profilePhotoUrl,
                     bouncerProfile: {
                         age,
                         gender,
@@ -242,8 +295,8 @@ export default function BouncerProfileScreen() {
                         upiId,
                         singleShiftPrice,
                         vipBodyguardPrice,
+                        bannerPhoto: bannerPhotoUrl,
                     }
-
                 });
 
                 if (response.data && response.data.user) {
@@ -300,6 +353,20 @@ export default function BouncerProfileScreen() {
 
             <ScrollView style={{ flex: 1, backgroundColor: '#0A0A0A' }} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
 
+                {/* Cover Banner Header */}
+                <View style={styles.bannerHeaderContainer}>
+                    {bannerImage || (user?.bouncerProfile as any)?.bannerPhoto ? (
+                        <Image source={{ uri: bannerImage || (user?.bouncerProfile as any)?.bannerPhoto }} style={styles.bannerHeaderImage} resizeMode="cover" />
+                    ) : (
+                        <LinearGradient colors={['#1E1E24', '#2C2A1E', '#121214']} style={styles.bannerHeaderGradient} />
+                    )}
+                    {isEditing && (
+                        <TouchableOpacity style={styles.changeBannerBtn} onPress={pickBannerImage}>
+                            <Ionicons name="camera-outline" size={14} color="#FFD700" />
+                            <Text style={styles.changeBannerText}>Edit Cover</Text>
+                        </TouchableOpacity>
+                    )}
+                </View>
 
                 {/* Premium Profile Card */}
                 <View style={styles.premiumProfileCard}>
@@ -628,18 +695,6 @@ export default function BouncerProfileScreen() {
                     </TouchableOpacity>
                 </View>
             </ScrollView>
-
-            <OnboardingTooltip
-                visible={showOnboarding}
-                title="Profile Survey"
-                message="Tap here to complete the required survey. This helps verify your profile and improve matching."
-                targetPosition={targetPos}
-                highlightPosition={targetPos}
-                arrowDirection="down"
-                nextLabel="Complete Now"
-                onNext={handleOnboardingNext}
-                onSkip={handleOnboardingSkip}
-            />
         </SafeAreaView>
     );
 }
@@ -991,5 +1046,41 @@ const styles = StyleSheet.create({
         color: '#E0E0E0',
         marginLeft: 12,
         fontWeight: '500',
+    },
+    bannerHeaderContainer: {
+        height: 140,
+        width: '100%',
+        position: 'relative',
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
+        overflow: 'hidden',
+        marginBottom: -35,
+    },
+    bannerHeaderImage: {
+        width: '100%',
+        height: '100%',
+    },
+    bannerHeaderGradient: {
+        width: '100%',
+        height: '100%',
+    },
+    changeBannerBtn: {
+        position: 'absolute',
+        top: 10,
+        right: 12,
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.65)',
+        paddingHorizontal: 10,
+        paddingVertical: 5,
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: 'rgba(255, 215, 0, 0.4)',
+        gap: 4,
+    },
+    changeBannerText: {
+        color: '#FFD700',
+        fontSize: 11,
+        fontWeight: '700',
     },
 });

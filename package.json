@@ -14,7 +14,7 @@
         "start": "concurrently --names \"BACKEND,METRO,ADMIN\" --prefix-colors \"bgBlue.bold,bgMagenta.bold,bgYellow.bold\" \"npm run start:backend\" \"npm run start:frontend\" \"npm run start:admin\"",
         "start:backend": "cd backend && npm run dev",
         "start:frontend": "cd frontend && npm start",
-        "start:admin": "cd admin-dashboard && npm run dev",
+        "start:admin": "cd admin-dashboard && npm run serve",
         "android": "concurrently --names \"BACKEND,METRO,ANDROID,ADMIN\" --prefix-colors \"bgBlue.bold,bgMagenta.bold,bgGreen.bold,bgYellow.bold\" \"npm run start:backend\" \"npm run start:frontend\" \"npm run android:all\" \"npm run start:admin\"",
         "android:all": "node start-all-devices.js",
         "android:build": "cd frontend && npm run android",

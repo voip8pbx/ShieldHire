@@ -1,38 +1,34 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 
-const BACKEND_API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const camelCaseKeys = (obj: any): any => {
+    if (!obj) return null;
+    const newObj: any = {};
+    for (const key in obj) {
+        const camelKey = key.replace(/_([a-z0-9])/g, (_: string, g: string) => g.toUpperCase());
+        newObj[camelKey] = obj[key];
+    }
+    return newObj;
+};
 
 export async function GET() {
     try {
         const cookieStore = await cookies();
-        const token = cookieStore.get('admin_token')?.value;
-
-        if (!token) {
+        if (!cookieStore.get('admin_token')?.value) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        // Fetch users from backend API
-        const response = await fetch(`${BACKEND_API_URL}/user`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            cache: 'no-store',
-        });
+        const { data, error } = await supabaseAdmin
+            .from('users')
+            .select('id, name, email, role, contactNo, age, profilePhoto, createdAt, updatedAt')
+            .order('createdAt', { ascending: false });
 
-        if (!response.ok) {
-            throw new Error('Failed to fetch users');
-        }
+        if (error) throw error;
 
-        const users = await response.json();
-        return NextResponse.json(users);
+        return NextResponse.json((data || []).map(camelCaseKeys));
     } catch (error) {
         console.error('Error fetching users:', error);
-        return NextResponse.json(
-            { error: 'Failed to fetch users' },
-            { status: 500 }
-        );
+        return NextResponse.json({ error: 'Failed to fetch users' }, { status: 500 });
     }
 }

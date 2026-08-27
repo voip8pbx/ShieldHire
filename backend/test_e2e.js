@@ -71,7 +71,7 @@ async function runTest() {
         }
     }, {
         bouncerId: 'e77b90ef-96e2-4ccf-a76b-d5597d56e0c8', // Mayur P (your bouncer test account)
-        date: new Date('2026-09-01T00:00:00Z').toISOString(),
+        date: new Date(`2027-02-${Math.floor(Math.random() * 20) + 10}T00:00:00Z`).toISOString(),
         time: '10:00 AM',
         location: 'Mumbai Event Hall',
         duration: 4,

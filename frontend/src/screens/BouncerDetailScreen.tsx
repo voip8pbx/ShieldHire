@@ -65,7 +65,12 @@ export default function BouncerDetailScreen({ navigation, route }: Props) {
                 const response = await api.get<any>(`/api/bouncers/${bouncerId}`);
                 const bouncerData: any = response.data;
 
-                const defaultCerts = ['Govt Security License', 'Background Checked', 'Liveness Verified'];
+                const isApproved = bouncerData.verificationStatus === 'APPROVED' || bouncerData.verification_status === 'APPROVED';
+                const isIdentityVerified = !!(bouncerData.identityVerified || bouncerData.identity_verified);
+
+                const defaultCerts = ['Govt Security License', 'Background Checked'];
+                if (isApproved) defaultCerts.push('Admin Approved');
+                if (isIdentityVerified) defaultCerts.push('Liveness Verified');
                 if (bouncerData.hasGunLicense || bouncerData.isGunman) {
                     defaultCerts.push('Armed Carry Permit');
                 }
@@ -93,6 +98,7 @@ export default function BouncerDetailScreen({ navigation, route }: Props) {
                     certifications: defaultCerts,
                     specialties: defaultSkills,
                     galleryPhotos: gallery,
+                    verificationStatus: bouncerData.verificationStatus || bouncerData.verification_status,
                 });
 
             } catch (error) {
@@ -122,6 +128,7 @@ export default function BouncerDetailScreen({ navigation, route }: Props) {
     const VIP_BODYGUARD_PRICE = (bouncer as any).vipBodyguardPrice || 4000;
     const selectedBasePrice = selectedPackage === 'VIP_BODYGUARD' ? VIP_BODYGUARD_PRICE : SINGLE_SHIFT_PRICE;
     const displayRating = bouncer.rating && bouncer.rating > 0 ? bouncer.rating.toFixed(1) : '4.8';
+    const isApprovedGuard = bouncer.verificationStatus === 'APPROVED' || (bouncer as any).verification_status === 'APPROVED';
 
     return (
         <SafeAreaView style={styles.safeArea}>
@@ -153,9 +160,11 @@ export default function BouncerDetailScreen({ navigation, route }: Props) {
                                     <MaterialCommunityIcons name="account-shield" size={60} color="#FFD700" />
                                 </View>
                             )}
-                            <View style={styles.verifiedBadgeIcon}>
-                                <MaterialCommunityIcons name="check-decagram" size={22} color="#FFD700" />
-                            </View>
+                            {isApprovedGuard && (
+                                <View style={styles.verifiedBadgeIcon}>
+                                    <MaterialCommunityIcons name="check-decagram" size={22} color="#FFD700" />
+                                </View>
+                            )}
                         </View>
 
                         <Text style={styles.guardName}>{bouncer.name}</Text>
@@ -186,9 +195,13 @@ export default function BouncerDetailScreen({ navigation, route }: Props) {
                     </View>
 
                     <View style={styles.metricCard}>
-                        <Ionicons name="shield-checkmark-outline" size={18} color="#4ade80" />
-                        <Text style={styles.metricValue}>100%</Text>
-                        <Text style={styles.metricLabel}>Verified</Text>
+                        <Ionicons
+                            name={isApprovedGuard ? "shield-checkmark-outline" : "time-outline"}
+                            size={18}
+                            color={isApprovedGuard ? "#4ade80" : "#FFD700"}
+                        />
+                        <Text style={styles.metricValue}>{isApprovedGuard ? "100%" : "Pending"}</Text>
+                        <Text style={styles.metricLabel}>{isApprovedGuard ? "Verified" : "Verification"}</Text>
                     </View>
 
                     <View style={styles.metricCard}>

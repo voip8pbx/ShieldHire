@@ -290,21 +290,18 @@ const AppContent = () => {
                             />
                         ) : isBouncerFlow ? (
                             <>
-                                {!user?.bouncerProfile?.bio ? (
+                                {!user?.bouncerProfile?.bio || !user?.bouncerProfile?.identityVerified ? (
                                     <Stack.Screen name="BouncerSurvey" component={BouncerSurveyScreen} options={{ headerShown: false }} />
                                 ) : !isApproved ? (
                                     <Stack.Screen name="VerificationPending" component={VerificationPendingScreen} options={{ headerShown: false }} />
                                 ) : (
                                     <Stack.Screen name="BouncerMain" component={BouncerNavigator} />
                                 )}
-                                {user?.bouncerProfile?.bio && isApproved && (
-                                    <Stack.Screen name="BouncerSurvey" component={BouncerSurveyScreen} options={{ headerShown: false }} />
-                                )}
                             </>
                         ) : (
                             !isClientApproved ? (
                                 <>
-                                    {!user?.clientProfile ? (
+                                    {!user?.clientProfile || !user?.clientProfile?.govtIdPhoto ? (
                                         <Stack.Screen name="ClientProfileSetup" component={ClientProfileSetupScreen} options={{ headerShown: false }} />
                                     ) : (
                                         <>

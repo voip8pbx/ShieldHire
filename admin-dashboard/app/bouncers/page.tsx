@@ -80,7 +80,7 @@ export default function BouncersPage() {
             {/* Header */}
             <div className="page-header border-b-3 border-text-primary pb-6 mb-8">
                 <div>
-                    <h1 className="page-title text-4xl font-black uppercase tracking-tight text-text-primary">
+                    <h1 className="page-title text-xl sm:text-3xl lg:text-4xl font-black uppercase tracking-tight text-text-primary">
                         Bouncers Directory
                     </h1>
                     <p className="page-subtitle text-xs font-mono text-text-muted uppercase tracking-wider mt-1">

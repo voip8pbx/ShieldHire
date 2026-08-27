@@ -62,3 +62,20 @@ serviceAccountKey.json
 *serviceAccountKey*.json
 shieldhire-9a30d-*.json
 backend/fcm/serviceAccountKey.json
+
+# Backend development artifacts — DO NOT COMMIT
+backend/prisma/dev.db
+backend/prisma/dev.db-journal
+backend/scratch/
+backend/public/uploads/
+
+# Local test & utility scripts
+backend/check_bouncers.ts
+backend/check_rls.ts
+backend/check_user_row.ts
+backend/fix_mayur_status.ts
+backend/get_token.ts
+backend/test_fcm.ts
+backend/test_mayur.ts
+backend/update_secrets.ts
+admin-dashboard/dev-env.js

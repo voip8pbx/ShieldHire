@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import {
     View,
     Text,
@@ -12,6 +12,7 @@ import {
     KeyboardAvoidingView,
     Platform,
     StatusBar,
+    BackHandler,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -54,6 +55,22 @@ export default function ClientProfileSetupScreen({ navigation }: Props) {
     const [uploadingImage, setUploadingImage] = useState(false);
     const [uploadingDoc, setUploadingDoc] = useState(false);
     const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        const backAction = () => {
+            if (!navigation.canGoBack()) {
+                return true; // handled, do nothing
+            }
+            return false; // let default behavior happen
+        };
+
+        const backHandler = BackHandler.addEventListener(
+            'hardwareBackPress',
+            backAction
+        );
+
+        return () => backHandler.remove();
+    }, [navigation]);
 
     const handlePickImage = () => {
         launchImageLibrary(
@@ -165,7 +182,14 @@ export default function ClientProfileSetupScreen({ navigation }: Props) {
             <StatusBar barStyle="light-content" backgroundColor={THEME.background} />
             
             <View style={styles.header}>
-                <Text style={styles.headerTitle}>Complete Client Profile</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    {navigation.canGoBack() && (
+                        <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginRight: 12 }}>
+                            <Ionicons name="arrow-back" size={24} color="#fff" />
+                        </TouchableOpacity>
+                    )}
+                    <Text style={styles.headerTitle}>Complete Client Profile</Text>
+                </View>
                 <TouchableOpacity onPress={logout} style={styles.logoutBtn}>
                     <Ionicons name="log-out-outline" size={22} color={THEME.error} />
                 </TouchableOpacity>

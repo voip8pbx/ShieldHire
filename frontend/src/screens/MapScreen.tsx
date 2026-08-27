@@ -274,7 +274,9 @@ export default function MapScreen({ navigation, route }: Props) {
                                 <Text style={styles.guardName} numberOfLines={1}>
                                     {selectedBouncer.name || selectedBouncer.user?.name || 'Security Professional'}
                                 </Text>
-                                <MaterialCommunityIcons name="check-decagram" size={16} color="#FFD700" style={{ marginLeft: 6 }} />
+                                {(selectedBouncer.verificationStatus === 'APPROVED' || (selectedBouncer as any).verification_status === 'APPROVED') && (
+                                    <MaterialCommunityIcons name="check-decagram" size={16} color="#FFD700" style={{ marginLeft: 6 }} />
+                                )}
                             </View>
                             <Text style={styles.guardRole}>
                                 {selectedBouncer.isGunman ? 'Armed Gunman' : 'Elite Bouncer'} • {selectedBouncer.experience || 5} Yrs Exp

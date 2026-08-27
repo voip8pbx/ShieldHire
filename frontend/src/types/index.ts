@@ -14,6 +14,10 @@ export type ClientProfile = {
     userId: string;
     verificationStatus: 'PENDING' | 'APPROVED' | 'REJECTED';
     rejectionReason?: string;
+    govtIdPhoto?: string;
+    age?: number;
+    gender?: string;
+    location?: string;
 };
 
 export type Bouncer = {

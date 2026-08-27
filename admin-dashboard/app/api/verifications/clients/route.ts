@@ -1,44 +1,49 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 
-const BACKEND_API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const camelCaseKeys = (obj: any): any => {
+    if (!obj) return null;
+    const newObj: any = {};
+    for (const key in obj) {
+        const camelKey = key.replace(/_([a-z0-9])/g, (_: string, g: string) => g.toUpperCase());
+        newObj[camelKey] = obj[key];
+    }
+    return newObj;
+};
 
 export async function GET(request: Request) {
     try {
-        const { searchParams } = new URL(request.url);
-        const status = searchParams.get('status');
-
         const cookieStore = await cookies();
-        const token = cookieStore.get('admin_token')?.value;
-
-        if (!token) {
+        if (!cookieStore.get('admin_token')?.value) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const url = status
-            ? `${BACKEND_API_URL}/verifications/clients?status=${status}`
-            : `${BACKEND_API_URL}/verifications/clients`;
+        const { searchParams } = new URL(request.url);
+        const status = searchParams.get('status');
 
-        const response = await fetch(url, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            cache: 'no-store',
+        let query = supabaseAdmin
+            .from('clients')
+            .select('*, users(name, email)')
+            .order('createdAt', { ascending: false });
+
+        if (status) query = query.eq('verificationStatus', status.toUpperCase()) as any;
+
+        const { data, error } = await query;
+        if (error) throw error;
+
+        const formatted = (data || []).map((c: any) => {
+            const f = camelCaseKeys(c);
+            if (c.users) {
+                f.user = camelCaseKeys(Array.isArray(c.users) ? c.users[0] : c.users);
+                delete f.users;
+            }
+            return f;
         });
 
-        if (!response.ok) {
-            throw new Error('Failed to fetch client verifications');
-        }
-
-        const verifications = await response.json();
-        return NextResponse.json(verifications);
-    } catch (error: any) {
+        return NextResponse.json(formatted);
+    } catch (error) {
         console.error('Error fetching client verifications:', error);
-        return NextResponse.json(
-            { error: error.message || 'Failed to fetch client verifications' },
-            { status: 500 }
-        );
+        return NextResponse.json({ error: 'Failed to fetch client verifications' }, { status: 500 });
     }
 }
