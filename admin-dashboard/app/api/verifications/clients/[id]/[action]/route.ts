@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 
-const BACKEND_API_URL = (process.env.NEXT_PUBLIC_API_URL || 'https://shield-hire-znyu.vercel.app/api').replace('localhost', '127.0.0.1');
+const BACKEND_API_URL = process.env.API_URL || 'https://shield-hire-znyu.vercel.app/api';
 
 export async function PATCH(
     request: NextRequest,

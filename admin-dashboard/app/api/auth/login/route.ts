@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies as nextCookies } from 'next/headers';
 
-const BACKEND_API_URL = (process.env.NEXT_PUBLIC_API_URL || 'https://shield-hire-znyu.vercel.app/api').replace('localhost', '127.0.0.1');
+// API_URL is a server-only env var (no NEXT_PUBLIC_ prefix) set in Vercel project settings.
+// Falls back to the production backend URL so the route works even if the var is missing.
+const BACKEND_API_URL = process.env.API_URL || 'https://shield-hire-znyu.vercel.app/api';
 
 export async function POST(request: NextRequest) {
     try {
