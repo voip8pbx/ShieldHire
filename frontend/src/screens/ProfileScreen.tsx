@@ -544,13 +544,6 @@ export default function ProfileScreen() {
                         <Ionicons name="color-palette-outline" size={18} color="#666" />
                     </TouchableOpacity>
 
-                    <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('ContactUs')}>
-                        <View style={styles.menuLeft}>
-                            <Ionicons name="chatbubbles-outline" size={20} color="#ccc" />
-                            <Text style={styles.menuText}>Contact Support</Text>
-                        </View>
-                        <Ionicons name="chevron-forward" size={18} color="#666" />
-                    </TouchableOpacity>
 
                     <TouchableOpacity
                         style={styles.menuItem}
