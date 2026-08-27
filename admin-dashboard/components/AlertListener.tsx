@@ -65,7 +65,11 @@ export default function AlertListener() {
             if (response.ok) {
                 const data = await response.json();
                 setAlerts(data);
+            } else if (response.status === 401) {
+                // Not logged in yet — silently skip, middleware will handle redirect
+                return;
             } else {
+                // Non-auth error — fall back to direct Supabase query
                 const { data, error } = await supabase
                     .from('emergency_alerts')
                     .select('*, users(name, email, contactNo)')
@@ -86,7 +90,11 @@ export default function AlertListener() {
         audioRef.current.loop = true;
 
         // Initialize Socket
-        const backendUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api').replace('/api', '');
+        // Strip trailing /api to get the base socket server URL
+        const rawApiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+        const backendUrl = rawApiUrl.endsWith('/api')
+            ? rawApiUrl.slice(0, -4)
+            : rawApiUrl.replace(/\/api$/, '');
         console.log('Initiating Socket.io connection to:', backendUrl);
         
         const socket = io(backendUrl, {

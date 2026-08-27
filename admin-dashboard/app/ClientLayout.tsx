@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
+import AlertListener from '@/components/AlertListener';
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
@@ -69,6 +70,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
 
     return (
         <div className="dashboard-layout">
+            <AlertListener />
             <Sidebar isOpen={sidebarOpen} windowWidth={windowWidth} onClose={closeSidebar} />
 
             <div className="main-content">

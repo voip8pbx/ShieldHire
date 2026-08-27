@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import AlertListener from "@/components/AlertListener";
 import ClientLayout from "./ClientLayout";
 
 export const metadata: Metadata = {
@@ -16,7 +15,6 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="antialiased" suppressHydrationWarning>
-        <AlertListener />
         <ClientLayout>
           {children}
         </ClientLayout>
