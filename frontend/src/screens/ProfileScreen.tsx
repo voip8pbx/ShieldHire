@@ -555,11 +555,10 @@ export default function ProfileScreen() {
                     <TouchableOpacity
                         style={styles.menuItem}
                         onPress={() => {
-                            // ⚠️ PRODUCTION SETUP REQUIRED: Replace this URL with your live privacy policy URL
-                            // Set PRIVACY_POLICY_URL = https://shieldhire.in/privacy-policy
-                            const PRIVACY_POLICY_URL = 'https://shieldhire.in/privacy-policy';
+                            // ⚠️ PRODUCTION SETUP: FlyCricket hosted privacy policy URL
+                            const PRIVACY_POLICY_URL = 'https://doc-hosting.flycricket.io/sos-shieldhire-privacy-policy/ced1d6d0-453d-44e7-81a0-7f7d1d26d250/privacy';
                             Linking.openURL(PRIVACY_POLICY_URL).catch(() =>
-                                Alert.alert('Privacy Policy', 'Visit shieldhire.in/privacy-policy to read our Privacy Policy.')
+                                Alert.alert('Privacy Policy', 'Could not open Privacy Policy URL.')
                             );
                         }}
                     >
