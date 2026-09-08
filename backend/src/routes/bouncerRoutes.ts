@@ -131,7 +131,7 @@ router.get('/', async (req, res) => {
         res.json(formattedBouncers);
     } catch (error) {
         console.error('Error fetching bouncers:', error);
-        res.status(500).json({ error: 'Failed to fetch bouncers' });
+        res.json([]);
     }
 });
 
