@@ -64,7 +64,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
         return null;
     }
 
-    if (pathname === '/login') {
+    if (pathname === '/login' || pathname === '/delete-account') {
         return <>{children}</>;
     }
 
