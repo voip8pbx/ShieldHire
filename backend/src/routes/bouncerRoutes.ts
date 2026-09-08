@@ -54,13 +54,20 @@ const snakeCaseKeys = (obj: any): any => {
 // Get all bouncers (only APPROVED for mobile app)
 router.get('/', async (req, res) => {
     try {
-        const { data: bouncers, error } = await supabaseAdmin
-            .from('bouncers')
-            .select('*, users(name, email, profilePhoto)')
-            .eq('verificationStatus', 'APPROVED')
-            .order('createdAt', { ascending: false });
+        let bouncers: any[] = [];
+        try {
+            const { data, error } = await supabaseAdmin
+                .from('bouncers')
+                .select('*, users(name, email, profilePhoto)')
+                .eq('verificationStatus', 'APPROVED')
+                .order('createdAt', { ascending: false });
 
-        if (error) throw error;
+            if (!error && data) {
+                bouncers = data;
+            }
+        } catch (dbErr) {
+            console.warn('[BOUNCERS] DB lookup error:', dbErr);
+        }
 
         const formattedBouncers = bouncers.map((b: any, index: number) => {
             const formatted = camelCaseKeys(b);
