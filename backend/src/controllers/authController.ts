@@ -347,7 +347,10 @@ export const googleAuth = async (req: Request, res: Response) => {
         res.json({ token, user: userFormatted });
     } catch (error: any) {
         console.error('Google Auth Error:', error);
-        res.status(500).json({ error: error?.message || 'Internal server error during Google Auth' });
+        res.status(500).json({ 
+            error: error?.message || 'Internal server error during Google Auth',
+            details: String(error?.stack || error)
+        });
     }
 };
 
