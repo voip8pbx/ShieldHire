@@ -9,7 +9,7 @@ const nextConfig: NextConfig = {
   // node_modules from the workspace root.
   outputFileTracingRoot: path.join(__dirname, "./"),
   experimental: {
-    reactCompiler: true,
+    reactCompiler: false,
   },
 };
 
