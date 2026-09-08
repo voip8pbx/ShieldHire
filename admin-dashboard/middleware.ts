@@ -5,10 +5,12 @@ export function middleware(request: NextRequest) {
     const token = request.cookies.get('admin_token')?.value;
     const { pathname } = request.nextUrl;
 
-    // Bypass public static assets, api/auth routes, etc.
+    // Bypass public static assets, api/auth routes, and public pages
     if (
         pathname.startsWith('/_next') ||
         pathname.startsWith('/api/auth') ||
+        pathname.startsWith('/api/delete-request') ||
+        pathname.startsWith('/delete-account') ||
         pathname.includes('.')
     ) {
         return NextResponse.next();
