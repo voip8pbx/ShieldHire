@@ -1,0 +1,179 @@
+apply plugin: "com.android.application"
+
+def env = [:]
+def envFile = file("../../../.env")
+if (envFile.exists()) {
+    envFile.eachLine { line ->
+        def matcher = (line =~ /^\s*([\w\.\-]+)\s*=\s*(.*)\s*$/)
+        if (matcher) {
+            def key = matcher[0][1]
+            def value = matcher[0][2]
+            if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+                value = value.substring(1, value.length() - 1)
+            }
+            env[key] = value
+        }
+    }
+}
+
+apply plugin: "org.jetbrains.kotlin.android"
+apply plugin: "com.facebook.react"
+apply plugin: "com.google.gms.google-services"
+
+project.ext.vectoricons = [
+    iconFontsDir: "../../../node_modules/react-native-vector-icons/Fonts",
+    iconFontNames: [
+        'MaterialIcons.ttf',
+        'MaterialCommunityIcons.ttf',
+        'Ionicons.ttf',
+        'FontAwesome.ttf',
+        'FontAwesome5_Regular.ttf',
+        'FontAwesome5_Solid.ttf',
+        'FontAwesome5_Brands.ttf',
+        'FontAwesome6_Regular.ttf',
+        'FontAwesome6_Solid.ttf',
+        'FontAwesome6_Brands.ttf',
+        'Entypo.ttf',
+        'EvilIcons.ttf',
+        'Feather.ttf',
+        'Fontisto.ttf',
+        'Foundation.ttf',
+        'Octicons.ttf',
+        'SimpleLineIcons.ttf',
+        'Zocial.ttf',
+        'AntDesign.ttf'
+    ]
+]
+
+apply from: "../../../node_modules/react-native-vector-icons/fonts.gradle"
+
+
+project.ext.react = [
+    // Hermes is enabled via hermesEnabled=true in gradle.properties (React Native 0.70+ standard)
+    enableHermes: true
+]
+
+/**
+ * This is the configuration block to customize your React Native Android app.
+ * By default you don't need to apply any configuration, just uncomment the lines you need.
+ */
+react {
+    /* Folders */
+    //   The root of your project, i.e. where "package.json" lives. Default is '../..'
+    root = file("../../")
+    //   The folder where the react-native NPM package is. Default is ../../node_modules/react-native
+    reactNativeDir = file("../../../node_modules/react-native")
+    //   The folder where the react-native Codegen package is. Default is ../../node_modules/@react-native/codegen
+    codegenDir = file("../../../node_modules/@react-native/codegen")
+    //   The cli.js file which is the React Native CLI entrypoint. Default is ../../node_modules/react-native/cli.js
+    cliFile = file("../../../node_modules/react-native/cli.js")
+    entryFile = file("../../index.js")
+    // hermesCommand is auto-detected by React Native gradle plugin for host OS (Linux/macOS/Windows)
+
+
+
+
+    /* Autolinking */
+    autolinkLibrariesWithApp()
+}
+
+/**
+ * Set this to true to Run Proguard on Release builds to minify the Java bytecode.
+ */
+def enableProguardInReleaseBuilds = true
+
+/**
+ * The preferred build flavor of JavaScriptCore (JSC)
+ *
+ * For example, to use the international variant, you can use:
+ * `def jscFlavor = 'org.webkit:android-jsc-intl:+'`
+ *
+ * The international variant includes ICU i18n library and necessary data
+ * allowing to use e.g. `Date.toLocaleString` and `String.localeCompare` that
+ * give correct results when using with locales other than en-US. Note that
+ * this variant is about 6MiB larger per architecture than default.
+ */
+def jscFlavor = 'org.webkit:android-jsc:+'
+
+android {
+    ndkVersion rootProject.ext.ndkVersion
+    buildToolsVersion rootProject.ext.buildToolsVersion
+    compileSdkVersion rootProject.ext.compileSdkVersion
+
+    namespace "com.shieldhire"
+    defaultConfig {
+        applicationId "com.shieldhire"
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        versionCode 1
+        versionName "1.0"
+        ndk {
+            // Match reactNativeArchitectures in gradle.properties
+            // arm64-v8a: modern 64-bit Android (2016+), armeabi-v7a: legacy 32-bit support
+            abiFilters "arm64-v8a", "armeabi-v7a"
+        }
+        // Inject Google Maps API Key dynamically from .env
+        resValue "string", "map_api_key", env['GOOGLE_MAPS_API_KEY'] ?: "AIzaSyCV1MNMAyPMvM0jXnPmVG01ikwxa1ETERg"
+    }
+    signingConfigs {
+        debug {
+            storeFile file('debug.keystore')
+            storePassword 'android'
+            keyAlias 'androiddebugkey'
+            keyPassword 'android'
+        }
+        release {
+            def storeFilePath = env['MYAPP_UPLOAD_STORE_FILE'] ?: System.getenv('MYAPP_UPLOAD_STORE_FILE')
+            def storePass = env['MYAPP_UPLOAD_STORE_PASSWORD'] ?: System.getenv('MYAPP_UPLOAD_STORE_PASSWORD')
+            def keyAliasVal = env['MYAPP_UPLOAD_KEY_ALIAS'] ?: System.getenv('MYAPP_UPLOAD_KEY_ALIAS')
+            def keyPass = env['MYAPP_UPLOAD_KEY_PASSWORD'] ?: System.getenv('MYAPP_UPLOAD_KEY_PASSWORD')
+
+            if (storeFilePath && storePass && keyAliasVal && keyPass && file(storeFilePath).exists()) {
+                storeFile file(storeFilePath)
+                storePassword storePass
+                keyAlias keyAliasVal
+                keyPassword keyPass
+            } else if (file('debug.keystore').exists()) {
+                storeFile file('debug.keystore')
+                storePassword 'android'
+                keyAlias 'androiddebugkey'
+                keyPassword 'android'
+            }
+        }
+    }
+    buildTypes {
+        debug {
+            signingConfig signingConfigs.debug
+        }
+        release {
+            signingConfig signingConfigs.release
+            minifyEnabled enableProguardInReleaseBuilds
+            proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
+        }
+    }
+
+    packagingOptions {
+        pickFirst 'com/facebook/react/viewmanagers/RNGestureHandlerButtonManagerInterface.class'
+    }
+}
+
+dependencies {
+    // The version of react-native is set by the React Native Gradle Plugin
+    implementation("com.facebook.react:react-android")
+
+    if (hermesEnabled.toBoolean()) {
+        implementation("com.facebook.react:hermes-android")
+    } else {
+        implementation jscFlavor
+    }
+
+    // ── Firebase ─────────────────────────────────────────────────────────────
+    // BOM 32.x is the last series compatible with Kotlin 1.9.x / RN 0.76.x.
+    // BOM 33+ pulls play-services-measurement 23.x (Kotlin 2.1 metadata) which
+    // breaks compilation when the project's kotlinVersion is 1.9.24.
+    implementation platform("com.google.firebase:firebase-bom:32.8.1")
+    implementation "com.google.firebase:firebase-messaging"
+    implementation "com.google.firebase:firebase-analytics"
+    // ── Google Maps ─────────────────────────────────────────────────────────
+    implementation "com.google.android.gms:play-services-maps:$rootProject.ext.googlePlayServicesVersion"
+}

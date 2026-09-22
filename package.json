@@ -1,0 +1,54 @@
+{
+    "name": "shield-hire-monorepo",
+    "version": "1.0.0",
+    "description": "Root package to manage backend and frontend",
+    "workspaces": [
+        "backend",
+        "frontend",
+        "admin-dashboard"
+    ],
+    "scripts": {
+        "postinstall": "node -e \"if(process.env.VERCEL) { console.log('Skipping patch-package on Vercel'); process.exit(0); } try { require('child_process').execSync('npx patch-package --patch-dir patches', {stdio: 'inherit', cwd: require('path').join(__dirname, 'frontend')}) } catch(e) { process.exit(e.status || 1) }\"",
+        "build": "cd backend && npm run build",
+        "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install && cd ../admin-dashboard && npm install",
+        "start": "concurrently --names \"BACKEND,METRO,ADMIN\" --prefix-colors \"bgBlue.bold,bgMagenta.bold,bgYellow.bold\" \"npm run start:backend\" \"npm run start:frontend\" \"npm run start:admin\"",
+        "start:backend": "cd backend && npm run dev",
+        "start:frontend": "cd frontend && npm start",
+        "start:admin": "cd admin-dashboard && npm run serve",
+        "android": "concurrently --names \"BACKEND,METRO,ANDROID,ADMIN\" --prefix-colors \"bgBlue.bold,bgMagenta.bold,bgGreen.bold,bgYellow.bold\" \"npm run start:backend\" \"npm run start:frontend\" \"npm run android:all\" \"npm run start:admin\"",
+        "android:all": "node start-all-devices.js",
+        "android:build": "cd frontend && npm run android",
+        "clean": "cd frontend/android && ./gradlew clean && cd ../..",
+        "ios": "concurrently --names \"BACKEND,METRO,IOS,ADMIN\" --prefix-colors \"bgBlue.bold,bgMagenta.bold,bgCyan.bold,bgYellow.bold\" \"npm run start:backend\" \"npm run start:frontend\" \"npm run ios:build\" \"npm run start:admin\"",
+        "ios:build": "cd frontend && npm run ios",
+        "dev": "npm start",
+        "stop": "taskkill /F /IM node.exe /T 2>nul || echo No Node processes to kill"
+    },
+    "devDependencies": {
+        "@types/bcryptjs": "^2.4.6",
+        "@types/cors": "^2.8.17",
+        "@types/express": "^4.17.21",
+        "@types/jsonwebtoken": "^9.0.5",
+        "@types/morgan": "^1.9.9",
+        "@types/node": "^20.10.4",
+        "concurrently": "^8.2.2",
+        "patch-package": "^8.0.1",
+        "typescript": "^5.9.3"
+    },
+    "dependencies": {
+        "@react-native/gradle-plugin": "0.76.6",
+        "@supabase/supabase-js": "^2.97.0",
+        "bcryptjs": "^2.4.3",
+        "compression": "^1.8.1",
+        "cors": "^2.8.5",
+        "dotenv": "^16.3.1",
+        "express": "^4.18.2",
+        "express-rate-limit": "^8.6.2",
+        "helmet": "^7.1.0",
+        "jsonwebtoken": "^9.0.2",
+        "morgan": "^1.10.0",
+        "react-native": "0.76.6",
+        "sharp": "^0.35.3",
+        "socket.io": "^4.8.3"
+    }
+}

@@ -1,0 +1,707 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&family=Inter:wght@400;600;700;900&display=swap');
+
+@import "tailwindcss";
+
+@theme {
+  --color-primary-yellow: var(--primary-yellow);
+  --color-success: var(--success);
+  --color-success-glow: var(--success-glow);
+  --color-error: var(--error);
+  --color-error-glow: var(--error-glow);
+  --color-warning: var(--warning);
+  --color-warning-glow: var(--warning-glow);
+  --color-pending: var(--pending);
+  --color-pending-glow: var(--pending-glow);
+  --color-border-brand: var(--border);
+  --color-surface-hover: var(--surface-hover);
+  --color-surface-elevated: var(--surface-elevated);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-tertiary);
+  --color-text-muted: var(--text-muted);
+}
+
+/* ============================================
+   SHIELDHIRE BRUTALIST & MAXIMALIST COLOR THEME
+   ============================================ */
+:root,
+[data-theme="dark"] {
+  --primary-black: #000000;
+  --secondary-black: #0d0d0d;
+  --tertiary-black: #161616;
+
+  --primary-yellow: #facc15;
+  --secondary-yellow: #fde047;
+  --dark-yellow: #eab308;
+
+  --text-light: #ffffff;
+  --text-dark: #000000;
+  --text-muted: #d4d4d8;
+  --text-dim: #71717a;
+
+  --bg-primary: #000000;
+  --bg-secondary: #0d0d0d;
+  --bg-tertiary: #161616;
+  --bg-elevated: #27272a;
+
+  /* Thick Brutalist Borders */
+  --border-gray: #27272a;
+  --border-light: #ffffff;
+  --border-highlight: #facc15;
+  --border: #27272a;
+
+  --accent: #facc15;
+  --accent-hover: #fde047;
+  --accent-glow: rgba(250, 204, 21, 0.25);
+  --accent-glow-strong: rgba(250, 204, 21, 0.4);
+
+  /* Semantic Status Colors */
+  --success: #22c55e;
+  --success-bg: #15803d;
+  --success-glow: rgba(34, 197, 94, 0.2);
+  --warning: #f59e0b;
+  --warning-bg: #b45309;
+  --warning-glow: rgba(245, 158, 11, 0.2);
+  --error: #ef4444;
+  --error-bg: #b91c1c;
+  --error-glow: rgba(239, 68, 68, 0.2);
+  --info: #3b82f6;
+  --info-bg: #1d4ed8;
+  --info-glow: rgba(59, 130, 246, 0.2);
+  
+  --pending: #f59e0b;
+  --pending-glow: rgba(245, 158, 11, 0.2);
+
+  --surface: #0d0d0d;
+  --surface-elevated: #161616;
+  --surface-hover: #27272a;
+
+  --text-primary: #ffffff;
+  --text-secondary: #a1a1aa;
+  --text-tertiary: #71717a;
+
+  /* Hard offset shadows - Neobrutalist style */
+  --shadow-sm: 2px 2px 0px 0px #0d0d0d;
+  --shadow-md: 4px 4px 0px 0px #000000;
+  --shadow-lg: 6px 6px 0px 0px #000000;
+  --shadow-xl: 8px 8px 0px 0px #000000;
+  --shadow-gold: 4px 4px 0px 0px #facc15;
+  --shadow-white: 4px 4px 0px 0px #ffffff;
+}
+
+[data-theme="light"] {
+  --primary-black: #ffffff;
+  --secondary-black: #f4f4f5;
+  --tertiary-black: #e4e4e7;
+
+  --primary-yellow: #facc15;
+  --secondary-yellow: #eab308;
+  --dark-yellow: #ca8a04;
+
+  --text-light: #000000;
+  --text-dark: #ffffff;
+  --text-muted: #27272a;
+  --text-dim: #52525b;
+
+  --bg-primary: #ffffff;
+  --bg-secondary: #f4f4f5;
+  --bg-tertiary: #e4e4e7;
+  --bg-elevated: #d4d4d8;
+
+  --border-gray: #d4d4d8;
+  --border-light: #000000;
+  --border-highlight: #facc15;
+  --border: #d4d4d8;
+
+  --accent: #facc15;
+  --accent-hover: #eab308;
+  --accent-glow: rgba(250, 204, 21, 0.2);
+  --accent-glow-strong: rgba(250, 204, 21, 0.35);
+
+  --success: #16a34a;
+  --success-bg: #dcfce7;
+  --success-glow: rgba(22, 163, 74, 0.15);
+  --warning: #ca8a04;
+  --warning-bg: #fef9c3;
+  --warning-glow: rgba(202, 138, 4, 0.15);
+  --error: #dc2626;
+  --error-bg: #fee2e2;
+  --error-glow: rgba(220, 38, 38, 0.15);
+  --info: #2563eb;
+  --info-bg: #dbeafe;
+  --info-glow: rgba(37, 99, 235, 0.15);
+
+  --pending: #ca8a04;
+  --pending-glow: rgba(202, 138, 4, 0.15);
+
+  --surface: #f4f4f5;
+  --surface-elevated: #ffffff;
+  --surface-hover: #e4e4e7;
+
+  --text-primary: #000000;
+  --text-secondary: #3f3f46;
+  --text-tertiary: #71717a;
+
+  --shadow-sm: 2px 2px 0px 0px #d4d4d8;
+  --shadow-md: 4px 4px 0px 0px #000000;
+  --shadow-lg: 6px 6px 0px 0px #000000;
+  --shadow-xl: 8px 8px 0px 0px #000000;
+  --shadow-gold: 4px 4px 0px 0px #facc15;
+  --shadow-white: 4px 4px 0px 0px #000000;
+}
+
+/* ============================================
+   BASE RESET & TYPOGRAPHY
+   ============================================ */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Monospace fonts for metrics and logs */
+.font-mono {
+  font-family: 'Space Mono', monospace !important;
+}
+
+/* Custom Scrollbar - Brutalist & Thick */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+  border-left: 2px solid var(--border-gray);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--text-primary);
+  border: 2px solid var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-yellow);
+}
+
+/* ============================================
+   BRUTALIST LAYOUT & STRUCTURE
+   ============================================ */
+.dashboard-layout {
+  display: flex;
+  min-height: 100vh;
+  background-color: var(--bg-primary);
+}
+
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 280px;
+  background-color: var(--bg-secondary);
+  border-right: 3px solid var(--text-primary);
+  display: flex;
+  flex-direction: column;
+  z-index: 50;
+  transition: transform 0.2s cubic-bezier(0, 0, 0.2, 1);
+}
+
+.sidebar-collapsed {
+  transform: translateX(-100%);
+}
+
+@media (min-width: 1025px) {
+  .sidebar-collapsed {
+    transform: translateX(0);
+  }
+}
+
+.main-content {
+  flex: 1;
+  overflow: hidden;
+  margin-left: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+@media (min-width: 769px) {
+  .main-content {
+    margin-left: 280px;
+  }
+}
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  height: 56px;
+  background-color: var(--bg-secondary);
+  border-bottom: 3px solid var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 0.75rem;
+}
+
+@media (min-width: 640px) {
+  .header {
+    height: 64px;
+    padding: 0 1.5rem;
+  }
+}
+
+.content-area {
+  flex: 1;
+  padding: 2rem;
+  overflow-y: auto;
+  background-color: var(--bg-primary);
+}
+
+@media (max-width: 768px) {
+  .content-area {
+    padding: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .content-area {
+    padding: 0.5rem;
+  }
+}
+
+/* ============================================
+   NEOBRUTALIST CARDS & CONTAINERS
+   ============================================ */
+.card {
+  background-color: var(--surface-elevated);
+  border: 3px solid var(--text-primary);
+  border-radius: 0px !important; /* Sharp corners mandatory */
+  box-shadow: var(--shadow-md);
+  padding: 1.5rem;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+  position: relative;
+}
+
+.card:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--primary-yellow);
+}
+
+/* High attention cards */
+.card-brand {
+  border-color: var(--primary-yellow);
+  box-shadow: var(--shadow-gold);
+}
+
+.card-brand:hover {
+  transform: translate(-3px, -3px);
+  box-shadow: 6px 6px 0px 0px var(--primary-yellow);
+}
+
+.card-elevated {
+  background-color: var(--bg-tertiary);
+}
+
+.card-interactive {
+  cursor: pointer;
+}
+
+.card-interactive:active {
+  transform: translate(2px, 2px);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ============================================
+   NEOBRUTALIST BUTTONS
+   ============================================ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  border: 3px solid var(--text-primary);
+  border-radius: 0px !important; /* Sharp corners */
+  cursor: pointer;
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.05s ease, box-shadow 0.05s ease;
+  white-space: nowrap;
+  min-height: 46px;
+}
+
+.btn:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-md);
+}
+
+.btn:active {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0px 0px var(--text-primary);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.btn-primary {
+  background-color: var(--primary-yellow);
+  color: #000000;
+  box-shadow: 3px 3px 0px 0px #000000;
+}
+
+.btn-primary:hover {
+  background-color: var(--secondary-yellow);
+  box-shadow: 5px 5px 0px 0px #000000;
+}
+
+.btn-secondary {
+  background-color: var(--text-primary);
+  color: var(--bg-primary);
+  box-shadow: 3px 3px 0px 0px var(--primary-yellow);
+}
+
+.btn-secondary:hover {
+  box-shadow: 5px 5px 0px 0px var(--primary-yellow);
+}
+
+.btn-ghost {
+  background-color: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.btn-ghost:hover {
+  background-color: var(--surface-hover);
+  border-color: var(--text-primary);
+  transform: none;
+  box-shadow: none;
+}
+
+.btn-danger {
+  background-color: var(--error);
+  color: #ffffff;
+  box-shadow: 3px 3px 0px 0px #000000;
+}
+
+.btn-success {
+  background-color: var(--success);
+  color: #ffffff;
+  box-shadow: 3px 3px 0px 0px #000000;
+}
+
+.btn-outline {
+  border: 3px solid var(--text-primary);
+  background-color: transparent;
+  box-shadow: 3px 3px 0px 0px var(--text-primary);
+}
+
+.btn-outline:hover {
+  background-color: var(--surface-hover);
+}
+
+.btn-sm {
+  padding: 0.5rem 1rem;
+  font-size: 0.75rem;
+  min-height: 36px;
+  border-width: 2px;
+}
+
+.btn-lg {
+  padding: 1rem 2rem;
+  font-size: 1rem;
+  min-height: 56px;
+}
+
+.btn-icon {
+  padding: 0.5rem;
+  min-width: 44px;
+}
+
+/* ============================================
+   NEOBRUTALIST FORM ELEMENTS
+   ============================================ */
+.input-field {
+  width: 100%;
+  background-color: var(--surface-elevated);
+  border: 3px solid var(--text-primary);
+  border-radius: 0px !important;
+  padding: 0.75rem 1rem;
+  color: var(--text-primary);
+  font-family: 'Space Mono', monospace;
+  font-size: 0.875rem;
+  outline: none;
+  box-shadow: inset 2px 2px 0px 0px rgba(0, 0, 0, 0.2);
+  transition: border-color 0.1s, box-shadow 0.1s;
+  min-height: 46px;
+}
+
+.input-field::placeholder {
+  color: var(--text-dim);
+}
+
+.input-field:focus {
+  border-color: var(--primary-yellow);
+  box-shadow: 3px 3px 0px 0px var(--primary-yellow);
+  background-color: var(--bg-primary);
+}
+
+.input-field:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.form-label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+  font-family: 'Space Mono', monospace;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23facc15' stroke-linecap='round' stroke-linejoin='round' stroke-width='2.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 0.75rem center;
+  background-repeat: no-repeat;
+  background-size: 1.25em 1.25em;
+  padding-right: 2.5rem;
+}
+
+/* ============================================
+   TACTICAL TABLES (MONOSPACE / SOLID BORDERS)
+   ============================================ */
+.table-container {
+  overflow-x: auto;
+  border: 3px solid var(--text-primary);
+  box-shadow: var(--shadow-md);
+  background-color: var(--surface-elevated);
+}
+
+.professional-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.professional-table thead th {
+  background-color: var(--text-primary);
+  color: var(--bg-primary);
+  font-family: 'Space Mono', monospace;
+  font-size: 0.75rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 3px solid var(--text-primary);
+  white-space: nowrap;
+}
+
+.professional-table tbody tr {
+  border-bottom: 2px solid var(--text-primary);
+  background-color: var(--surface-elevated);
+  transition: background-color 0.1s ease;
+}
+
+.professional-table tbody tr:hover {
+  background-color: var(--surface-hover);
+}
+
+.professional-table tbody tr:nth-child(even) {
+  background-color: var(--surface);
+}
+
+.professional-table tbody td {
+  padding: 1rem;
+  color: var(--text-primary);
+  font-size: 0.8125rem;
+  vertical-align: middle;
+}
+
+.professional-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+/* ============================================
+   STATUS BADGES (SOLID & BORDERED)
+   ============================================ */
+.status-badge, .badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  border: 2px solid var(--text-primary);
+  border-radius: 0px !important;
+  letter-spacing: 0.05em;
+  box-shadow: 1px 1px 0px 0px var(--text-primary);
+}
+
+.status-active, .badge-success {
+  background-color: var(--success);
+  color: #000000;
+}
+
+.status-inactive, .badge-error {
+  background-color: var(--error);
+  color: #ffffff;
+}
+
+.badge-warning, .badge-pending {
+  background-color: var(--warning);
+  color: #000000;
+}
+
+.badge-info {
+  background-color: var(--info);
+  color: #ffffff;
+}
+
+.badge-neutral {
+  background-color: var(--surface-hover);
+  color: var(--text-primary);
+}
+
+/* ============================================
+   PAGE HEADER & HERO STATS
+   ============================================ */
+.page-header {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 2.5rem;
+  border-bottom: 4px double var(--text-primary);
+  padding-bottom: 1.5rem;
+}
+
+@media (min-width: 769px) {
+  .page-header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+}
+
+.page-title {
+  font-family: 'Inter', sans-serif;
+  font-size: 2.5rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: -0.04em;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.page-subtitle {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  margin-top: 0.5rem;
+  text-transform: uppercase;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 2.5rem;
+}
+
+@media (min-width: 481px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 769px) {
+  .stats-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1025px) {
+  .stats-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* ============================================
+   ANIMATIONS & SKELETON
+   ============================================ */
+.animate-fade-in {
+  animation: fadeIn 0.25s cubic-bezier(0, 0, 0.2, 1) forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.skeleton {
+  background-color: var(--surface-hover);
+  border: 2px dashed var(--text-dim);
+  animation: pulse 1.5s infinite;
+  min-height: 20px;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 0.3; }
+}
+
+/* ============================================
+   MOBILE OVERLAY
+   ============================================ */
+.mobile-menu-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.85);
+  z-index: 45;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+.mobile-menu-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}

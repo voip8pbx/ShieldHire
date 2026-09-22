@@ -1,0 +1,19 @@
+# .clangd configuration for ShieldHire iOS
+# This suppresses false-positive errors that appear when editing iOS files on
+# Windows/Linux where the Xcode SDK and CocoaPods-generated headers are not
+# available. The actual build happens on macOS via Xcode.
+
+Diagnostics:
+  Suppress:
+    - pp_file_not_found         # 'RCTAppDelegate.h' file not found
+    - unknown_typename          # Unknown type name 'UIView' / 'UIApplication' etc.
+    - undeclared_identifier     # Use of undeclared identifier 'RNBootSplash' etc.
+    - objc_root_class           # 'AppDelegate' cannot use 'super' (root class)
+    - incomplete_implementation # Property not found / Expected a type
+  UnusedIncludes: None
+
+CompileFlags:
+  # Treat .mm files as Objective-C++
+  Add:
+    - -xobjective-c++
+    - -Wno-everything

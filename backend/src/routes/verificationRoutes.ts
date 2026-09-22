@@ -1,0 +1,393 @@
+import { Router, Request, Response } from 'express';
+import { supabaseAdmin } from '../config/supabase';
+import { authenticate, authorize } from '../middleware/authMiddleware';
+import { sendPushToToken } from '../utils/fcmAdmin';
+
+const router = Router();
+
+router.use(authenticate, authorize(['ADMIN']));
+
+// Helper to convert snake_case DB columns to camelCase for frontend
+const camelCaseKeys = (obj: any): any => {
+    if (!obj) return null;
+    const newObj: any = {};
+    for (const key in obj) {
+        const camelKey = key.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
+        newObj[camelKey] = obj[key];
+    }
+    return newObj;
+};
+
+// ==========================================
+// CLIENT VERIFICATION ROUTES (must be before /:id)
+// ==========================================
+
+// GET all pending clients
+router.get('/clients/pending', async (req: Request, res: Response) => {
+    try {
+        const { data: pendingClients, error } = await supabaseAdmin
+            .from('clients')
+            .select('*, users(name, email)')
+            .eq('verificationStatus', 'PENDING')
+            .order('createdAt', { ascending: false });
+
+        if (error) throw error;
+        const formatted = pendingClients.map((c: any) => {
+            const f = camelCaseKeys(c);
+            if (c.users) {
+                f.user = camelCaseKeys(Array.isArray(c.users) ? c.users[0] : c.users);
+                delete f.users;
+            }
+            return f;
+        });
+        res.json(formatted);
+    } catch (error) {
+        console.error('Error fetching pending clients:', error);
+        res.status(500).json({ error: 'Failed to fetch pending clients' });
+    }
+});
+
+// GET all clients (with status filter)
+router.get('/clients', async (req: Request, res: Response) => {
+    try {
+        const { status } = req.query;
+        let query = supabaseAdmin
+            .from('clients')
+            .select('*, users(name, email)')
+            .order('createdAt', { ascending: false });
+
+        if (status && typeof status === 'string') {
+            query = query.eq('verificationStatus', status.toUpperCase());
+        }
+
+        const { data: clients, error } = await query;
+        if (error) throw error;
+        const formatted = clients.map((c: any) => {
+            const f = camelCaseKeys(c);
+            if (c.users) {
+                f.user = camelCaseKeys(Array.isArray(c.users) ? c.users[0] : c.users);
+                delete f.users;
+            }
+            return f;
+        });
+        res.json(formatted);
+    } catch (error) {
+        console.error('Error fetching clients:', error);
+        res.status(500).json({ error: 'Failed to fetch clients' });
+    }
+});
+
+// PATCH - Approve a client
+router.patch('/clients/:id/approve', async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const { error: updateError } = await supabaseAdmin
+            .from('clients')
+            .update({ verificationStatus: 'APPROVED' })
+            .eq('id', id);
+
+        if (updateError) throw updateError;
+
+        // Fetch client to get userId for role update + FCM
+        const { data: client } = await supabaseAdmin
+            .from('clients')
+            .select('userId, user_id, users(fcm_token, name)')
+            .eq('id', id)
+            .single();
+
+        if (client) {
+            const targetUserId = client.userId || client.user_id;
+
+            // Update user role to CLIENT
+            if (targetUserId) {
+                await supabaseAdmin
+                    .from('users')
+                    .update({ role: 'CLIENT' })
+                    .eq('id', targetUserId);
+            }
+
+            // Send FCM push notification
+            const userRow = Array.isArray(client.users) ? client.users[0] : client.users;
+            const fcmToken = userRow?.fcm_token;
+            if (fcmToken) {
+                sendPushToToken(
+                    fcmToken,
+                    '✅ Account Approved!',
+                    'Your client account has been verified. You can now hire security professionals.',
+                    { type: 'VERIFICATION_APPROVED', status: 'APPROVED' },
+                ).catch(err => console.error('[FCM] Failed to send client approval push:', err));
+            }
+        }
+
+        res.json({ message: 'Client approved successfully' });
+    } catch (error) {
+        console.error('Error approving client:', error);
+        res.status(500).json({ error: 'Failed to approve client' });
+    }
+});
+
+// PATCH - Reject a client
+router.patch('/clients/:id/reject', async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const { reason } = req.body;
+        const { error: updateError } = await supabaseAdmin
+            .from('clients')
+            .update({ verificationStatus: 'REJECTED', rejectionReason: reason })
+            .eq('id', id);
+
+        if (updateError) throw updateError;
+
+        // Send FCM push notification
+        const { data: client } = await supabaseAdmin
+            .from('clients')
+            .select('users(fcm_token)')
+            .eq('id', id)
+            .single();
+
+        if (client) {
+            const userRow = Array.isArray(client.users) ? client.users[0] : client.users;
+            const fcmToken = userRow?.fcm_token;
+            if (fcmToken) {
+                sendPushToToken(
+                    fcmToken,
+                    '❌ Verification Rejected',
+                    reason || 'Your client account was not approved. Please contact support.',
+                    { type: 'VERIFICATION_REJECTED', status: 'REJECTED', reason: reason || '' },
+                ).catch(err => console.error('[FCM] Failed to send client rejection push:', err));
+            }
+        }
+
+        res.json({ message: 'Client rejected successfully' });
+    } catch (error) {
+        console.error('Error rejecting client:', error);
+        res.status(500).json({ error: 'Failed to reject client' });
+    }
+});
+
+// ==========================================
+// BOUNCER VERIFICATION ROUTES
+// ==========================================
+
+// GET all pending verifications
+router.get('/pending', async (req: Request, res: Response) => {
+    try {
+        const { data: pendingBouncers, error } = await supabaseAdmin
+            .from('bouncers')
+            .select('*, users(name, email)')
+            .eq('verificationStatus', 'PENDING')
+            .order('createdAt', { ascending: false });
+
+        if (error) throw error;
+
+        const formatted = pendingBouncers.map((b: any) => {
+            const f = camelCaseKeys(b);
+            if (b.users) {
+                f.user = camelCaseKeys(Array.isArray(b.users) ? b.users[0] : b.users);
+                delete f.users;
+            }
+            return f;
+        });
+
+        res.json(formatted);
+    } catch (error) {
+        console.error('Error fetching pending verifications:', error);
+        res.status(500).json({ error: 'Failed to fetch pending verifications' });
+    }
+});
+
+// GET all verifications (including approved/rejected)
+router.get('/', async (req: Request, res: Response) => {
+    try {
+        const { status } = req.query;
+
+        let query = supabaseAdmin
+            .from('bouncers')
+            .select('*, users(name, email)')
+            .order('createdAt', { ascending: false });
+
+        if (status && typeof status === 'string') {
+            query = query.eq('verificationStatus', status.toUpperCase());
+        }
+
+        const { data: bouncers, error } = await query;
+
+        if (error) throw error;
+
+        const formatted = bouncers.map((b: any) => {
+            const f = camelCaseKeys(b);
+            if (b.users) {
+                f.user = camelCaseKeys(Array.isArray(b.users) ? b.users[0] : b.users);
+                delete f.users;
+            }
+            return f;
+        });
+
+        res.json(formatted);
+    } catch (error) {
+        console.error('Error fetching verifications:', error);
+        res.status(500).json({ error: 'Failed to fetch verifications' });
+    }
+});
+
+// GET single bouncer verification details
+router.get('/:id', async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+
+        const { data: bouncer, error } = await supabaseAdmin
+            .from('bouncers')
+            .select('*, users(name, email, createdAt)')
+            .eq('id', id)
+            .single();
+
+        if (error || !bouncer) {
+            return res.status(404).json({ error: 'Bouncer not found' });
+        }
+
+        const formatted = camelCaseKeys(bouncer);
+        if (bouncer.users) {
+            formatted.user = camelCaseKeys(Array.isArray(bouncer.users) ? bouncer.users[0] : bouncer.users);
+            delete formatted.users;
+        }
+
+        res.json(formatted);
+    } catch (error) {
+        console.error('Error fetching bouncer details:', error);
+        res.status(500).json({ error: 'Failed to fetch bouncer details' });
+    }
+});
+
+// PATCH - Approve a bouncer
+router.patch('/:id/approve', async (req: Request, res: Response) => {
+    console.log(`[VERIFICATION] Approve request received for ID: ${req.params.id}`);
+    try {
+        const { id } = req.params;
+        const { adminId } = req.body;
+        let warningMessage = '';
+
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        const verifiedBy = (adminId && uuidRegex.test(adminId)) ? adminId : null;
+
+        const { error: updateError } = await supabaseAdmin
+            .from('bouncers')
+            .update({
+                verificationStatus: 'APPROVED',
+                verifiedBy: verifiedBy,
+                verifiedAt: new Date().toISOString(),
+                rejectionReason: null,
+                isAvailable: true
+            })
+            .eq('id', id);
+
+        if (updateError) throw updateError;
+
+        const { data: bouncer, error: fetchError } = await supabaseAdmin
+            .from('bouncers')
+            .select('*, users(name, email, fcm_token)')
+            .eq('id', id)
+            .single();
+
+        if (fetchError) throw fetchError;
+
+        try {
+            let newRole = 'BOUNCER';
+            if (bouncer.isGunman) newRole = 'GUNMAN';
+
+            const targetUserId = bouncer.userId || bouncer.user_id;
+            if (!targetUserId) throw new Error('User ID not found for bouncer');
+
+            await supabaseAdmin
+                .from('users')
+                .update({ role: newRole })
+                .eq('id', targetUserId);
+        } catch (syncError) {
+            console.error('Error updating user role:', syncError);
+            warningMessage = 'Failed to update user role. Manual review may be required.';
+        }
+
+        // Send FCM push notification to the bouncer
+        const userRow = Array.isArray(bouncer.users) ? bouncer.users[0] : bouncer.users;
+        const fcmToken = userRow?.fcm_token;
+        if (fcmToken) {
+            sendPushToToken(
+                fcmToken,
+                '✅ Verification Approved!',
+                'Congratulations! Your bouncer profile has been verified. You can now accept bookings.',
+                { type: 'VERIFICATION_APPROVED', status: 'APPROVED' },
+            ).catch(err => console.error('[FCM] Failed to send bouncer approval push:', err));
+        }
+
+        const formatted = camelCaseKeys(bouncer);
+        if (bouncer.users) {
+            formatted.user = camelCaseKeys(Array.isArray(bouncer.users) ? bouncer.users[0] : bouncer.users);
+            delete formatted.users;
+        }
+
+        res.json({ message: 'Bouncer approved successfully', bouncer: formatted, warning: warningMessage });
+    } catch (error) {
+        console.error('Error approving bouncer:', error);
+        res.status(500).json({ error: 'Failed to approve bouncer' });
+    }
+});
+
+// PATCH - Reject a bouncer
+router.patch('/:id/reject', async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const { adminId, reason } = req.body;
+
+        if (!reason) {
+            return res.status(400).json({ error: 'Rejection reason is required' });
+        }
+
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        const verifiedBy = (adminId && uuidRegex.test(adminId)) ? adminId : null;
+
+        const { error: updateError } = await supabaseAdmin
+            .from('bouncers')
+            .update({
+                verificationStatus: 'REJECTED',
+                verifiedBy: verifiedBy,
+                verifiedAt: new Date().toISOString(),
+                rejectionReason: reason,
+                isAvailable: false
+            })
+            .eq('id', id);
+
+        if (updateError) throw updateError;
+
+        const { data: bouncer, error: fetchError } = await supabaseAdmin
+            .from('bouncers')
+            .select('*, users(name, email, fcm_token)')
+            .eq('id', id)
+            .single();
+
+        if (fetchError) throw fetchError;
+
+        // Send FCM push notification to the bouncer
+        const userRow = Array.isArray(bouncer.users) ? bouncer.users[0] : bouncer.users;
+        const fcmToken = userRow?.fcm_token;
+        if (fcmToken) {
+            sendPushToToken(
+                fcmToken,
+                '❌ Verification Rejected',
+                reason || 'Your bouncer profile was not approved. Please contact support.',
+                { type: 'VERIFICATION_REJECTED', status: 'REJECTED', reason: reason },
+            ).catch(err => console.error('[FCM] Failed to send bouncer rejection push:', err));
+        }
+
+        const formatted = camelCaseKeys(bouncer);
+        if (bouncer.users) {
+            formatted.user = camelCaseKeys(Array.isArray(bouncer.users) ? bouncer.users[0] : bouncer.users);
+            delete formatted.users;
+        }
+
+        res.json({ message: 'Bouncer rejected', bouncer: formatted });
+    } catch (error) {
+        console.error('Error rejecting bouncer:', error);
+        res.status(500).json({ error: 'Failed to reject bouncer' });
+    }
+});
+
+export default router;

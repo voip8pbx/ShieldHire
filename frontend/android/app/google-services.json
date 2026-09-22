@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "376211888391",
+    "project_id": "shieldhire-9a30d",
+    "storage_bucket": "shieldhire-9a30d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:376211888391:android:b47849e188c7ffa894cda2",
+        "android_client_info": {
+          "package_name": "com.shieldhire"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "376211888391-22t8brgf2r287tuufhqo362l3fe4li3g.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.shieldhire",
+            "certificate_hash": "f2de9709308da6d2325cb3543979679c056d1c1e"
+          }
+        },
+        {
+          "client_id": "376211888391-02rulpap4r0taldp1ml91a69dpg9gscb.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD-2KIHt3V5LF5W1L5G1YVEaJKPSA_KzLw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "376211888391-02rulpap4r0taldp1ml91a69dpg9gscb.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
