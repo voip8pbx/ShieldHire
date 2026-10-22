@@ -3,7 +3,8 @@
  * In a native bare build (such as the Google Play Store release AAB), all native modules
  * are registered in the binary, so these fallbacks are completely bypassed.
  */
-import { NativeModules, TurboModuleRegistry, Platform } from 'react-native';
+global.RN$TurboInterop = true;
+import { NativeModules, TurboModuleRegistry } from 'react-native';
 
 // ── 1. TurboModule fallback proxy (RNBootSplash, RNGoogleSignin, etc.) ─────────
 if (TurboModuleRegistry && typeof TurboModuleRegistry.getEnforcing === 'function') {
