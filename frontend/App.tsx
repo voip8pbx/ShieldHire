@@ -223,7 +223,7 @@ const AppContent = () => {
             console.log('[App] Splash animation complete. Triggering native BootSplash.hide fail-safe...');
             const timer = setTimeout(() => {
                 BootSplash.hide({ fade: true }).catch(err => {
-                    Alert.alert('BootSplash Error (Fail-safe)', err?.message || String(err));
+                    console.log('[BootSplash Fail-safe]:', err?.message || String(err));
                 });
             }, 150);
             return () => clearTimeout(timer);
@@ -272,7 +272,7 @@ const AppContent = () => {
             theme={navigationTheme}
             onReady={() => {
                 BootSplash.hide({ fade: true }).catch(err => {
-                    Alert.alert('BootSplash Error (onReady)', err?.message || String(err));
+                    console.log('[BootSplash onReady]:', err?.message || String(err));
                 });
             }}
         >

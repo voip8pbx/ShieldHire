@@ -6,19 +6,24 @@
  * any React component) so it runs even in the killed / background state.
  */
 
+import './src/utils/expoGoShims';
 import 'react-native-url-polyfill/auto';
 import { AppRegistry } from 'react-native';
-import messaging from '@react-native-firebase/messaging';
+import { registerRootComponent } from 'expo';
 import App from './App';
 import { name as appName } from './app.json';
 
 // ─── FCM Background / Killed-state message handler ───────────────────────────
 try {
-  messaging().setBackgroundMessageHandler(async remoteMessage => {
-    console.log('[FCM] Background message received:', JSON.stringify(remoteMessage));
-  });
+  const messaging = require('@react-native-firebase/messaging').default;
+  if (messaging) {
+    messaging().setBackgroundMessageHandler(async remoteMessage => {
+      console.log('[FCM] Background message received:', JSON.stringify(remoteMessage));
+    });
+  }
 } catch (e) {
-  console.warn('[FCM] setBackgroundMessageHandler failed:', e);
+  // Gracefully handled when running in Expo Go or environments without native Firebase
+  console.log('[FCM] Background messaging not active in current environment');
 }
 
 // ─── Register tap handler for background-state notifications ─────────────────
@@ -26,8 +31,9 @@ try {
   const { registerBackgroundNotificationOpenedHandler } = require('./src/services/fcmService');
   registerBackgroundNotificationOpenedHandler();
 } catch (e) {
-  console.warn('[FCM] registerBackgroundNotificationOpenedHandler failed:', e);
+  console.log('[FCM] registerBackgroundNotificationOpenedHandler:', e?.message || e);
 }
 
-// ─── Register the React Native app ───────────────────────────────────────────
-AppRegistry.registerComponent(appName, () => App);
+// ─── Register the React Native / Expo app ────────────────────────────────────
+registerRootComponent(App);
+

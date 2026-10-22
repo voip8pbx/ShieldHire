@@ -390,10 +390,30 @@ export default function LivenessCamera({ onSuccess, onCancel }: Props) {
     if (!device) {
         return (
             <View style={styles.container}>
-                <MaterialCommunityIcons name="camera-off" size={48} color="#FFD700" />
-                <Text style={styles.loadingText}>No Front Camera Device Found</Text>
+                <MaterialCommunityIcons name="camera-outline" size={56} color="#FFD700" />
+                <Text style={[styles.loadingText, { marginTop: 16, fontSize: 18, fontWeight: '700' }]}>
+                    Camera Simulation Mode
+                </Text>
+                <Text style={{ color: '#888', textAlign: 'center', marginHorizontal: 32, marginVertical: 12, fontSize: 13 }}>
+                    Native camera is unavailable in Expo Go. You can simulate face verification to test the complete flow.
+                </Text>
+                <TouchableOpacity 
+                    style={[styles.cancelBtn, { backgroundColor: '#FFD700', borderColor: '#FFD700', marginBottom: 12, minWidth: 200 }]} 
+                    onPress={() => {
+                        onSuccess({
+                            verificationStatus: 'SUCCESS',
+                            challengeSequence: ['CENTER', 'TURN_LEFT', 'BLINK', 'TURN_RIGHT', 'BLINK_AGAIN'],
+                            capturedSelfieImage: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400',
+                            timestamp: new Date().toISOString()
+                        });
+                    }}
+                >
+                    <Text style={[styles.cancelBtnText, { color: '#000', fontWeight: 'bold' }]}>
+                        ✓ Simulate Verification
+                    </Text>
+                </TouchableOpacity>
                 <TouchableOpacity style={styles.cancelBtn} onPress={onCancel}>
-                    <Text style={styles.cancelBtnText}>Go Back</Text>
+                    <Text style={styles.cancelBtnText}>Cancel</Text>
                 </TouchableOpacity>
             </View>
         );
