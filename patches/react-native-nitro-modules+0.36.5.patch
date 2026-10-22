@@ -3441,12 +3441,10 @@ index 0000000..7ef138b
 +set(CMAKE_CXX_IMPLICIT_LINK_FRAMEWORK_DIRECTORIES "")
 diff --git a/node_modules/react-native-nitro-modules/android/.cxx/Debug/3j3mg5t4/arm64-v8a/CMakeFiles/3.22.1-g37088a8-dirty/CMakeDetermineCompilerABI_C.bin b/node_modules/react-native-nitro-modules/android/.cxx/Debug/3j3mg5t4/arm64-v8a/CMakeFiles/3.22.1-g37088a8-dirty/CMakeDetermineCompilerABI_C.bin
 new file mode 100644
-index 0000000..b2ad1eb
-Binary files /dev/null and b/node_modules/react-native-nitro-modules/android/.cxx/Debug/3j3mg5t4/arm64-v8a/CMakeFiles/3.22.1-g37088a8-dirty/CMakeDetermineCompilerABI_C.bin differ
+index 0000000..e69de29
 diff --git a/node_modules/react-native-nitro-modules/android/.cxx/Debug/3j3mg5t4/arm64-v8a/CMakeFiles/3.22.1-g37088a8-dirty/CMakeDetermineCompilerABI_CXX.bin b/node_modules/react-native-nitro-modules/android/.cxx/Debug/3j3mg5t4/arm64-v8a/CMakeFiles/3.22.1-g37088a8-dirty/CMakeDetermineCompilerABI_CXX.bin
 new file mode 100644
-index 0000000..365dc57
-Binary files /dev/null and b/node_modules/react-native-nitro-modules/android/.cxx/Debug/3j3mg5t4/arm64-v8a/CMakeFiles/3.22.1-g37088a8-dirty/CMakeDetermineCompilerABI_CXX.bin differ
+index 0000000..e69de29
 diff --git a/node_modules/react-native-nitro-modules/android/.cxx/Debug/3j3mg5t4/arm64-v8a/CMakeFiles/3.22.1-g37088a8-dirty/CMakeSystem.cmake b/node_modules/react-native-nitro-modules/android/.cxx/Debug/3j3mg5t4/arm64-v8a/CMakeFiles/3.22.1-g37088a8-dirty/CMakeSystem.cmake
 new file mode 100644
 index 0000000..ba6735e
@@ -4279,8 +4277,7 @@ index 0000000..41b99d7
 +#endif
 diff --git a/node_modules/react-native-nitro-modules/android/.cxx/Debug/3j3mg5t4/arm64-v8a/CMakeFiles/3.22.1-g37088a8-dirty/CompilerIdC/CMakeCCompilerId.o b/node_modules/react-native-nitro-modules/android/.cxx/Debug/3j3mg5t4/arm64-v8a/CMakeFiles/3.22.1-g37088a8-dirty/CompilerIdC/CMakeCCompilerId.o
 new file mode 100644
-index 0000000..62e1732
-Binary files /dev/null and b/node_modules/react-native-nitro-modules/android/.cxx/Debug/3j3mg5t4/arm64-v8a/CMakeFiles/3.22.1-g37088a8-dirty/CompilerIdC/CMakeCCompilerId.o differ
+index 0000000..e69de29
 diff --git a/node_modules/react-native-nitro-modules/android/.cxx/Debug/3j3mg5t4/arm64-v8a/CMakeFiles/3.22.1-g37088a8-dirty/CompilerIdCXX/CMakeCXXCompilerId.cpp b/node_modules/react-native-nitro-modules/android/.cxx/Debug/3j3mg5t4/arm64-v8a/CMakeFiles/3.22.1-g37088a8-dirty/CompilerIdCXX/CMakeCXXCompilerId.cpp
 new file mode 100644
 index 0000000..25c62a8
@@ -5080,8 +5077,7 @@ index 0000000..25c62a8
 +}
 diff --git a/node_modules/react-native-nitro-modules/android/.cxx/Debug/3j3mg5t4/arm64-v8a/CMakeFiles/3.22.1-g37088a8-dirty/CompilerIdCXX/CMakeCXXCompilerId.o b/node_modules/react-native-nitro-modules/android/.cxx/Debug/3j3mg5t4/arm64-v8a/CMakeFiles/3.22.1-g37088a8-dirty/CompilerIdCXX/CMakeCXXCompilerId.o
 new file mode 100644
-index 0000000..a6749e5
-Binary files /dev/null and b/node_modules/react-native-nitro-modules/android/.cxx/Debug/3j3mg5t4/arm64-v8a/CMakeFiles/3.22.1-g37088a8-dirty/CompilerIdCXX/CMakeCXXCompilerId.o differ
+index 0000000..e69de29
 diff --git a/node_modules/react-native-nitro-modules/android/.cxx/Debug/3j3mg5t4/arm64-v8a/CMakeFiles/CMakeOutput.log b/node_modules/react-native-nitro-modules/android/.cxx/Debug/3j3mg5t4/arm64-v8a/CMakeFiles/CMakeOutput.log
 new file mode 100644
 index 0000000..c3242f0
@@ -6113,42 +6109,41 @@ index 0000000..fe0d0fc
 \ No newline at end of file
 diff --git a/node_modules/react-native-nitro-modules/android/.cxx/Debug/3j3mg5t4/arm64-v8a/compile_commands.json.bin b/node_modules/react-native-nitro-modules/android/.cxx/Debug/3j3mg5t4/arm64-v8a/compile_commands.json.bin
 new file mode 100644
-index 0000000..131a0b0
-Binary files /dev/null and b/node_modules/react-native-nitro-modules/android/.cxx/Debug/3j3mg5t4/arm64-v8a/compile_commands.json.bin differ
+index 0000000..e69de29
 diff --git a/node_modules/react-native-nitro-modules/android/.cxx/Debug/3j3mg5t4/arm64-v8a/configure_fingerprint.bin b/node_modules/react-native-nitro-modules/android/.cxx/Debug/3j3mg5t4/arm64-v8a/configure_fingerprint.bin
 new file mode 100644
-index 0000000..c24e969
+index 0000000..8777268
 --- /dev/null
 +++ b/node_modules/react-native-nitro-modules/android/.cxx/Debug/3j3mg5t4/arm64-v8a/configure_fingerprint.bin
 @@ -0,0 +1,28 @@
-+C/C++ Structured Log‰
-+†
-+ƒD:\.React\HomeGymTrainer\node_modules\react-native-nitro-modules\android\.cxx\Debug\3j3mg5t4\arm64-v8a\additional_project_files.txtC
++C/C++ Structured Logï¿½
++ï¿½
++ï¿½D:\.React\HomeGymTrainer\node_modules\react-native-nitro-modules\android\.cxx\Debug\3j3mg5t4\arm64-v8a\additional_project_files.txtC
 +A
-+?com.android.build.gradle.internal.cxx.io.EncodedFileFingerPrint	ÒŠÏ€ä3 ê‰Ï€ä3†
-+ƒ
-+€D:\.React\HomeGymTrainer\node_modules\react-native-nitro-modules\android\.cxx\Debug\3j3mg5t4\arm64-v8a\android_gradle_build.json	ÒŠÏ€ä3î î‰Ï€ä3‹
-+ˆ
-+…D:\.React\HomeGymTrainer\node_modules\react-native-nitro-modules\android\.cxx\Debug\3j3mg5t4\arm64-v8a\android_gradle_build_mini.json	ÒŠÏ€ä3œ ¿ŠÏ€ä3v
++?com.android.build.gradle.internal.cxx.io.EncodedFileFingerPrint	ÒŠÏ€ï¿½3 ï¿½Ï€ï¿½3ï¿½
++ï¿½
++ï¿½D:\.React\HomeGymTrainer\node_modules\react-native-nitro-modules\android\.cxx\Debug\3j3mg5t4\arm64-v8a\android_gradle_build.json	ÒŠÏ€ï¿½3ï¿½ ï¿½Ï€ï¿½3ï¿½
++ï¿½
++ï¿½D:\.React\HomeGymTrainer\node_modules\react-native-nitro-modules\android\.cxx\Debug\3j3mg5t4\arm64-v8a\android_gradle_build_mini.json	ÒŠÏ€ï¿½3ï¿½ ï¿½ï¿½Ï€ï¿½3v
 +t
-+rD:\.React\HomeGymTrainer\node_modules\react-native-nitro-modules\android\.cxx\Debug\3j3mg5t4\arm64-v8a\build.ninja	ÒŠÏ€ä3šÔ ’‰Ï€ä3z
++rD:\.React\HomeGymTrainer\node_modules\react-native-nitro-modules\android\.cxx\Debug\3j3mg5t4\arm64-v8a\build.ninja	ÒŠÏ€ï¿½3ï¿½ï¿½ ï¿½ï¿½Ï€ï¿½3z
 +x
-+vD:\.React\HomeGymTrainer\node_modules\react-native-nitro-modules\android\.cxx\Debug\3j3mg5t4\arm64-v8a\build.ninja.txt	ÒŠÏ€ä3
++vD:\.React\HomeGymTrainer\node_modules\react-native-nitro-modules\android\.cxx\Debug\3j3mg5t4\arm64-v8a\build.ninja.txt	ÒŠÏ€ï¿½3
 +}
-+{D:\.React\HomeGymTrainer\node_modules\react-native-nitro-modules\android\.cxx\Debug\3j3mg5t4\arm64-v8a\build_file_index.txt	ÒŠÏ€ä3¹ ÅŠÏ€ä3€
++{D:\.React\HomeGymTrainer\node_modules\react-native-nitro-modules\android\.cxx\Debug\3j3mg5t4\arm64-v8a\build_file_index.txt	ÒŠÏ€ï¿½3ï¿½ ÅŠÏ€ï¿½3ï¿½
 +~
-+|D:\.React\HomeGymTrainer\node_modules\react-native-nitro-modules\android\.cxx\Debug\3j3mg5t4\arm64-v8a\compile_commands.json	ÒŠÏ€ä3‡Ğ ‘‰Ï€ä3†
-+ƒ
-+€D:\.React\HomeGymTrainer\node_modules\react-native-nitro-modules\android\.cxx\Debug\3j3mg5t4\arm64-v8a\compile_commands.json.bin	ÒŠÏ€ä3	¼A ‘‰Ï€ä3Œ
-+‰
-+†D:\.React\HomeGymTrainer\node_modules\react-native-nitro-modules\android\.cxx\Debug\3j3mg5t4\arm64-v8a\metadata_generation_command.txt	ÒŠÏ€ä3
-+¸ ÄŠÏ€ä3}
++|D:\.React\HomeGymTrainer\node_modules\react-native-nitro-modules\android\.cxx\Debug\3j3mg5t4\arm64-v8a\compile_commands.json	ÒŠÏ€ï¿½3ï¿½ï¿½ ï¿½ï¿½Ï€ï¿½3ï¿½
++ï¿½
++ï¿½D:\.React\HomeGymTrainer\node_modules\react-native-nitro-modules\android\.cxx\Debug\3j3mg5t4\arm64-v8a\compile_commands.json.bin	ÒŠÏ€ï¿½3	ï¿½A ï¿½ï¿½Ï€ï¿½3ï¿½
++ï¿½
++ï¿½D:\.React\HomeGymTrainer\node_modules\react-native-nitro-modules\android\.cxx\Debug\3j3mg5t4\arm64-v8a\metadata_generation_command.txt	ÒŠÏ€ï¿½3
++ï¿½ ÄŠÏ€ï¿½3}
 +{
-+yD:\.React\HomeGymTrainer\node_modules\react-native-nitro-modules\android\.cxx\Debug\3j3mg5t4\arm64-v8a\prefab_config.json	ÒŠÏ€ä3İ ÄŠÏ€ä3ƒ
-+€
-+~D:\.React\HomeGymTrainer\node_modules\react-native-nitro-modules\android\.cxx\Debug\3j3mg5t4\arm64-v8a\symbol_folder_index.txt	ÒŠÏ€ä3} ÄŠÏ€ä3[
++yD:\.React\HomeGymTrainer\node_modules\react-native-nitro-modules\android\.cxx\Debug\3j3mg5t4\arm64-v8a\prefab_config.json	ÒŠÏ€ï¿½3ï¿½ ÄŠÏ€ï¿½3ï¿½
++ï¿½
++~D:\.React\HomeGymTrainer\node_modules\react-native-nitro-modules\android\.cxx\Debug\3j3mg5t4\arm64-v8a\symbol_folder_index.txt	ÒŠÏ€ï¿½3} ÄŠÏ€ï¿½3[
 +Y
-+WD:\.React\HomeGymTrainer\node_modules\react-native-nitro-modules\android\CMakeLists.txt	ÒŠÏ€ä3â Š€ä3
++WD:\.React\HomeGymTrainer\node_modules\react-native-nitro-modules\android\CMakeLists.txt	ÒŠÏ€ï¿½3ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½3
 \ No newline at end of file
 diff --git a/node_modules/react-native-nitro-modules/android/.cxx/Debug/3j3mg5t4/arm64-v8a/metadata_generation_command.txt b/node_modules/react-native-nitro-modules/android/.cxx/Debug/3j3mg5t4/arm64-v8a/metadata_generation_command.txt
 new file mode 100644
@@ -13851,8 +13846,7 @@ index 0000000..9e26dfe
 \ No newline at end of file
 diff --git a/node_modules/react-native-nitro-modules/android/build/intermediates/compile_r_class_jar/debug/generateDebugRFile/R.jar b/node_modules/react-native-nitro-modules/android/build/intermediates/compile_r_class_jar/debug/generateDebugRFile/R.jar
 new file mode 100644
-index 0000000..b10c1e4
-Binary files /dev/null and b/node_modules/react-native-nitro-modules/android/build/intermediates/compile_r_class_jar/debug/generateDebugRFile/R.jar differ
+index 0000000..e69de29
 diff --git a/node_modules/react-native-nitro-modules/android/build/intermediates/compile_symbol_list/debug/generateDebugRFile/R.txt b/node_modules/react-native-nitro-modules/android/build/intermediates/compile_symbol_list/debug/generateDebugRFile/R.txt
 new file mode 100644
 index 0000000..4ae5791
@@ -14559,8 +14553,7 @@ index 0000000..61fc503
 \ No newline at end of file
 diff --git a/node_modules/react-native-nitro-modules/android/build/kotlin/compileDebugKotlin/local-state/build-history.bin b/node_modules/react-native-nitro-modules/android/build/kotlin/compileDebugKotlin/local-state/build-history.bin
 new file mode 100644
-index 0000000..3364920
-Binary files /dev/null and b/node_modules/react-native-nitro-modules/android/build/kotlin/compileDebugKotlin/local-state/build-history.bin differ
+index 0000000..e69de29
 diff --git a/node_modules/react-native-nitro-modules/android/build/outputs/logs/manifest-merger-debug-report.txt b/node_modules/react-native-nitro-modules/android/build/outputs/logs/manifest-merger-debug-report.txt
 new file mode 100644
 index 0000000..189ce42
@@ -14584,10 +14577,10 @@ index 0000000..189ce42
 +	android:minSdkVersion
 +		INJECTED from D:\.React\HomeGymTrainer\node_modules\react-native-nitro-modules\android\src\main\AndroidManifest.xml
 diff --git a/node_modules/react-native-nitro-modules/android/src/main/java/com/margelo/nitro/NitroModulesPackage.kt b/node_modules/react-native-nitro-modules/android/src/main/java/com/margelo/nitro/NitroModulesPackage.kt
-index f55986b..8a8d8e7 100644
+index f55986b..e2c6f27 100644
 --- a/node_modules/react-native-nitro-modules/android/src/main/java/com/margelo/nitro/NitroModulesPackage.kt
 +++ b/node_modules/react-native-nitro-modules/android/src/main/java/com/margelo/nitro/NitroModulesPackage.kt
-@@ -26,10 +26,10 @@ class NitroModulesPackage : BaseReactPackage() {
+@@ -26,10 +26,11 @@ class NitroModulesPackage : BaseReactPackage() {
          ReactModuleInfo(
            NitroModules.NAME,
            NitroModules.NAME,
@@ -14595,6 +14588,7 @@ index f55986b..8a8d8e7 100644
 -          needsEagerInit = false,
 -          isCxxModule = false,
 -          isTurboModule = isTurboModule,
++          false,
 +          false,
 +          false,
 +          false,

@@ -27,7 +27,7 @@ export const ENV = {
     // API Configurations
     API_PORT: PORT || '5000',
     DEV_BASE_URL: `http://localhost:${PORT || '5001'}`,
-    PROD_BASE_URL: PROD_BASE_URL || 'https://shield-hire-admindhasboard.vercel.app',
+    PROD_BASE_URL: PROD_BASE_URL || 'https://shield-hire-znyu.vercel.app',
 
     // Google Services — injected from frontend/.env at Metro bundle time
     GOOGLE_MAPS_API_KEY: GOOGLE_MAPS_API_KEY ?? '',

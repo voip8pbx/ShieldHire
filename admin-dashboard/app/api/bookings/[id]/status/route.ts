@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 
-const BACKEND_API_URL = process.env.API_URL || 'https://shield-hire-admindhasboard.vercel.app/api';
+const BACKEND_API_URL = process.env.API_URL || 'https://shield-hire-znyu.vercel.app/api';
 
 interface RouteParams {
     params: Promise<{

@@ -1,0 +1,33 @@
+{
+  "cli": {
+    "version": ">= 14.0.0",
+    "appVersionSource": "local"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "node": "22.14.0"
+    },
+    "preview": {
+      "distribution": "internal",
+      "node": "22.14.0",
+      "android": {
+        "buildType": "apk",
+        "image": "ubuntu-24.04-jdk-17-ndk-r27b"
+      }
+    },
+    "production": {
+      "autoIncrement": true,
+      "credentialsSource": "local",
+      "node": "22.14.0",
+      "android": {
+        "buildType": "app-bundle",
+        "image": "ubuntu-24.04-jdk-17-ndk-r27b"
+      }
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}

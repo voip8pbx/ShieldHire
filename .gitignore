@@ -63,6 +63,11 @@ serviceAccountKey.json
 shieldhire-9a30d-*.json
 backend/fcm/serviceAccountKey.json
 
+# EAS Credentials & Certificates
+credentials.json
+**/credentials.json
+*.pem
+
 # Backend development artifacts — DO NOT COMMIT
 backend/prisma/dev.db
 backend/prisma/dev.db-journal

@@ -21,7 +21,6 @@ import api from '../services/api';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import LinearGradient from 'react-native-linear-gradient';
-import { BlurView } from '@react-native-community/blur';
 import { ThemeContext } from '../context/ThemeContext';
 
 type NavigationProp = StackNavigationProp<HomeStackParamList, 'ExploreProfessionals'>;
@@ -517,9 +516,9 @@ export default function ExploreProfessionalsScreen({ navigation }: Props) {
                 />
 
                 <TouchableOpacity style={styles.fabBtn} onPress={() => toggleAdvFilter(true)}>
-                    <BlurView blurType={theme === 'dark' ? 'dark' : 'light'} blurAmount={10} style={styles.fabBlur}>
+                    <View style={[styles.fabBlur, { backgroundColor: theme === 'dark' ? 'rgba(30,30,30,0.92)' : 'rgba(255,255,255,0.92)' }]}>
                         <Ionicons name="options" size={24} color={colors.gold} />
-                    </BlurView>
+                    </View>
                 </TouchableOpacity>
 
                 {renderSortSheet()}

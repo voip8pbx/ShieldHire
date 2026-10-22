@@ -68,7 +68,16 @@ react {
     //   The cli.js file which is the React Native CLI entrypoint. Default is ../../node_modules/react-native/cli.js
     cliFile = file("../../../node_modules/react-native/cli.js")
     entryFile = file("../../index.js")
-    // hermesCommand is auto-detected by React Native gradle plugin for host OS (Linux/macOS/Windows)
+    def isWindows = org.gradle.internal.os.OperatingSystem.current().isWindows()
+    def isMac = org.gradle.internal.os.OperatingSystem.current().isMacOsX()
+    def osBin = isWindows ? "win64-bin/hermesc.exe" : (isMac ? "osx-bin/hermesc" : "linux64-bin/hermesc")
+    def hermesRootFile = file("../../../node_modules/react-native/sdks/hermesc/${osBin}")
+    def hermesLocalFile = file("../../node_modules/react-native/sdks/hermesc/${osBin}")
+    if (hermesRootFile.exists()) {
+        hermesCommand = hermesRootFile.absolutePath
+    } else if (hermesLocalFile.exists()) {
+        hermesCommand = hermesLocalFile.absolutePath
+    }
 
 
 
@@ -105,12 +114,21 @@ android {
         applicationId "com.shieldhire"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        versionCode 29
+        versionName "1.0.0"
         ndk {
             // Match reactNativeArchitectures in gradle.properties
             // arm64-v8a: modern 64-bit Android (2016+), armeabi-v7a: legacy 32-bit support
             abiFilters "arm64-v8a", "armeabi-v7a"
+        }
+        externalNativeBuild {
+            cmake {
+                arguments "-DANDROID_STL=c++_shared",
+                          "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON",
+                          "-DCMAKE_SHARED_LINKER_FLAGS=-Wl,-z,max-page-size=16384",
+                          "-DCMAKE_MODULE_LINKER_FLAGS=-Wl,-z,max-page-size=16384",
+                          "-DCMAKE_EXE_LINKER_FLAGS=-Wl,-z,max-page-size=16384"
+            }
         }
         // Inject Google Maps API Key dynamically from .env
         resValue "string", "map_api_key", env['GOOGLE_MAPS_API_KEY'] ?: "AIzaSyCV1MNMAyPMvM0jXnPmVG01ikwxa1ETERg"

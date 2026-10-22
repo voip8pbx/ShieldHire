@@ -2,10 +2,10 @@ buildscript {
     ext {
         buildToolsVersion = "35.0.0"
         minSdkVersion = 24
-        compileSdkVersion = 35
-        targetSdkVersion = 34
-        ndkVersion = "26.1.10909125"
-        kotlinVersion = "1.9.24"
+        compileSdkVersion = 36
+        targetSdkVersion = 36
+        ndkVersion = "27.1.12297006"
+        kotlinVersion = "2.0.21"
         googlePlayServicesVersion = "18.2.0"
         REACT_NATIVE_NODE_MODULES_DIR = file("../../node_modules/react-native")
     }
@@ -15,13 +15,13 @@ buildscript {
     }
     dependencies {
         classpath("com.android.tools.build:gradle:8.7.2")
-        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.24")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:2.0.21")
         classpath("com.google.gms:google-services:4.4.2")
     }
 }
 
 plugins {
-    id("com.facebook.react.rootproject") version "0.76.6"
+    id("com.facebook.react.rootproject") version "0.77.3"
 }
 allprojects {
     repositories {
@@ -35,8 +35,8 @@ allprojects {
 
     configurations.all {
         resolutionStrategy {
-            force "com.facebook.react:react-android:0.76.6"
-            force "com.facebook.react:hermes-android:0.76.6"
+            force "com.facebook.react:react-android:0.77.3"
+            force "com.facebook.react:hermes-android:0.77.3"
 
             // ── Kotlin metadata compatibility fix ────────────────────────────
             // @react-native-firebase v23 uses Firebase BOM 34.x internally,
@@ -52,4 +52,5 @@ allprojects {
         }
     }
 }
+
 

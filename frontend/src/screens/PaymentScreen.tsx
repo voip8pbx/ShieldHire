@@ -24,7 +24,6 @@ import api from '../services/api';
 import { ENV } from '../config/env';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { BlurView } from '@react-native-community/blur';
 import { launchImageLibrary } from 'react-native-image-picker';
 import { uploadImageToBlob } from '../services/uploadService';
 
@@ -396,7 +395,7 @@ export default function PaymentScreen({ navigation, route }: Props) {
             {/* Success Overlay */}
             {showSuccess && (
                 <Animated.View style={[styles.successOverlay, { opacity: successFade }]}>
-                    <BlurView style={StyleSheet.absoluteFill} blurType="dark" blurAmount={10} />
+                    <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0, 0, 0, 0.8)' }]} />
                     <View style={styles.successContent}>
                         <Ionicons name="checkmark-circle" size={80} color={THEME.success} />
                         <Text style={styles.successTitle}>Payment Submitted!</Text>
