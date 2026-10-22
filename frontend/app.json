@@ -38,8 +38,9 @@
     },
     "extra": {
       "eas": {
-        "projectId": "a45f7ec4-2d53-4ac8-9681-7b04f8622beb"
+        "projectId": "d549e551-fc25-410a-b128-0cdefdc87a5e"
       }
-    }
+    },
+    "owner": "rishi076"
   }
 }
