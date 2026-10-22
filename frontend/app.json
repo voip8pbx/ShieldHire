@@ -22,7 +22,7 @@
     },
     "android": {
       "package": "com.shieldhire",
-      "versionCode": 29,
+      "versionCode": 30,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0F0F0F"

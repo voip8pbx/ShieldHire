@@ -1,37 +1,30 @@
 const path = require('path');
-const {getDefaultConfig, mergeConfig} = require('@react-native/metro-config');
-const exclusionList = require('metro-config/src/defaults/exclusionList');
+const { getDefaultConfig } = require('expo/metro-config');
 
-const projectRoot = path.resolve(__dirname, '..');
-const frontendRoot = __dirname;
+const projectRoot = __dirname;
+const monorepoRoot = path.resolve(projectRoot, '..');
 
-const defaultConfig = getDefaultConfig(__dirname);
-const { assetExts, sourceExts } = defaultConfig.resolver;
+const config = getDefaultConfig(projectRoot);
 
-/**
- * Metro configuration
- * https://reactnative.dev/docs/metro
- *
- * @type {import('metro-config').MetroConfig}
- */
-const config = {
-  watchFolders: [projectRoot],
-  transformer: {
-    babelTransformerPath: require.resolve('react-native-svg-transformer'),
-  },
-  resolver: {
-    blockList: exclusionList([
-      /.*\/android\/.*/,
-      /.*\/ios\/.*/,
-      /.*\.cxx.*/,
-    ]),
-    nodeModulesPaths: [
-      path.resolve(frontendRoot, 'node_modules'),
-      path.resolve(projectRoot, 'node_modules'),
-    ],
-    assetExts: assetExts.filter(ext => ext !== 'svg'),
-    sourceExts: [...sourceExts, 'svg'],
-  },
+// 1. Watch all files within the monorepo
+config.watchFolders = [monorepoRoot];
+
+// 2. Let Metro know where to resolve packages and in what order
+config.resolver.nodeModulesPaths = [
+  path.resolve(projectRoot, 'node_modules'),
+  path.resolve(monorepoRoot, 'node_modules'),
+];
+
+// 3. SVG Transformer
+const { transformer, resolver } = config;
+config.transformer = {
+  ...transformer,
+  babelTransformerPath: require.resolve('react-native-svg-transformer'),
+};
+config.resolver = {
+  ...resolver,
+  assetExts: resolver.assetExts.filter((ext) => ext !== 'svg'),
+  sourceExts: [...resolver.sourceExts, 'svg'],
 };
 
-module.exports = mergeConfig(defaultConfig, config);
+module.exports = config;
