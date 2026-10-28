@@ -220,10 +220,10 @@ const AppContent = () => {
     // Fail-safe to ensure native splash screen is dismissed in production release builds
     useEffect(() => {
         if (isSplashAnimationComplete) {
-            console.log('[App] Splash animation complete. Triggering native BootSplash.hide fail-safe...');
+            console.log('[App] Splash animation complete. Rendering main app...');
             const timer = setTimeout(() => {
                 BootSplash.hide({ fade: true }).catch(err => {
-                    console.log('[BootSplash Fail-safe]:', err?.message || String(err));
+                    console.log('[BootSplash]:', err?.message || String(err));
                 });
             }, 150);
             return () => clearTimeout(timer);
@@ -252,7 +252,7 @@ const AppContent = () => {
         user?.role === 'ADMIN' ||
         user?.clientProfile?.verificationStatus === 'APPROVED';
 
-    console.log(`[AppNavigation] User: ${user?.email}, Role: ${user?.role}, isBouncer: ${isBouncerFlow}, bouncerApproved: ${isApproved}, clientApproved: ${isClientApproved}`);
+    console.log(`[AppNavigation] Active Session: ${user?.email ? user.email : 'Guest / New User'}, Screen: ${!token ? 'Auth (Login)' : isBouncerFlow ? 'BouncerMain' : 'ClientMain'}`);
 
     const navigationTheme = theme === 'dark' ? DarkTheme : {
         ...DefaultTheme,
@@ -302,7 +302,10 @@ const AppContent = () => {
                             !isClientApproved ? (
                                 <>
                                     {!user?.clientProfile || !user?.clientProfile?.govtIdPhoto ? (
-                                        <Stack.Screen name="ClientProfileSetup" component={ClientProfileSetupScreen} options={{ headerShown: false }} />
+                                        <>
+                                            <Stack.Screen name="ClientProfileSetup" component={ClientProfileSetupScreen} options={{ headerShown: false }} />
+                                            <Stack.Screen name="ClientVerificationPending" component={ClientVerificationPendingScreen} options={{ headerShown: false }} />
+                                        </>
                                     ) : (
                                         <>
                                             <Stack.Screen name="ClientVerificationPending" component={ClientVerificationPendingScreen} options={{ headerShown: false }} />

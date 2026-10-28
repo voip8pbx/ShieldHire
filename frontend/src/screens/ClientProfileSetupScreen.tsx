@@ -82,19 +82,40 @@ export default function ClientProfileSetupScreen({ navigation }: Props) {
                 quality: 0.8,
             },
             async (response) => {
-                if (response.didCancel || response.errorCode || !response.assets?.[0]) return;
-                const asset = response.assets[0];
-                if (!asset.uri || !asset.base64) return;
+                if (response.didCancel) return;
+                if (response.errorCode) {
+                    Alert.alert('Selection Error', response.errorMessage || 'Could not access photo library');
+                    return;
+                }
+                const asset = response.assets?.[0];
+                if (!asset || !asset.uri) return;
+
+                let base64 = asset.base64;
+                if (!base64) {
+                    try {
+                        const FileSystem = require('expo-file-system');
+                        base64 = await FileSystem.readAsStringAsync(asset.uri, {
+                            encoding: FileSystem.EncodingType.Base64,
+                        });
+                    } catch (_) {}
+                }
+
+                if (!base64) {
+                    Alert.alert('Image Error', 'Could not read image data.');
+                    return;
+                }
 
                 setUploadingImage(true);
                 try {
-                    const dataUri = `data:${asset.type};base64,${asset.base64}`;
+                    const mime = asset.type || 'image/jpeg';
+                    const dataUri = `data:${mime};base64,${base64}`;
                     const uploadedUrl = await uploadImageToBlob(dataUri, `client-profile-${Date.now()}.jpg`, 'clients');
                     if (uploadedUrl) {
                         setProfilePhoto(uploadedUrl);
                     }
                 } catch (e: any) {
-                    Alert.alert('Upload Failed', 'Could not upload profile image.');
+                    console.error('[ClientProfile] Profile image upload failed:', e?.message || e);
+                    Alert.alert('Upload Failed', e?.response?.data?.error || 'Could not upload profile image.');
                 } finally {
                     setUploadingImage(false);
                 }
@@ -112,19 +133,40 @@ export default function ClientProfileSetupScreen({ navigation }: Props) {
                 quality: 0.8,
             },
             async (response) => {
-                if (response.didCancel || response.errorCode || !response.assets?.[0]) return;
-                const asset = response.assets[0];
-                if (!asset.uri || !asset.base64) return;
+                if (response.didCancel) return;
+                if (response.errorCode) {
+                    Alert.alert('Selection Error', response.errorMessage || 'Could not access document library');
+                    return;
+                }
+                const asset = response.assets?.[0];
+                if (!asset || !asset.uri) return;
+
+                let base64 = asset.base64;
+                if (!base64) {
+                    try {
+                        const FileSystem = require('expo-file-system');
+                        base64 = await FileSystem.readAsStringAsync(asset.uri, {
+                            encoding: FileSystem.EncodingType.Base64,
+                        });
+                    } catch (_) {}
+                }
+
+                if (!base64) {
+                    Alert.alert('Document Error', 'Could not read document data.');
+                    return;
+                }
 
                 setUploadingDoc(true);
                 try {
-                    const dataUri = `data:${asset.type};base64,${asset.base64}`;
+                    const mime = asset.type || 'image/jpeg';
+                    const dataUri = `data:${mime};base64,${base64}`;
                     const uploadedUrl = await uploadImageToBlob(dataUri, `client-doc-${Date.now()}.jpg`, 'clients');
                     if (uploadedUrl) {
                         setDocPhoto(uploadedUrl);
                     }
                 } catch (e: any) {
-                    Alert.alert('Upload Failed', 'Could not upload document image.');
+                    console.error('[ClientProfile] Document upload failed:', e?.message || e);
+                    Alert.alert('Upload Failed', e?.response?.data?.error || 'Could not upload document image.');
                 } finally {
                     setUploadingDoc(false);
                 }
@@ -168,6 +210,7 @@ export default function ClientProfileSetupScreen({ navigation }: Props) {
 
             if (response.data && response.data.user) {
                 updateUser(response.data.user);
+                navigation.replace('ClientVerificationPending');
             }
         } catch (error: any) {
             console.error('Submit Profile Error:', error);

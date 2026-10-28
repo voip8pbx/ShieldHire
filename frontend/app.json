@@ -6,6 +6,7 @@
     "slug": "shieldhire",
     "version": "1.0.0",
     "sdkVersion": "57.0.0",
+    "newArchEnabled": true,
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
@@ -23,7 +24,7 @@
     },
     "android": {
       "package": "com.shieldhire",
-      "versionCode": 30,
+      "versionCode": 34,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0F0F0F"
@@ -38,9 +39,8 @@
     },
     "extra": {
       "eas": {
-        "projectId": "d549e551-fc25-410a-b128-0cdefdc87a5e"
+        "projectId": "a45f7ec4-2d53-4ac8-9681-7b04f8622beb"
       }
-    },
-    "owner": "rishi076"
+    }
   }
 }

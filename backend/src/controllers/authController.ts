@@ -5,10 +5,16 @@ import { supabaseAdmin } from '../config/supabase';
 
 // Helper to format user response to match existing API structure
 const formatUserResponse = (user: any) => {
-    // Map bouncers array (Supabase 1:many) to bouncerProfile
+    // Map bouncers array or object (Supabase 1:1 or 1:many) to bouncerProfile
     let bouncerProfile = null;
-    if (user.bouncers && user.bouncers.length > 0) {
-        bouncerProfile = camelCaseKeys(user.bouncers[0]);
+    if (user.bouncers) {
+        if (Array.isArray(user.bouncers)) {
+            if (user.bouncers.length > 0) {
+                bouncerProfile = camelCaseKeys(user.bouncers[0]);
+            }
+        } else {
+            bouncerProfile = camelCaseKeys(user.bouncers);
+        }
     } else if (user.bouncerProfile) {
         bouncerProfile = user.bouncerProfile;
     }

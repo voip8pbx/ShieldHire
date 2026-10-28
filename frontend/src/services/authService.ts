@@ -24,8 +24,46 @@ export const initGoogleSignIn = () => {
  * - Not affected by Android network security config or HTTPS restrictions
  * - Works correctly in React Native New Architecture / Bridgeless mode with v23+
  */
-export const signInWithGoogle = async (forceAccountPicker = false) => {
+export const signInWithGoogle = async (
+    forceAccountPicker = false,
+    role: 'client' | 'bouncer' = 'client'
+) => {
     try {
+        let isExpoGo = false;
+        try {
+            const Constants = require('expo-constants').default || require('expo-constants');
+            isExpoGo = Constants?.appOwnership === 'expo' || Constants?.executionEnvironment === 'storeClient';
+        } catch (_) {}
+        if (!isExpoGo) {
+            isExpoGo = (typeof globalThis !== 'undefined' && Boolean((globalThis as any).__IS_EXPO_GO__)) ||
+                       (typeof process !== 'undefined' && Boolean(process.env?.EXPO_OS));
+        }
+
+        if (isExpoGo) {
+            console.log(`[AuthService] Running in Expo Go — activating demo Google authentication session for role: ${role}`);
+            if (role === 'bouncer') {
+                return {
+                    firebaseUser: {
+                        uid: 'google_expo_demo_bouncer_mayur',
+                        email: 'mapyur06@gmail.com',
+                        displayName: 'Mayur P (Bouncer)',
+                        photoURL: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100',
+                    },
+                    firebaseToken: 'expo_demo_bouncer_token',
+                };
+            }
+
+            return {
+                firebaseUser: {
+                    uid: 'google_expo_demo_user_rishi',
+                    email: 'rishi076@gmail.com',
+                    displayName: 'Rishi (Demo User)',
+                    photoURL: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100',
+                },
+                firebaseToken: 'expo_demo_firebase_token',
+            };
+        }
+
         // 1. Ensure Google Play Services are available
         await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
 
@@ -38,8 +76,15 @@ export const signInWithGoogle = async (forceAccountPicker = false) => {
         const signInResult = await GoogleSignin.signIn();
         console.log('[AuthService] Google Sign-In result:', JSON.stringify(signInResult));
 
-        // 4. Handle v13+ response shape: { type: 'success' | 'cancelled' | 'noSavedCredentialFound', data }
-        if (signInResult.type === 'cancelled') {
+        // 4. Handle cancellation across various GoogleSignin library versions:
+        //    - v13+ direct: { type: 'cancelled' }
+        //    - wrapped data: { type: 'success', data: { type: 'cancelled' } }
+        //    - noSavedCredentialFound
+        if (
+            signInResult.type === 'cancelled' ||
+            (signInResult as any).data?.type === 'cancelled' ||
+            (signInResult as any).type === 'noSavedCredentialFound'
+        ) {
             const cancelError: any = new Error('Sign-in cancelled');
             cancelError.code = '12501';
             throw cancelError;

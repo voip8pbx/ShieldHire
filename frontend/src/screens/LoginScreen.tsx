@@ -111,7 +111,7 @@ export default function LoginScreen({ navigation }: Props) {
         suppressAutoLogin();
 
         try {
-            const { firebaseUser, firebaseToken } = await signInWithGoogle(true);
+            const { firebaseUser, firebaseToken } = await signInWithGoogle(true, 'bouncer');
             setAuthToken(firebaseToken);
 
             const response = await api.post('/auth/google', {
@@ -134,7 +134,12 @@ export default function LoginScreen({ navigation }: Props) {
             login(customToken, existingUser);
         } catch (error: any) {
             resumeAutoLogin();
-            if (error.code === statusCodes.SIGN_IN_CANCELLED || error.code === '12501') {
+            if (
+                error.code === statusCodes.SIGN_IN_CANCELLED ||
+                error.code === '12501' ||
+                error.message?.includes('cancelled') ||
+                error.message?.includes('Sign-in cancelled')
+            ) {
                 return; 
             }
             console.error('Bouncer Google Auth Error:', error);
@@ -147,7 +152,7 @@ export default function LoginScreen({ navigation }: Props) {
     const handleClientGoogleLogin = async () => {
         setLoading(true);
         try {
-            const { firebaseUser, firebaseToken } = await signInWithGoogle(true);
+            const { firebaseUser, firebaseToken } = await signInWithGoogle(true, 'client');
             setAuthToken(firebaseToken);
 
             const response = await api.post('/auth/google', {
@@ -158,7 +163,12 @@ export default function LoginScreen({ navigation }: Props) {
 
             login(response.data.token, response.data.user);
         } catch (error: any) {
-            if (error.code === statusCodes.SIGN_IN_CANCELLED || error.code === '12501') {
+            if (
+                error.code === statusCodes.SIGN_IN_CANCELLED ||
+                error.code === '12501' ||
+                error.message?.includes('cancelled') ||
+                error.message?.includes('Sign-in cancelled')
+            ) {
                 return; 
             }
             Alert.alert('Google Sign-In Failed', error.response?.data?.error || error.message || 'Please try again');

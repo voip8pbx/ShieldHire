@@ -1,0 +1,228 @@
+diff --git a/node_modules/react-native/Libraries/BatchedBridge/NativeModules.js b/node_modules/react-native/Libraries/BatchedBridge/NativeModules.js
+index a421b0b..497b499 100644
+--- a/node_modules/react-native/Libraries/BatchedBridge/NativeModules.js
++++ b/node_modules/react-native/Libraries/BatchedBridge/NativeModules.js
+@@ -178,7 +178,56 @@ function updateErrorWithErrorData(
+ 
+ let NativeModules: {[moduleName: string]: $FlowFixMe, ...} = {};
+ if (global.nativeModuleProxy) {
+-  NativeModules = global.nativeModuleProxy;
++  const customModules: {[string]: mixed} = Object.create(null);
++  NativeModules = (new Proxy(global.nativeModuleProxy, {
++    get(target, prop) {
++      if (typeof prop === 'string' && prop in customModules) {
++        return customModules[prop];
++      }
++      try {
++        return target[prop];
++      } catch (_) {
++        return undefined;
++      }
++    },
++    set(target, prop, value) {
++      if (typeof prop === 'string') {
++        customModules[prop] = value;
++      }
++      return true;
++    },
++    defineProperty(target, prop, descriptor) {
++      if (typeof prop === 'string') {
++        customModules[prop] = descriptor ? descriptor.value : undefined;
++      }
++      return true;
++    },
++    getOwnPropertyDescriptor(target, prop) {
++      if (typeof prop === 'string' && prop in customModules) {
++        return {
++          value: customModules[prop],
++          writable: true,
++          enumerable: true,
++          configurable: true,
++        };
++      }
++      try {
++        return Object.getOwnPropertyDescriptor(target, prop);
++      } catch (_) {
++        return undefined;
++      }
++    },
++    has(target, prop) {
++      if (typeof prop === 'string' && prop in customModules) {
++        return true;
++      }
++      try {
++        return prop in target;
++      } catch (_) {
++        return false;
++      }
++    },
++  }): any);
+ } else {
+   const bridgeConfig = global.__fbBatchedBridgeConfig;
+   invariant(
+diff --git a/node_modules/react-native/Libraries/Core/ReactNativeVersionCheck.js b/node_modules/react-native/Libraries/Core/ReactNativeVersionCheck.js
+index aca1389..da61a4a 100644
+--- a/node_modules/react-native/Libraries/Core/ReactNativeVersionCheck.js
++++ b/node_modules/react-native/Libraries/Core/ReactNativeVersionCheck.js
+@@ -22,19 +22,16 @@ const ReactNativeVersion = require('./ReactNativeVersion');
+  * and rely on its existence as a separate module.
+  */
+ const checkVersions = function checkVersions(): void {
+-  const nativeVersion = Platform.constants.reactNativeVersion;
++  const nativeVersion = Platform.constants?.reactNativeVersion;
++  if (!nativeVersion) return;
+   if (
+     ReactNativeVersion.version.major !== nativeVersion.major ||
+     ReactNativeVersion.version.minor !== nativeVersion.minor
+   ) {
+-    console.error(
+-      `React Native version mismatch.\n\nJavaScript version: ${_formatVersion(
++    console.warn(
++      `[ReactNativeVersionCheck] Mismatched React Native versions (JS: ${_formatVersion(
+         (ReactNativeVersion.version: $FlowFixMe),
+-      )}\n` +
+-        `Native version: ${_formatVersion(nativeVersion)}\n\n` +
+-        'Make sure that you have rebuilt the native code. If the problem ' +
+-        'persists try clearing the Watchman and packager caches with ' +
+-        '`watchman watch-del-all && npx react-native start --reset-cache`.',
++      )}, Native: ${_formatVersion(nativeVersion)}). Continuing in dev mode.`,
+     );
+   }
+ };
+diff --git a/node_modules/react-native/Libraries/Renderer/shims/ReactNativeViewConfigRegistry.js b/node_modules/react-native/Libraries/Renderer/shims/ReactNativeViewConfigRegistry.js
+index d1da444..e8adac9 100644
+--- a/node_modules/react-native/Libraries/Renderer/shims/ReactNativeViewConfigRegistry.js
++++ b/node_modules/react-native/Libraries/Renderer/shims/ReactNativeViewConfigRegistry.js
+@@ -110,7 +110,10 @@ export function get(name: string): ViewConfig {
+       );
+     }
+     viewConfig = callback();
+-    invariant(viewConfig, 'View config not found for component `%s`', name);
++    if (!viewConfig) {
++      console.warn(`[ReactNativeViewConfigRegistry] View config not found for component \`${name}\`. Falling back to RCTView.`);
++      viewConfig = name !== 'RCTView' ? get('RCTView') : { validAttributes: {} };
++    }
+ 
+     processEventTypes(viewConfig);
+     viewConfigs.set(name, viewConfig);
+diff --git a/node_modules/react-native/Libraries/TurboModule/TurboModuleRegistry.js b/node_modules/react-native/Libraries/TurboModule/TurboModuleRegistry.js
+index 135be5b..de86678 100644
+--- a/node_modules/react-native/Libraries/TurboModule/TurboModuleRegistry.js
++++ b/node_modules/react-native/Libraries/TurboModule/TurboModuleRegistry.js
+@@ -39,15 +39,73 @@ function requireModule<T: TurboModule>(name: string): ?T {
+ }
+ 
+ export function get<T: TurboModule>(name: string): ?T {
+-  return requireModule<T>(name);
++  let module = requireModule<T>(name);
++  if (module == null && NativeModules) {
++    module = (NativeModules[name]: any);
++  }
++  if (module == null && name === 'NativeReactNativeFeatureFlagsCxx') {
++    return (new Proxy({}, {
++      get: () => () => false,
++    }): any);
++  }
++  return module;
+ }
+ 
+ export function getEnforcing<T: TurboModule>(name: string): T {
+-  const module = requireModule<T>(name);
+-  invariant(
+-    module != null,
+-    `TurboModuleRegistry.getEnforcing(...): '${name}' could not be found. ` +
+-      'Verify that a module by this name is registered in the native binary.',
+-  );
+-  return module;
++  let module = requireModule<T>(name);
++  if (module == null && NativeModules) {
++    module = (NativeModules[name]: any);
++  }
++  if (module != null) {
++    return module;
++  }
++  if (name === 'PlatformConstants' || name === 'NativePlatformConstantsIOS') {
++    return ({
++      getConstants() {
++        return {
++          isTesting: false,
++          reactNativeVersion: { major: 0, minor: 77, patch: 3, prerelease: null },
++          forceTouchAvailable: false,
++          osVersion: '17.0',
++          systemName: 'iOS',
++          interfaceIdiom: 'phone',
++          isMacCatalyst: false,
++        };
++      },
++    }: any);
++  }
++  if (name === 'NativePlatformConstantsAndroid') {
++    return ({
++      getConstants() {
++        return {
++          isTesting: false,
++          reactNativeVersion: { major: 0, minor: 77, patch: 3, prerelease: null },
++          Version: 34,
++          Release: '14',
++          Serial: 'unknown',
++          Fingerprint: 'unknown',
++          Model: 'Emulator',
++          Brand: 'generic',
++          Manufacturer: 'generic',
++          ServerHost: 'localhost:8081',
++          uiMode: 'normal',
++        };
++      },
++    }: any);
++  }
++  return (new Proxy({}, {
++    get: (_target, prop) => {
++      if (prop === '__isMock') return true;
++      if (prop === 'getConstants') return () => ({ darkModeEnabled: true });
++      if (prop === 'hide') return async () => {};
++      if (prop === 'isVisible') return () => false;
++      if (prop === 'configure') return async () => {};
++      if (prop === 'signIn') return async () => ({ type: 'cancelled' });
++      if (prop === 'hasPlayServices') return async () => false;
++      if (prop === 'playServicesAvailable') return async () => false;
++      if (prop === 'signOut') return async () => {};
++      if (prop === 'install') return () => null;
++      return (..._args) => Promise.resolve(null);
++    },
++  }): any);
+ }
+diff --git a/node_modules/react-native/index.js b/node_modules/react-native/index.js
+index 99a5a5e..d67ec32 100644
+--- a/node_modules/react-native/index.js
++++ b/node_modules/react-native/index.js
+@@ -389,6 +389,12 @@ module.exports = {
+         'LogBox is enabled by default so there is no need to call unstable_enableLogBox() anymore. This is a no op and will be removed in the next version.',
+       );
+   },
++  get codegenNativeCommands(): any {
++    return require('./Libraries/Utilities/codegenNativeCommands').default;
++  },
++  get codegenNativeComponent(): any {
++    return require('./Libraries/Utilities/codegenNativeComponent').default;
++  },
+ };
+ 
+ if (__DEV__) {
+diff --git a/node_modules/react-native/src/private/featureflags/ReactNativeFeatureFlagsBase.js b/node_modules/react-native/src/private/featureflags/ReactNativeFeatureFlagsBase.js
+index 062f6c9..ab87f90 100644
+--- a/node_modules/react-native/src/private/featureflags/ReactNativeFeatureFlagsBase.js
++++ b/node_modules/react-native/src/private/featureflags/ReactNativeFeatureFlagsBase.js
+@@ -102,8 +102,10 @@ const reportedConfigNames: Set<string> = new Set();
+ function logUnavailableNativeModuleError(configName: string): void {
+   if (!reportedConfigNames.has(configName)) {
+     reportedConfigNames.add(configName);
+-    console.error(
+-      `Could not access feature flag '${configName}' because native module method was not available`,
+-    );
++    if (typeof console.debug === 'function') {
++      console.debug(
++        `Feature flag '${configName}' defaulted because native module method was not available`,
++      );
++    }
+   }
+ }

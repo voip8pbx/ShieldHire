@@ -12,10 +12,7 @@ class MainActivity : ReactActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     RNBootSplash.init(this, R.style.BootTheme)
-    super.onCreate(savedInstanceState)
-    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
-      splashScreen.clearOnExitAnimationListener()
-    }
+    super.onCreate(null)
   }
 
   /**

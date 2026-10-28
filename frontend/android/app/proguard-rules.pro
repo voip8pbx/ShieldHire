@@ -25,6 +25,10 @@
 -keep class com.google.firebase.messaging.** { *; }
 -keep class io.invertase.firebase.** { *; }
 
+# ── @react-native-google-signin/google-signin ──────────────────────────────
+-keep class com.reactnativegooglesignin.** { *; }
+-dontwarn com.reactnativegooglesignin.**
+
 # ── Google Maps ─────────────────────────────────────────────────────────────
 -keep class com.google.android.gms.maps.** { *; }
 -keep class com.google.maps.android.** { *; }

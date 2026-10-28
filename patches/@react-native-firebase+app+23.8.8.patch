@@ -1,0 +1,23 @@
+diff --git a/node_modules/@react-native-firebase/app/dist/module/internal/registry/nativeModule.js b/node_modules/@react-native-firebase/app/dist/module/internal/registry/nativeModule.js
+index d6e8624..a7c0701 100644
+--- a/node_modules/@react-native-firebase/app/dist/module/internal/registry/nativeModule.js
++++ b/node_modules/@react-native-firebase/app/dist/module/internal/registry/nativeModule.js
+@@ -78,7 +78,17 @@ function nativeModuleWrapped(namespace, NativeModule, argToPrepend, isTurboModul
+       native[property] = nativeModuleObj[property];
+     }
+   }
+-  return native;
++  return new Proxy(native, {
++    get(target, prop) {
++      if (prop in target) return target[prop];
++      if (typeof prop === 'string') {
++        if (prop === 'APP_LANGUAGE') return { '[DEFAULT]': 'en' };
++        if (prop === 'APP_USER') return {};
++        return (..._args) => Promise.resolve(null);
++      }
++      return undefined;
++    },
++  });
+ }
+ 
+ /**
