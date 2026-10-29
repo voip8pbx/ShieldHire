@@ -69,26 +69,28 @@ if (typeof global !== 'undefined' && global.ErrorUtils) {
   });
 }
 
-// ── Ensure global.expo.modules exists for Expo modules ─────────────────────────
-if (!global.expo) {
-  global.expo = { modules: {} };
-}
-if (!global.expo.modules) {
-  global.expo.modules = {};
-}
-
+// ── Ensure global.expo.modules exists for Expo modules only in Expo Go ─────────
 import { NativeModules, TurboModuleRegistry } from 'react-native';
 
-// ── Ensure legacy NativeUnimoduleProxy exists on NativeModules for expo-modules-core ──
-if (NativeModules && !NativeModules.NativeUnimoduleProxy) {
-  try {
-    NativeModules.NativeUnimoduleProxy = {
-      modulesConstants: {},
-      exportedMethods: {},
-      viewManagersMetadata: {},
-      callMethod: () => Promise.resolve(null),
-    };
-  } catch (_) {}
+if (earlyExpoGo) {
+  if (!global.expo) {
+    global.expo = { modules: {} };
+  }
+  if (!global.expo.modules) {
+    global.expo.modules = {};
+  }
+
+  // ── Ensure legacy NativeUnimoduleProxy exists on NativeModules for expo-modules-core in Expo Go ──
+  if (NativeModules && !NativeModules.NativeUnimoduleProxy) {
+    try {
+      NativeModules.NativeUnimoduleProxy = {
+        modulesConstants: {},
+        exportedMethods: {},
+        viewManagersMetadata: {},
+        callMethod: () => Promise.resolve(null),
+      };
+    } catch (_) {}
+  }
 }
 
 // ── ImagePicker bridge using expo-image-picker for Expo Go ────────────────────

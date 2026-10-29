@@ -35,8 +35,7 @@ export const signInWithGoogle = async (
             isExpoGo = Constants?.appOwnership === 'expo' || Constants?.executionEnvironment === 'storeClient';
         } catch (_) {}
         if (!isExpoGo) {
-            isExpoGo = (typeof globalThis !== 'undefined' && Boolean((globalThis as any).__IS_EXPO_GO__)) ||
-                       (typeof process !== 'undefined' && Boolean(process.env?.EXPO_OS));
+            isExpoGo = typeof globalThis !== 'undefined' && Boolean((globalThis as any).__IS_EXPO_GO__);
         }
 
         if (isExpoGo) {

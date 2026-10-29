@@ -2,15 +2,16 @@
  * @format
  * Application entry point.
  *
+ * react-native-gesture-handler MUST be at the very top.
  * Firebase background message handler MUST be registered here (outside
  * any React component) so it runs even in the killed / background state.
  */
 
+import 'react-native-gesture-handler';
 import './src/utils/expoGoShims';
 import 'react-native-url-polyfill/auto';
 import React from 'react';
 import { View, Text, ScrollView, AppRegistry } from 'react-native';
-import { registerRootComponent } from 'expo';
 
 // ─── Safely load App component ───────────────────────────────────────────────
 let RootApp = null;
@@ -19,6 +20,10 @@ try {
 } catch (e) {
   console.error('[CRITICAL] Failed to load ./App:', e?.message || e);
   console.error('[CRITICAL] Stack trace:', e?.stack);
+  try {
+    const BootSplash = require('react-native-bootsplash').default;
+    BootSplash?.hide?.({ fade: true }).catch(() => {});
+  } catch (_) {}
   RootApp = function ErrorFallback() {
     return (
       <View style={{ flex: 1, backgroundColor: '#070708', justifyContent: 'center', alignItems: 'center', padding: 24 }}>
@@ -31,6 +36,14 @@ try {
     );
   };
 }
+
+// ─── Native splash screen fail-safe ──────────────────────────────────────────
+setTimeout(() => {
+  try {
+    const BootSplash = require('react-native-bootsplash').default;
+    BootSplash?.hide?.({ fade: true }).catch(() => {});
+  } catch (_) {}
+}, 2500);
 
 // ─── FCM Background / Killed-state message handler ───────────────────────────
 try {
@@ -68,14 +81,10 @@ const FinalApp = RootApp || function EmptyRoot() {
   return <View style={{ flex: 1, backgroundColor: '#070708' }} />;
 };
 
-// 1. Register for Bare Android / iOS Native Builds (Google Play / App Store)
+// Register component for bare Android / iOS Native Builds (Google Play / App Store)
 AppRegistry.registerComponent('ShieldHire', () => FinalApp);
 
-// 2. Register for Expo Go environments (uses "main")
-try {
-  registerRootComponent(FinalApp);
-} catch (_) {
-  AppRegistry.registerComponent('main', () => FinalApp);
-}
+// Register component for Expo Go environments (uses "main")
+AppRegistry.registerComponent('main', () => FinalApp);
 
 
