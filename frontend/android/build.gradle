@@ -7,6 +7,7 @@ buildscript {
         ndkVersion = "27.1.12297006"
         kotlinVersion = "2.0.21"
         googlePlayServicesVersion = "18.2.0"
+        playServicesLocationVersion = "21.3.0"
         REACT_NATIVE_NODE_MODULES_DIR = file("../../node_modules/react-native")
     }
     repositories {
@@ -37,6 +38,7 @@ allprojects {
         resolutionStrategy {
             force "com.facebook.react:react-android:0.77.3"
             force "com.facebook.react:hermes-android:0.77.3"
+            force "com.google.android.gms:play-services-location:21.3.0"
         }
     }
 }
