@@ -252,7 +252,23 @@ const AppContent = () => {
         user?.role === 'ADMIN' ||
         user?.clientProfile?.verificationStatus === 'APPROVED';
 
-    console.log(`[AppNavigation] Active Session: ${user?.email ? user.email : 'Guest / New User'}, Screen: ${!token ? 'Auth (Login)' : isBouncerFlow ? 'BouncerMain' : 'ClientMain'}`);
+    const activeScreen = !token
+        ? 'Auth (Login)'
+        : pendingBouncerRegistration
+        ? 'BouncerRegistration'
+        : isBouncerFlow
+        ? (!user?.bouncerProfile?.bio || !user?.bouncerProfile?.identityVerified
+            ? 'BouncerSurvey'
+            : !isApproved
+            ? 'VerificationPending'
+            : 'BouncerMain')
+        : (!isClientApproved
+            ? (!user?.clientProfile || !user?.clientProfile?.govtIdPhoto
+                ? 'ClientProfileSetup'
+                : 'ClientVerificationPending')
+            : 'ClientMain');
+
+    console.log(`[AppNavigation] Active Session: ${user?.email || 'Guest / New User'}, Screen: ${activeScreen}`);
 
     const navigationTheme = theme === 'dark' ? DarkTheme : {
         ...DefaultTheme,

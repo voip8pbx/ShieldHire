@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect } from 'react';
+import React, { useState, useContext, useEffect, useRef } from 'react';
 import {
     View,
     Text,
@@ -75,7 +75,13 @@ export default function BouncerSurveyScreen({ navigation }: Props) {
         return { valid: true, message: 'Aadhaar format verified.' };
     };
 
+    const hasFetchedRef = useRef(false);
+
+    // 1. Fetch profile strictly once on mount
     useEffect(() => {
+        if (hasFetchedRef.current) return;
+        hasFetchedRef.current = true;
+
         const fetchProfile = async () => {
             console.log('[Survey] Fetching profile...');
             try {
@@ -107,12 +113,19 @@ export default function BouncerSurveyScreen({ navigation }: Props) {
             }
         };
         fetchProfile();
+    }, []);
 
+    // 2. Hardware back button handling
+    useEffect(() => {
         const backAction = () => {
-            if (!navigation.canGoBack()) {
-                return true; // handled, do nothing
+            if (currentStep > 0) {
+                setCurrentStep(prev => prev - 1);
+                return true;
             }
-            return false; // let default behavior happen
+            if (!navigation.canGoBack()) {
+                return true; // handled at root, prevent unhandled GO_BACK action
+            }
+            return false;
         };
 
         const backHandler = BackHandler.addEventListener(
@@ -121,8 +134,9 @@ export default function BouncerSurveyScreen({ navigation }: Props) {
         );
 
         return () => backHandler.remove();
-    }, [navigation]);
+    }, [currentStep, navigation]);
 
+    // 3. Sync initial state from user context once when user ID is available
     useEffect(() => {
         if (user) {
             if (!editName && user.name) setEditName(user.name);
@@ -147,7 +161,7 @@ export default function BouncerSurveyScreen({ navigation }: Props) {
                 if (!isIdentityVerified && bp.identityVerified) setIsIdentityVerified(bp.identityVerified);
             }
         }
-    }, [user]);
+    }, [user?.id]);
 
     const calculateProgress = () => {
         let filled = 0;
@@ -228,7 +242,7 @@ export default function BouncerSurveyScreen({ navigation }: Props) {
     const handleBack = () => {
         if (currentStep > 0) {
             setCurrentStep(currentStep - 1);
-        } else {
+        } else if (navigation.canGoBack()) {
             navigation.goBack();
         }
     };
