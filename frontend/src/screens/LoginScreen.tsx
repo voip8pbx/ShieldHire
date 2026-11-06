@@ -134,16 +134,26 @@ export default function LoginScreen({ navigation }: Props) {
             login(customToken, existingUser);
         } catch (error: any) {
             resumeAutoLogin();
-            if (
-                error.code === statusCodes.SIGN_IN_CANCELLED ||
-                error.code === '12501' ||
-                error.message?.includes('cancelled') ||
-                error.message?.includes('Sign-in cancelled')
-            ) {
+            const isCancelled =
+                error?.code === '12501' ||
+                error?.code === statusCodes?.SIGN_IN_CANCELLED ||
+                error?.message?.includes('cancelled') ||
+                error?.message?.includes('Sign-in cancelled');
+
+            if (isCancelled) {
                 return; 
             }
+
             console.error('Bouncer Google Auth Error:', error);
-            Alert.alert('Google Sign-In Failed', error.response?.data?.error || error.message || 'Please try again');
+            const isDevError = error?.code === '10' || error?.message?.includes('DEVELOPER_ERROR');
+            const alertMsg = isDevError
+                ? 'Google Play Services configuration error (DEVELOPER_ERROR: 10). Please ensure your Release SHA-1 fingerprint is added in Firebase Console.'
+                : (error?.response?.data?.error || error?.message || 'Please try again');
+
+            // Delay alert to ensure native Google Sign-In activity is fully detached
+            setTimeout(() => {
+                Alert.alert('Google Sign-In Failed', alertMsg);
+            }, 250);
         } finally {
             setLoading(false);
         }
@@ -163,15 +173,26 @@ export default function LoginScreen({ navigation }: Props) {
 
             login(response.data.token, response.data.user);
         } catch (error: any) {
-            if (
-                error.code === statusCodes.SIGN_IN_CANCELLED ||
-                error.code === '12501' ||
-                error.message?.includes('cancelled') ||
-                error.message?.includes('Sign-in cancelled')
-            ) {
+            const isCancelled =
+                error?.code === '12501' ||
+                error?.code === statusCodes?.SIGN_IN_CANCELLED ||
+                error?.message?.includes('cancelled') ||
+                error?.message?.includes('Sign-in cancelled');
+
+            if (isCancelled) {
                 return; 
             }
-            Alert.alert('Google Sign-In Failed', error.response?.data?.error || error.message || 'Please try again');
+
+            console.error('Client Google Auth Error:', error);
+            const isDevError = error?.code === '10' || error?.message?.includes('DEVELOPER_ERROR');
+            const alertMsg = isDevError
+                ? 'Google Play Services configuration error (DEVELOPER_ERROR: 10). Please ensure your Release SHA-1 fingerprint is added in Firebase Console.'
+                : (error?.response?.data?.error || error?.message || 'Please try again');
+
+            // Delay alert to ensure native Google Sign-In activity is fully detached
+            setTimeout(() => {
+                Alert.alert('Google Sign-In Failed', alertMsg);
+            }, 250);
         } finally {
             setLoading(false);
         }

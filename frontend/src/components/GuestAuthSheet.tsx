@@ -45,8 +45,9 @@ export default function GuestAuthSheet() {
             });
 
             const user = response.data.user;
+            const customToken = response.data.token;
             
-            login(firebaseToken, user);
+            login(customToken || firebaseToken, user);
             hideGuestSheet();
 
             // Check if profile is complete
@@ -59,11 +60,26 @@ export default function GuestAuthSheet() {
             }
         } catch (error: any) {
             resumeAutoLogin();
-            if (error.code === '12501' || error.code?.includes('SIGN_IN_CANCELLED') || error.code?.includes('SIGN_IN_REQUIRED')) {
+            const isCancelled =
+                error?.code === '12501' ||
+                error?.code?.includes?.('SIGN_IN_CANCELLED') ||
+                error?.code?.includes?.('SIGN_IN_REQUIRED') ||
+                error?.message?.includes?.('cancelled');
+
+            if (isCancelled) {
                 // user cancelled
-            } else {
-                Alert.alert('Authentication Failed', error.response?.data?.error || error.message || 'Please try again');
+                return;
             }
+
+            console.error('Guest Google Auth Error:', error);
+            const isDevError = error?.code === '10' || error?.message?.includes('DEVELOPER_ERROR');
+            const alertMsg = isDevError
+                ? 'Google Play Services configuration error (DEVELOPER_ERROR: 10). Please ensure your Release SHA-1 fingerprint is added in Firebase Console.'
+                : (error?.response?.data?.error || error?.message || 'Please try again');
+
+            setTimeout(() => {
+                Alert.alert('Authentication Failed', alertMsg);
+            }, 250);
         } finally {
             setLoading(false);
         }
