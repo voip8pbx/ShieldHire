@@ -21,6 +21,9 @@
       "autoIncrement": true,
       "credentialsSource": "local",
       "node": "22.14.0",
+      "env": {
+        "EAS_GRADLE_CACHE": "1"
+      },
       "android": {
         "buildType": "app-bundle",
         "image": "ubuntu-24.04-jdk-17-ndk-r27b"

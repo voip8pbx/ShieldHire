@@ -249,4 +249,20 @@ eval "set -- $(
         tr '\n' ' '
     )" '"$@"'
 
-exec "$JAVACMD" "$@"
+# Attempt to run Gradle with retries in case wrapper download or network encounters transient 503 / timeout
+MAX_RETRIES=4
+COUNT=0
+STATUS=0
+while [ $COUNT -lt $MAX_RETRIES ]; do
+    "$JAVACMD" "$@"
+    STATUS=$?
+    if [ $STATUS -eq 0 ]; then
+        exit 0
+    fi
+    COUNT=$((COUNT + 1))
+    if [ $COUNT -lt $MAX_RETRIES ]; then
+        echo "gradlew: Command failed with exit status $STATUS. Retrying in 5 seconds (attempt $((COUNT + 1)) of $MAX_RETRIES)..."
+        sleep 5
+    fi
+done
+exit $STATUS
