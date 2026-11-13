@@ -12,6 +12,7 @@ import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../types';
 import { AuthContext } from '../../context/AuthContext';
+import { formatRating } from '../../utils/formatters';
 
 interface BookingHistory {
     id: string;
@@ -324,7 +325,7 @@ export default function BouncerHistoryScreen() {
 
     const completedCount = pastEvents.filter(t => t.status === 'COMPLETED').length;
     const totalEarnings = pastEvents.filter(t => t.status === 'COMPLETED').reduce((sum, item) => sum + (item.totalPrice || 0), 0);
-    const displayRating = user?.bouncerProfile?.rating ? user.bouncerProfile.rating.toFixed(1) : '4.8';
+    const displayRating = formatRating(user?.bouncerProfile?.rating);
 
     return (
         <View style={styles.container}>

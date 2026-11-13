@@ -23,6 +23,7 @@ import { launchImageLibrary, ImagePickerResponse } from 'react-native-image-pick
 import api from '../../services/api';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { formatRating } from '../../utils/formatters';
 import { RootStackParamList } from '../../types';
 import LinearGradient from 'react-native-linear-gradient';
 
@@ -500,7 +501,7 @@ export default function BouncerProfileScreen() {
 
                         <View style={styles.statInputGroup}>
                             <Text style={styles.label}>Real Rating</Text>
-                            <Text style={styles.statValue}>{user?.bouncerProfile?.rating ? user.bouncerProfile.rating.toFixed(1) : '4.8'} ⭐</Text>
+                            <Text style={styles.statValue}>{formatRating(user?.bouncerProfile?.rating)} ⭐</Text>
                         </View>
                     </View>
 

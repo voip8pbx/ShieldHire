@@ -14,6 +14,7 @@ import { notificationService } from '../../services/notificationService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import OnboardingTooltip from '../../components/OnboardingTooltip';
 import SOSConfirmationModal, { SOSModalState } from '../../components/SOSConfirmationModal';
+import { formatCoordinates, safeDateString } from '../../utils/formatters';
 
 
 interface BouncerBooking {
@@ -149,25 +150,35 @@ export default function BouncerHomeScreen() {
         });
 
         socket.on('new-alert', (newAlert: any) => {
-            if (newAlert.userId === user?.id) return;
+            try {
+                if (!newAlert || newAlert.userId === user?.id) return;
+                const latStr = formatCoordinates(newAlert.latitude);
+                const lonStr = formatCoordinates(newAlert.longitude);
 
-            Alert.alert(
-                '🚨 EMERGENCY ALERT 🚨',
-                `${newAlert.user?.name || 'Someone'} needs help!\nLocation: ${newAlert.location || 'Unknown'}\n\nCoordinates: ${newAlert.latitude?.toFixed(4)}, ${newAlert.longitude?.toFixed(4)}`,
-                [{ text: 'OK' }],
-                { cancelable: false }
-            );
+                Alert.alert(
+                    '🚨 EMERGENCY ALERT 🚨',
+                    `${newAlert.user?.name || 'Someone'} needs help!\nLocation: ${newAlert.location || 'Unknown'}\n\nCoordinates: ${latStr}, ${lonStr}`,
+                    [{ text: 'OK' }],
+                    { cancelable: false }
+                );
+            } catch (err) {
+                console.error('[Socket new-alert err]:', err);
+            }
         });
 
         socket.on('new-booking', async (data: any) => {
-            if (data.bouncerId === user?.bouncerProfile?.id) {
-                const bookingDate = new Date(data.booking.date).toLocaleDateString();
-                await notificationService.displayBookingNotification(
-                    data.clientName,
-                    bookingDate,
-                    data.booking.id
-                );
-                fetchPendingBookings();
+            try {
+                if (data?.bouncerId === user?.bouncerProfile?.id && data?.booking) {
+                    const bookingDate = safeDateString(data.booking.date, 'Upcoming Date');
+                    await notificationService.displayBookingNotification(
+                        data.clientName || 'Client',
+                        bookingDate,
+                        data.booking.id || ''
+                    );
+                    fetchPendingBookings();
+                }
+            } catch (err) {
+                console.error('[Socket new-booking err]:', err);
             }
         });
 

@@ -22,6 +22,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import LinearGradient from 'react-native-linear-gradient';
 import { ThemeContext } from '../context/ThemeContext';
+import { formatRating } from '../utils/formatters';
 
 type NavigationProp = StackNavigationProp<HomeStackParamList, 'ExploreProfessionals'>;
 
@@ -72,7 +73,7 @@ const GridCard = React.memo(({ item, onPress }: { item: Bouncer, onPress: () => 
 
     const displayName = item.name || item.user?.name || 'Security Professional';
     const displayPhoto = item.profilePhoto || (item as any).profileImageUrl || item.user?.profilePhoto;
-    const displayRating = item.rating && item.rating > 0 ? item.rating.toFixed(1) : '4.8';
+    const displayRating = formatRating(item.rating);
     const displayExp = item.experience ? `${item.experience} Yrs Exp` : '5+ Yrs Exp';
     const isAvailable = item.isAvailable !== false;
     const isGunman = item.isGunman || (item as any).hasGunLicense;
@@ -135,7 +136,7 @@ const ListCard = React.memo(({ item, onPress }: { item: Bouncer, onPress: () => 
 
     const displayName = item.name || item.user?.name || 'Security Professional';
     const displayPhoto = item.profilePhoto || (item as any).profileImageUrl || item.user?.profilePhoto;
-    const displayRating = item.rating && item.rating > 0 ? item.rating.toFixed(1) : '4.8';
+    const displayRating = formatRating(item.rating);
     const displayExp = item.experience ? `${item.experience} Yrs Exp` : '5+ Yrs Exp';
     const isGunman = item.isGunman || (item as any).hasGunLicense;
     const roleText = isGunman ? 'Gunman' : 'Bouncer';

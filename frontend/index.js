@@ -77,14 +77,30 @@ try {
 }
 
 // ─── Register the React Native / Expo app ────────────────────────────────────
+let ErrorBoundary = null;
+try {
+  ErrorBoundary = require('./src/components/ErrorBoundary').default;
+} catch (_) {}
+
 const FinalApp = RootApp || function EmptyRoot() {
   return <View style={{ flex: 1, backgroundColor: '#070708' }} />;
 };
 
+const SafeApp = function SafeAppWrapper(props) {
+  if (ErrorBoundary) {
+    return (
+      <ErrorBoundary>
+        <FinalApp {...props} />
+      </ErrorBoundary>
+    );
+  }
+  return <FinalApp {...props} />;
+};
+
 // Register component for bare Android / iOS Native Builds (Google Play / App Store)
-AppRegistry.registerComponent('ShieldHire', () => FinalApp);
+AppRegistry.registerComponent('ShieldHire', () => SafeApp);
 
 // Register component for Expo Go environments (uses "main")
-AppRegistry.registerComponent('main', () => FinalApp);
+AppRegistry.registerComponent('main', () => SafeApp);
 
 

@@ -65,7 +65,18 @@ if (typeof global !== 'undefined' && global.ErrorUtils) {
     if (err?.stack) {
       console.error('>>> [CRASH STACK]:\n', err.stack);
     }
-    if (origHandler) origHandler(err, isFatal);
+    // In release builds (!__DEV__), pass isFatal = false to prevent React Native's
+    // ExceptionsManagerModule from throwing fatal com.facebook.react.common.JavascriptException
+    // which kills the native Android process.
+    if (__DEV__) {
+      if (origHandler) origHandler(err, isFatal);
+    } else {
+      if (origHandler) {
+        try {
+          origHandler(err, false);
+        } catch (_) {}
+      }
+    }
   });
 }
 

@@ -9,6 +9,7 @@ import { RouteProp } from '@react-navigation/native';
 import { HomeStackParamList, Bouncer } from '../types';
 import api from '../services/api';
 import LinearGradient from 'react-native-linear-gradient';
+import { formatRating } from '../utils/formatters';
 
 type MapScreenNavigationProp = StackNavigationProp<HomeStackParamList, 'MapScreen'>;
 type MapScreenRouteProp = RouteProp<HomeStackParamList, 'MapScreen'>;
@@ -284,7 +285,7 @@ export default function MapScreen({ navigation, route }: Props) {
                             <View style={styles.ratingRow}>
                                 <Ionicons name="star" size={12} color="#FFD700" />
                                 <Text style={styles.ratingValue}>
-                                    {selectedBouncer.rating ? selectedBouncer.rating.toFixed(1) : '4.8'}
+                                    {formatRating(selectedBouncer.rating)}
                                 </Text>
                                 <Text style={styles.statusDotText}>• Tap card for profile</Text>
                             </View>

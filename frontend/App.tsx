@@ -350,14 +350,18 @@ const AppContent = () => {
     );
 };
 
+import ErrorBoundary from './src/components/ErrorBoundary';
+
 export default function App() {
     return (
-        <SafeAreaProvider>
-            <ThemeProvider>
-                <AuthProvider>
-                    <AppContent />
-                </AuthProvider>
-            </ThemeProvider>
-        </SafeAreaProvider>
+        <ErrorBoundary>
+            <SafeAreaProvider>
+                <ThemeProvider>
+                    <AuthProvider>
+                        <AppContent />
+                    </AuthProvider>
+                </ThemeProvider>
+            </SafeAreaProvider>
+        </ErrorBoundary>
     );
 }

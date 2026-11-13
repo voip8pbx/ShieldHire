@@ -22,6 +22,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import LinearGradient from 'react-native-linear-gradient';
 import { ThemeContext } from '../context/ThemeContext';
+import { formatRating } from '../utils/formatters';
 
 type BouncerDetailScreenNavigationProp = StackNavigationProp<HomeStackParamList, 'BouncerDetail'>;
 type BouncerDetailScreenRouteProp = RouteProp<HomeStackParamList, 'BouncerDetail'>;
@@ -127,7 +128,7 @@ export default function BouncerDetailScreen({ navigation, route }: Props) {
     const SINGLE_SHIFT_PRICE = (bouncer as any).singleShiftPrice || (isGunman ? 3500 : 2000);
     const VIP_BODYGUARD_PRICE = (bouncer as any).vipBodyguardPrice || 4000;
     const selectedBasePrice = selectedPackage === 'VIP_BODYGUARD' ? VIP_BODYGUARD_PRICE : SINGLE_SHIFT_PRICE;
-    const displayRating = bouncer.rating && bouncer.rating > 0 ? bouncer.rating.toFixed(1) : '4.8';
+    const displayRating = formatRating(bouncer.rating);
     const isApprovedGuard = bouncer.verificationStatus === 'APPROVED' || (bouncer as any).verification_status === 'APPROVED';
 
     return (
@@ -218,7 +219,7 @@ export default function BouncerDetailScreen({ navigation, route }: Props) {
                     <View style={styles.sectionWrap}>
                         <Text style={styles.sectionHeaderTitle}>Verified Credentials</Text>
                         <View style={styles.certsGrid}>
-                            {bouncer.certifications.map((cert, idx) => (
+                            {(bouncer.certifications || []).map((cert, idx) => (
                                 <View key={idx} style={styles.certBadgePill}>
                                     <MaterialCommunityIcons name="certificate" size={15} color="#FFD700" style={{ marginRight: 6 }} />
                                     <Text style={styles.certBadgeText}>{cert}</Text>
@@ -239,7 +240,7 @@ export default function BouncerDetailScreen({ navigation, route }: Props) {
                     <View style={styles.sectionWrap}>
                         <Text style={styles.sectionHeaderTitle}>Tactical Skills</Text>
                         <View style={styles.skillsGridWrap}>
-                            {bouncer.specialties.map((skill, idx) => (
+                            {(bouncer.specialties || []).map((skill, idx) => (
                                 <View key={idx} style={styles.skillPill}>
                                     <Ionicons name="checkmark-circle" size={14} color="#FFD700" style={{ marginRight: 6 }} />
                                     <Text style={styles.skillPillText}>{skill}</Text>
@@ -252,7 +253,7 @@ export default function BouncerDetailScreen({ navigation, route }: Props) {
                     <View style={styles.sectionWrap}>
                         <Text style={styles.sectionHeaderTitle}>Duty & Field Photos</Text>
                         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.galleryRow}>
-                            {bouncer.galleryPhotos.map((photoUrl, idx) => (
+                            {(bouncer.galleryPhotos || []).map((photoUrl, idx) => (
                                 <TouchableOpacity
                                     key={idx}
                                     style={styles.galleryCard}

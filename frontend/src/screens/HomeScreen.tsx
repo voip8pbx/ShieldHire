@@ -20,6 +20,8 @@ import { AuthContext } from '../context/AuthContext';
 import { ThemeContext } from '../context/ThemeContext';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 
+import { formatRating } from '../utils/formatters';
+
 type HomeScreenNavigationProp = CompositeNavigationProp<
     BottomTabNavigationProp<MainTabParamList, 'HomeStack'>,
     StackNavigationProp<HomeStackParamList>
@@ -39,7 +41,7 @@ const BouncerCard = React.memo(({ item, onPress }: { item: Bouncer; onPress: (id
     // Safe fallbacks for data
     const displayName = item.name || item.user?.name || 'Security Professional';
     const displayPhoto = item.profilePhoto || (item as any).profileImageUrl || item.user?.profilePhoto;
-    const displayRating = item.rating && item.rating > 0 ? item.rating.toFixed(1) : '4.8';
+    const displayRating = formatRating(item.rating);
     const displayExp = item.experience ? `${item.experience} yrs exp` : '5+ yrs exp';
     const isGunman = item.isGunman || (item as any).hasGunLicense;
 
