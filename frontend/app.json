@@ -4,6 +4,7 @@
   "expo": {
     "name": "SOS Guard",
     "slug": "shieldhire",
+    "owner": "shieldhire",
     "version": "1.0.0",
     "sdkVersion": "58.0.0",
     "newArchEnabled": true,

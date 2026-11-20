@@ -1,0 +1,23 @@
+diff --git a/node_modules/@expo/cli/build/src/start/server/middleware/ManifestMiddleware.js b/node_modules/@expo/cli/build/src/start/server/middleware/ManifestMiddleware.js
+index d073c4f..dd551a1 100644
+--- a/node_modules/@expo/cli/build/src/start/server/middleware/ManifestMiddleware.js
++++ b/node_modules/@expo/cli/build/src/start/server/middleware/ManifestMiddleware.js
+@@ -213,6 +213,10 @@ class ManifestMiddleware extends _expoMiddleware.ExpoMiddleware {
+         }) + path;
+     }
+     getExpoGoConfig({ mainModuleName , hostname  }) {
++        let username;
++        try {
++            username = require("../../../api/user/UserSettings").getSession()?.username;
++        } catch {}
+         return {
+             // localhost:8081
+             debuggerHost: this.options.constructUrl({
+@@ -230,6 +234,7 @@ class ManifestMiddleware extends _expoMiddleware.ExpoMiddleware {
+             },
+             // Indicates the name of the main bundle.
+             mainModuleName,
++            ...(username ? { username } : undefined),
+             // Add this string to make Flipper register React Native / Metro as "running".
+             // Can be tested by running:
+             // `METRO_SERVER_PORT=8081 open -a flipper.app`
