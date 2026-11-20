@@ -1,0 +1,46 @@
+diff --git a/node_modules/react-native-gesture-handler/lib/commonjs/init.js b/node_modules/react-native-gesture-handler/lib/commonjs/init.js
+index ec254f6..4b46dce 100644
+--- a/node_modules/react-native-gesture-handler/lib/commonjs/init.js
++++ b/node_modules/react-native-gesture-handler/lib/commonjs/init.js
+@@ -24,8 +24,9 @@ function initialize() {
+ 
+ function maybeInitializeFabric() {
+   if ((0, _utils.isFabric)() && !fabricInitialized) {
+-    _RNGestureHandlerModule.default.install();
+-
++    if (typeof _RNGestureHandlerModule.default?.install === 'function') {
++      _RNGestureHandlerModule.default.install();
++    }
+     fabricInitialized = true;
+   }
+ }
+diff --git a/node_modules/react-native-gesture-handler/lib/module/init.js b/node_modules/react-native-gesture-handler/lib/module/init.js
+index 1ea9280..c373e43 100644
+--- a/node_modules/react-native-gesture-handler/lib/module/init.js
++++ b/node_modules/react-native-gesture-handler/lib/module/init.js
+@@ -9,7 +9,9 @@ export function initialize() {
+ 
+ export function maybeInitializeFabric() {
+   if (isFabric() && !fabricInitialized) {
+-    RNGestureHandlerModule.install();
++    if (typeof RNGestureHandlerModule?.install === 'function') {
++      RNGestureHandlerModule.install();
++    }
+     fabricInitialized = true;
+   }
+ }
+diff --git a/node_modules/react-native-gesture-handler/src/init.ts b/node_modules/react-native-gesture-handler/src/init.ts
+index 078cd51..cf9ca77 100644
+--- a/node_modules/react-native-gesture-handler/src/init.ts
++++ b/node_modules/react-native-gesture-handler/src/init.ts
+@@ -12,7 +12,9 @@ export function initialize() {
+ // method during render of GestureHandlerRootView
+ export function maybeInitializeFabric() {
+   if (isFabric() && !fabricInitialized) {
+-    RNGestureHandlerModule.install();
++    if (typeof (RNGestureHandlerModule as any)?.install === 'function') {
++      (RNGestureHandlerModule as any).install();
++    }
+     fabricInitialized = true;
+   }
+ }
