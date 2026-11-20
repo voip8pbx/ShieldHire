@@ -82,19 +82,28 @@ try {
   ErrorBoundary = require('./src/components/ErrorBoundary').default;
 } catch (_) {}
 
+let GestureHandlerRootView = null;
+try {
+  GestureHandlerRootView = require('react-native-gesture-handler').GestureHandlerRootView;
+} catch (_) {}
+
 const FinalApp = RootApp || function EmptyRoot() {
   return <View style={{ flex: 1, backgroundColor: '#070708' }} />;
 };
 
 const SafeApp = function SafeAppWrapper(props) {
-  if (ErrorBoundary) {
-    return (
-      <ErrorBoundary>
-        <FinalApp {...props} />
-      </ErrorBoundary>
-    );
+  const content = ErrorBoundary ? (
+    <ErrorBoundary>
+      <FinalApp {...props} />
+    </ErrorBoundary>
+  ) : (
+    <FinalApp {...props} />
+  );
+
+  if (GestureHandlerRootView) {
+    return <GestureHandlerRootView style={{ flex: 1 }}>{content}</GestureHandlerRootView>;
   }
-  return <FinalApp {...props} />;
+  return content;
 };
 
 // Register component for bare Android / iOS Native Builds (Google Play / App Store)

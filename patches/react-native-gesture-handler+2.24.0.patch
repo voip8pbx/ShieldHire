@@ -1,3 +1,33 @@
+diff --git a/node_modules/react-native-gesture-handler/lib/commonjs/RNGestureHandlerModule.js b/node_modules/react-native-gesture-handler/lib/commonjs/RNGestureHandlerModule.js
+index fe7590e..9baaad9 100644
+--- a/node_modules/react-native-gesture-handler/lib/commonjs/RNGestureHandlerModule.js
++++ b/node_modules/react-native-gesture-handler/lib/commonjs/RNGestureHandlerModule.js
+@@ -11,6 +11,23 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
+ 
+ // Reexport the native module spec used by codegen. The relevant files are inluded on Android
+ // to ensure the compatibility with the old arch, while iOS doesn't require those at all.
+-var _default = _NativeRNGestureHandlerModule.default;
++var realModule = _NativeRNGestureHandlerModule.default || {};
++var _default = new Proxy(realModule, {
++  get(target, prop) {
++    if (typeof target[prop] === 'function') {
++      return target[prop].bind(target);
++    }
++    if (prop === 'updateGestureHandler' && typeof target.updateGestureHandlerConfig === 'function') {
++      return target.updateGestureHandlerConfig.bind(target);
++    }
++    if (prop === 'install' && typeof target.installUIRuntimeBindings === 'function') {
++      return target.installUIRuntimeBindings.bind(target);
++    }
++    if (prop in target) {
++      return target[prop];
++    }
++    return (...args) => {};
++  }
++});
+ exports.default = _default;
+ //# sourceMappingURL=RNGestureHandlerModule.js.map
+\ No newline at end of file
 diff --git a/node_modules/react-native-gesture-handler/lib/commonjs/init.js b/node_modules/react-native-gesture-handler/lib/commonjs/init.js
 index ec254f6..4b46dce 100644
 --- a/node_modules/react-native-gesture-handler/lib/commonjs/init.js
@@ -14,6 +44,38 @@ index ec254f6..4b46dce 100644
      fabricInitialized = true;
    }
  }
+diff --git a/node_modules/react-native-gesture-handler/lib/module/RNGestureHandlerModule.js b/node_modules/react-native-gesture-handler/lib/module/RNGestureHandlerModule.js
+index 2e7cb4c..d404382 100644
+--- a/node_modules/react-native-gesture-handler/lib/module/RNGestureHandlerModule.js
++++ b/node_modules/react-native-gesture-handler/lib/module/RNGestureHandlerModule.js
+@@ -1,5 +1,25 @@
+ // Reexport the native module spec used by codegen. The relevant files are inluded on Android
+ // to ensure the compatibility with the old arch, while iOS doesn't require those at all.
+ import Module from './specs/NativeRNGestureHandlerModule';
+-export default Module;
++
++const realModule = Module || {};
++const safeModule = new Proxy(realModule, {
++  get(target, prop) {
++    if (typeof target[prop] === 'function') {
++      return target[prop].bind(target);
++    }
++    if (prop === 'updateGestureHandler' && typeof target.updateGestureHandlerConfig === 'function') {
++      return target.updateGestureHandlerConfig.bind(target);
++    }
++    if (prop === 'install' && typeof target.installUIRuntimeBindings === 'function') {
++      return target.installUIRuntimeBindings.bind(target);
++    }
++    if (prop in target) {
++      return target[prop];
++    }
++    return (...args) => {};
++  }
++});
++
++export default safeModule;
+ //# sourceMappingURL=RNGestureHandlerModule.js.map
+\ No newline at end of file
 diff --git a/node_modules/react-native-gesture-handler/lib/module/init.js b/node_modules/react-native-gesture-handler/lib/module/init.js
 index 1ea9280..c373e43 100644
 --- a/node_modules/react-native-gesture-handler/lib/module/init.js
@@ -29,6 +91,36 @@ index 1ea9280..c373e43 100644
      fabricInitialized = true;
    }
  }
+diff --git a/node_modules/react-native-gesture-handler/src/RNGestureHandlerModule.ts b/node_modules/react-native-gesture-handler/src/RNGestureHandlerModule.ts
+index b32050b..dcbd268 100644
+--- a/node_modules/react-native-gesture-handler/src/RNGestureHandlerModule.ts
++++ b/node_modules/react-native-gesture-handler/src/RNGestureHandlerModule.ts
+@@ -2,4 +2,24 @@
+ // to ensure the compatibility with the old arch, while iOS doesn't require those at all.
+ 
+ import Module from './specs/NativeRNGestureHandlerModule';
+-export default Module;
++
++const realModule: any = Module || {};
++const safeModule = new Proxy(realModule, {
++  get(target: any, prop: string) {
++    if (typeof target[prop] === 'function') {
++      return target[prop].bind(target);
++    }
++    if (prop === 'updateGestureHandler' && typeof target.updateGestureHandlerConfig === 'function') {
++      return target.updateGestureHandlerConfig.bind(target);
++    }
++    if (prop === 'install' && typeof target.installUIRuntimeBindings === 'function') {
++      return target.installUIRuntimeBindings.bind(target);
++    }
++    if (prop in target) {
++      return target[prop];
++    }
++    return (...args: any[]) => {};
++  }
++});
++
++export default safeModule;
 diff --git a/node_modules/react-native-gesture-handler/src/init.ts b/node_modules/react-native-gesture-handler/src/init.ts
 index 078cd51..cf9ca77 100644
 --- a/node_modules/react-native-gesture-handler/src/init.ts

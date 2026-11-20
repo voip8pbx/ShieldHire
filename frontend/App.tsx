@@ -351,17 +351,20 @@ const AppContent = () => {
 };
 
 import ErrorBoundary from './src/components/ErrorBoundary';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 export default function App() {
     return (
-        <ErrorBoundary>
-            <SafeAreaProvider>
-                <ThemeProvider>
-                    <AuthProvider>
-                        <AppContent />
-                    </AuthProvider>
-                </ThemeProvider>
-            </SafeAreaProvider>
-        </ErrorBoundary>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+            <ErrorBoundary>
+                <SafeAreaProvider>
+                    <ThemeProvider>
+                        <AuthProvider>
+                            <AppContent />
+                        </AuthProvider>
+                    </ThemeProvider>
+                </SafeAreaProvider>
+            </ErrorBoundary>
+        </GestureHandlerRootView>
     );
 }

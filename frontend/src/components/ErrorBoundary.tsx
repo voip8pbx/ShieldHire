@@ -30,6 +30,7 @@ export default class ErrorBoundary extends Component<Props, State> {
 
     componentDidCatch(error: Error, errorInfo: ErrorInfo) {
         console.error('>>> [ErrorBoundary Caught Component Exception]:', error?.message || error);
+        console.error('>>> [JS Exception Stack]:\n', error?.stack || 'No stack');
         if (errorInfo?.componentStack) {
             console.error('>>> [Component Stack Trace]:\n', errorInfo.componentStack);
         }
