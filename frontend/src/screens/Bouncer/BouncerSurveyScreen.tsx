@@ -31,7 +31,7 @@ const STEPS = ['Info', 'Bio', 'Skills', 'Photos', 'Verify'];
 const { width } = Dimensions.get('window');
 
 export default function BouncerSurveyScreen({ navigation }: Props) {
-    const { user, updateUser } = useContext(AuthContext);
+    const { user, updateUser, logout } = useContext(AuthContext);
     const [currentStep, setCurrentStep] = useState(0);
     const [loading, setLoading] = useState(false);
 
@@ -109,7 +109,24 @@ export default function BouncerSurveyScreen({ navigation }: Props) {
                     }
                 }
             } catch (e: any) {
-                console.error("[Survey] Failed to fetch profile:", e.message);
+                console.warn("[Survey] Failed to fetch profile from API, falling back to local user context:", e?.message || e);
+                if (user) {
+                    if (user.name) setEditName(user.name);
+                    if (user.bouncerProfile) {
+                        const bp = user.bouncerProfile;
+                        setBio(bp.bio || '');
+                        setUpiId(bp.upiId || '');
+                        setSkills(bp.skills || []);
+                        setExperience(bp.experience?.toString() || '');
+                        setGalleryImages(bp.gallery || []);
+                        setEditAge(bp.age?.toString() || '');
+                        setEditGender(bp.gender || '');
+                        setIsGunman(bp.isGunman || false);
+                        setRegistrationType(bp.registrationType || 'Individual');
+                        setAadhaar(bp.aadhaarLast4 || '');
+                        setIsIdentityVerified(bp.identityVerified || false);
+                    }
+                }
             }
         };
         fetchProfile();
@@ -123,6 +140,14 @@ export default function BouncerSurveyScreen({ navigation }: Props) {
                 return true;
             }
             if (!navigation.canGoBack()) {
+                Alert.alert(
+                    'Exit Survey',
+                    'Do you want to log out of your session?',
+                    [
+                        { text: 'Cancel', style: 'cancel' },
+                        { text: 'Log Out', style: 'destructive', onPress: logout }
+                    ]
+                );
                 return true; // handled at root, prevent unhandled GO_BACK action
             }
             return false;
@@ -134,7 +159,7 @@ export default function BouncerSurveyScreen({ navigation }: Props) {
         );
 
         return () => backHandler.remove();
-    }, [currentStep, navigation]);
+    }, [currentStep, navigation, logout]);
 
     // 3. Sync initial state from user context once when user ID is available
     useEffect(() => {
@@ -244,6 +269,15 @@ export default function BouncerSurveyScreen({ navigation }: Props) {
             setCurrentStep(currentStep - 1);
         } else if (navigation.canGoBack()) {
             navigation.goBack();
+        } else {
+            Alert.alert(
+                'Exit Survey',
+                'Do you want to log out of your session?',
+                [
+                    { text: 'Cancel', style: 'cancel' },
+                    { text: 'Log Out', style: 'destructive', onPress: logout }
+                ]
+            );
         }
     };
 
@@ -297,7 +331,28 @@ export default function BouncerSurveyScreen({ navigation }: Props) {
             return false;
         } catch (error: any) {
             console.error('Save Profile Error', error);
-            if (!silent) Alert.alert('Error', 'Failed to save changes.');
+            // Gracefully keep local updates in context
+            if (user) {
+                updateUser({
+                    name: editName,
+                    bouncerProfile: {
+                        ...(user.bouncerProfile || {}),
+                        age: parseInt(editAge) || user?.bouncerProfile?.age || 0,
+                        gender: editGender || user?.bouncerProfile?.gender || '',
+                        registrationType: registrationType,
+                        isGunman: isGunman,
+                        bio,
+                        upiId,
+                        skills,
+                        experience: parseInt(experience) || 0,
+                        gallery: galleryImages,
+                        identityVerified: isIdentityVerified,
+                        aadhaarLast4: aadhaar,
+                        livenessVerifiedAt: isIdentityVerified ? new Date().toISOString() : null,
+                    } as any
+                });
+            }
+            if (!silent) Alert.alert('Notice', 'Failed to sync with server. Local changes have been retained.');
             return false;
         } finally {
             if (!silent) setLoading(false);
@@ -599,12 +654,28 @@ export default function BouncerSurveyScreen({ navigation }: Props) {
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Complete Profile</Text>
 
-                {/* Floating Save Button Visibility - only on last step or if valid */}
+                {/* Header Action: Save on last step, or Logout button */}
                 {currentStep === STEPS.length - 1 ? (
                     <TouchableOpacity onPress={handleSubmit} disabled={loading}>
                         <Text style={{ color: '#FFD700', fontWeight: 'bold' }}>Save</Text>
                     </TouchableOpacity>
-                ) : <View style={{ width: 30 }} />}
+                ) : (
+                    <TouchableOpacity
+                        onPress={() => {
+                            Alert.alert(
+                                'Log Out',
+                                'Are you sure you want to log out?',
+                                [
+                                    { text: 'Cancel', style: 'cancel' },
+                                    { text: 'Log Out', style: 'destructive', onPress: logout }
+                                ]
+                            );
+                        }}
+                        hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                    >
+                        <Ionicons name="log-out-outline" size={22} color="#AAA" />
+                    </TouchableOpacity>
+                )}
             </View>
 
             {/* Profile Summary & Progress */}

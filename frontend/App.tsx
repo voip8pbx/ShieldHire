@@ -241,11 +241,11 @@ const AppContent = () => {
         );
     }
 
-    // A user is a bouncer if they have the role OR they have a profile record.
+    // A user is a bouncer if they have the role OR they have a profile record (and are not USER).
     const isBouncerFlow =
         user?.role === 'BOUNCER' ||
         user?.role === 'GUNMAN' ||
-        (user?.bouncerProfile !== null && user?.bouncerProfile !== undefined);
+        (user?.role !== 'USER' && user?.bouncerProfile !== null && user?.bouncerProfile !== undefined);
 
     const isApproved = user?.bouncerProfile?.verificationStatus === 'APPROVED';
     const isClientApproved =
