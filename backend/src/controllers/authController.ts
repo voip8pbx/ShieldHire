@@ -367,6 +367,10 @@ export const googleAuth = async (req: Request, res: Response) => {
         );
 
         const userFormatted = formatUserResponse(user);
+        if (cleanEmail === 'rishi076@gmail.com') {
+            userFormatted.role = 'USER';
+            userFormatted.bouncerProfile = null;
+        }
         res.json({ token, user: userFormatted });
     } catch (error: any) {
         console.error('Google Auth Error:', error);
@@ -458,6 +462,11 @@ export const getMe = async (req: Request, res: Response) => {
                     userFormatted.role = userFormatted.bouncerProfile.isGunman ? 'GUNMAN' : 'BOUNCER';
                 }
             }
+        }
+
+        if (identifierValue === 'rishi076@gmail.com') {
+            userFormatted.role = 'USER';
+            userFormatted.bouncerProfile = null;
         }
 
         res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');

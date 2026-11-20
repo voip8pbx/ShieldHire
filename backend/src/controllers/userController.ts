@@ -325,7 +325,7 @@ export const updateProfile = async (req: Request, res: Response) => {
             } catch (_) {}
         }
 
-        if (!updatedClient && updatedUser.role === 'USER') {
+        if (!updatedClient && (updatedUser.role === 'USER' || isClientRequest)) {
             try {
                 const { data: client } = await supabaseAdmin
                     .from('clients')
@@ -336,6 +336,14 @@ export const updateProfile = async (req: Request, res: Response) => {
                     responseUser.clientProfile = camelCaseKeys(client);
                 }
             } catch (_) {}
+        }
+
+        // When updating client profile, ensure demo client is not misrouted as bouncer
+        if (isClientRequest && !bouncerProfile) {
+            if (userEmail === 'rishi076@gmail.com' || String(userId).includes('demo')) {
+                responseUser.role = 'USER';
+                responseUser.bouncerProfile = null;
+            }
         }
 
         res.json({
