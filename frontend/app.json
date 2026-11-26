@@ -4,7 +4,7 @@
   "expo": {
     "name": "SOS Guard",
     "slug": "shieldhire",
-    "owner": "shieldhire",
+    "owner": "rishi076",
     "version": "1.0.0",
     "sdkVersion": "58.0.0",
     "newArchEnabled": true,
@@ -25,7 +25,7 @@
     },
     "android": {
       "package": "com.shieldhire",
-      "versionCode": 49,
+      "versionCode": 50,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0F0F0F"
@@ -40,7 +40,7 @@
     },
     "extra": {
       "eas": {
-        "projectId": "a45f7ec4-2d53-4ac8-9681-7b04f8622beb"
+        "projectId": "d549e551-fc25-410a-b128-0cdefdc87a5e"
       }
     }
   }
